@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Networking Deep Dive - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Networking Deep Dive</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (starting-point) • Updated May 27, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">networking</span><span class="tag">cni</span><span class="tag">containers</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Networking Deep Dive</h2>
+<h3>Pod-to-Pod Communication</h3>
+<ul><li>Each pod gets its own IP address</li>
+<li>Pods can communicate directly without NAT</li>
+<li>CNI plugins handle network implementation</li>
+<li>Flat network space across all nodes</li>
+<h3>Service Types</h3>
+<h4>ClusterIP - Internal cluster communication (default)</h4>
+<li>Only accessible within cluster</li>
+<li>Load balances across pod endpoints</li>
+<li>DNS resolution via service name</li>
+<h4>NodePort - External access via node ports</h4>
+<li>Exposes service on each node's IP</li>
+<li>Port range: 30000-32767</li>
+<li>Good for development, not production</li>
+<h4>LoadBalancer - Cloud provider integration</h4>
+<li>Provisions external load balancer</li>
+<li>Cloud-specific implementation</li>
+<li>Automatic external IP assignment</li>
+<h4>ExternalName - Maps to external DNS</h4>
+<li>CNAME record for external services</li>
+<li>No proxying involved</li>
+<li>Used for service migration</li>
+<h3>Network Policies</h3>
+<li>Kubernetes firewall rules</li>
+<li>Default: all pods can communicate</li>
+<li>Ingress and egress rules</li>
+<li>Requires CNI plugin support</li>
+<h3>CNI Plugins</h3>
+<li><strong>Calico</strong> - Layer 3, network policies</li>
+<li><strong>Flannel</strong> - Simple overlay network</li>
+<li><strong>Weave</strong> - Mesh networking</li>
+<li><strong>Cilium</strong> - eBPF-based, advanced features</li></ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

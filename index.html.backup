@@ -774,6 +774,36 @@
         </div>
     </div>
                 </div>
+        </div>
+        
+        <!-- NAVIGATION ALWAYS SECOND -->
+        <div class="nav">
+            <button class="nav-btn active" onclick="showSection('intro')">About Me</button>
+            <button class="nav-btn" onclick="showSection('cv')">Experience & CV</button>
+            <button class="nav-btn" onclick="showSection('notes')">Knowledge Base</button>
+        </div>
+        
+        <!-- CONTENT ALWAYS THIRD -->
+        <div class="content">
+            <div class="section active" id="intro">
+                <div class="greeting">Hello there! 👋</div>
+                
+                <p>I'm Alex, and I absolutely love what I do! I'm a customer-focused engineer who thrives on solving problems and making technology work better for everyone. Over the past few years, I've had the pleasure of working in some really exciting, fast-paced environments where no two days are the same.</p>
+                
+                <p>My journey has taken me through building <span class="highlight">Java microservices</span>, diving into production firefighting (the fun kind!), crafting automation scripts that make everyone's lives easier, and keeping systems humming along smoothly. There's something incredibly satisfying about improving uptime, creating tools that genuinely help the team, or being the person who jumps in when things get critical.</p>
+                
+                <p>I'm pretty comfortable with a variety of tools—<span class="highlight">Java, Bash, Kubernetes, Docker, AWS</span>—but honestly, what excites me most is learning something new when a challenge calls for it. There's always another cool technology or approach to explore!</p>
+                
+                <p>What I think sets me apart is how much I enjoy the people side of tech. I've spent plenty of time working directly with clients, writing documentation that people actually want to read, running training sessions, and helping translate between the technical and non-technical worlds. I genuinely believe that the best solutions come from understanding what people really need.</p>
+                
+                <p>I'm excited about opportunities where I can bring together my technical skills with my people-first approach—whether that's in <span class="highlight">tech support, DevOps, backend engineering</span>, or wherever there's a good problem to solve and great people to work with.</p>
+                
+                <p>Thanks so much for taking the time to get to know me a bit! I'd love to chat more about how we might work together—feel free to reach out anytime.</p>
+                
+                <div class="signature">
+                    <div>Cheers,</div>
+                    <div class="name">Alex Susanu</div>
+                </div>
             </div>
             
             <div class="section" id="cv">

@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Container Pods: A Deep Dive - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Multi-Container Pods: A Deep Dive</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                General (k8s) • Updated May 27, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Multi-Container Pods: A Deep Dive</h2>
+<h3>Understanding the Foundation: Why Multi-Container Pods Exist</h3>
+<p>Before diving into patterns, it's crucial to understand <strong>why</strong> Kubernetes allows multiple containers in a single pod when the general recommendation is "one process per container."</p>
+<h4>The Core Problem</h4>
+<p>Modern applications often need auxiliary processes that are tightly coupled to the main application but serve different purposes:</p>
+<ul><li>Log collection and forwarding</li>
+<li>Configuration management</li>
+<li>Security proxies</li>
+<li>Database migration scripts</li>
+<li>Health checking services</li>
+<h4>Why Not Separate Pods?</h4>
+<p>You might ask: "Why not just create separate pods for each container?" Here's why that doesn't work:</p>
+<p>1. <strong>Lifecycle Coupling</strong>: Auxiliary containers often need to start before, alongside, or after the main container
+2. <strong>Resource Sharing</strong>: They need to share network, storage, and sometimes process namespace
+3. <strong>Atomic Deployment</strong>: They should be deployed, scaled, and deleted as a single unit
+4. <strong>Co-location</strong>: They must run on the same node for optimal performance</p>
+<p>---</p>
+<h3>Pattern 1: Sidecar Container Pattern</h3>
+<h4>What is a Sidecar?</h4>
+<p>A sidecar container runs alongside your main application container, extending or enhancing its functionality without modifying the main application.</p>
+<h4>Real-World Example: Web Server with Log Aggregation</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: web-server-with-logging
+spec:
+  containers:
+  # Main application container
+  - name: web-server
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log/nginx
+    
+  # Sidecar container for log processing
+  - name: log-aggregator
+    image: fluent/fluent-bit:1.8
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log/nginx
+      readOnly: true
+    - name: fluentbit-config
+      mountPath: /fluent-bit/etc
+    env:
+    - name: ELASTICSEARCH_HOST
+      value: "elasticsearch.logging.svc.cluster.local"
+    
+  volumes:
+  - name: shared-logs
+    emptyDir: {}
+  - name: fluentbit-config
+    configMap:
+      name: fluentbit-config</code></pre>
+<h4>Why Use This Pattern?</h4>
+<strong>1. Separation of Concerns</strong>
+<li>The web server focuses solely on serving HTTP requests</li>
+<li>The log aggregator handles log processing and forwarding</li>
+<li>Each container can be developed, tested, and updated independently</li>
+<strong>2. Reusability</strong>
+<li>The same log aggregator sidecar can be used with any application that writes logs to files</li>
+<li>You don't need to embed logging logic into every application</li>
+<strong>3. Different Resource Requirements</strong>
+<pre><code>containers:
+<li>name: web-server</li>
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+      
+<li>name: log-aggregator  </li>
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"</code></pre>
+<h4>Advanced Sidecar Example: Service Mesh Proxy</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-istio-proxy
+spec:
+  containers:
+  # Main application
+  - name: my-app
+    image: my-company/my-app:v1.2.3
+    ports:
+    - containerPort: 8080
+    
+  # Istio sidecar proxy
+  - name: istio-proxy
+    image: docker.io/istio/proxyv2:1.11.4
+    env:
+    - name: PILOT_CERT_PROVIDER
+      value: istiod
+    volumeMounts:
+    - name: istio-certs
+      mountPath: /etc/ssl/certs
+    - name: istio-token
+      mountPath: /var/run/secrets/tokens
+      
+  volumes:
+  - name: istio-certs
+    secret:
+      secretName: istio.default
+  - name: istio-token
+    projected:
+      sources:
+      - serviceAccountToken:
+          audience: istio-ca
+          expirationSeconds: 43200
+          path: istio-token</code></pre>
+<strong>Why This Matters:</strong>
+<li>All traffic to/from your application goes through the Istio proxy</li>
+<li>Provides mutual TLS, traffic management, and observability</li>
+<li>Application code remains unchanged - the proxy handles all service mesh functionality</li>
+<p>---</p>
+<h3>Pattern 2: Init Containers</h3>
+<h4>What Are Init Containers?</h4>
+<p>Init containers run <strong>before</strong> the main application containers start. They run to completion sequentially, and all must succeed before the main containers start.</p>
+<h4>Key Characteristics:</h4>
+<li>Run once and exit</li>
+<li>Run in sequence (not parallel)</li>
+<li>Must complete successfully</li>
+<li>Have access to the same volumes and network as main containers</li>
+<h4>Real-World Example: Database Migration</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: web-app-with-migration
+spec:
+  initContainers:
+  # Wait for database to be ready
+  - name: wait-for-db
+    image: busybox:1.35
+    command:
+    - sh
+    - -c
+    - |
+      until nc -z postgres-service 5432; do
+        echo "Waiting for database..."
+        sleep 2
+      done
+      echo "Database is ready!"
+      
+  # Run database migrations
+  - name: db-migration
+    image: my-company/my-app:v1.2.3
+    command:
+    - /app/migrate
+    - --database-url=postgresql://user:pass@postgres-service:5432/mydb
+    - --migrations-path=/app/migrations
+    env:
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password
+          
+  # Download configuration files
+  - name: config-downloader
+    image: alpine/git:latest
+    command:
+    - git
+    - clone
+    - https://github.com/my-company/app-config.git
+    - /shared-config
+    volumeMounts:
+    - name: config-volume
+      mountPath: /shared-config
+      
+  containers:
+  # Main application starts only after all init containers succeed
+  - name: web-app
+    image: my-company/my-app:v1.2.3
+    ports:
+    - containerPort: 8080
+    volumeMounts:
+    - name: config-volume
+      mountPath: /app/config
+    env:
+    - name: CONFIG_PATH
+      value: /app/config
+      
+  volumes:
+  - name: config-volume
+    emptyDir: {}</code></pre>
+<h4>Why Use Init Containers Instead of Shell Scripts?</h4>
+<strong>Problem with Shell Scripts in Main Container:</strong>
+<pre><code><h2>Bad approach - everything in one container</h2>
+FROM node:16
+COPY . /app
+WORKDIR /app
+<h2>This creates a fragile, hard-to-debug container</h2>
+RUN apt-get update && apt-get install -y postgresql-client
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+<h2>entrypoint.sh contains:</h2>
+<h2>1. Wait for database</h2>
+<h2>2. Run migrations  </h2>
+<h2>3. Download config</h2>
+<h2>4. Start application</h2></code></pre>
+<strong>Why This Is Problematic:</strong>
+<p>1. <strong>Single Point of Failure</strong>: If any step fails, the entire container fails
+2. <strong>Difficult Debugging</strong>: Hard to know which step failed
+3. <strong>Resource Waste</strong>: Main container image becomes bloated with tools only needed during initialization
+4. <strong>Poor Separation</strong>: Mixing initialization logic with application logic</p>
+<strong>Init Container Benefits:</strong>
+<p>1. <strong>Clear Failure Points</strong>: Each init container can fail independently
+2. <strong>Specialized Images</strong>: Each init container uses only the tools it needs
+3. <strong>Reusability</strong>: Init containers can be reused across different applications
+4. <strong>Better Logging</strong>: Each step has separate logs</p>
+<h4>Advanced Init Container Example: TLS Certificate Setup</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-web-app
+spec:
+  initContainers:
+  # Generate TLS certificates using cert-manager
+  - name: cert-generator
+    image: cert-manager/cert-manager-controller:v1.6.1
+    command:
+    - /manager
+    - --certificate-name=my-app-tls
+    - --namespace=default
+    - --output-dir=/certs
+    volumeMounts:
+    - name: tls-certs
+      mountPath: /certs
+      
+  # Validate certificates
+  - name: cert-validator
+    image: alpine/openssl:latest
+    command:
+    - sh
+    - -c
+    - |
+      openssl x509 -in /certs/tls.crt -text -noout
+      openssl verify /certs/tls.crt
+      echo "Certificates validated successfully"
+    volumeMounts:
+    - name: tls-certs
+      mountPath: /certs
+      readOnly: true
+      
+  containers:
+  - name: web-server
+    image: nginx:1.21
+    ports:
+    - containerPort: 443
+    volumeMounts:
+    - name: tls-certs
+      mountPath: /etc/nginx/certs
+      readOnly: true
+    - name: nginx-config
+      mountPath: /etc/nginx/nginx.conf
+      subPath: nginx.conf
+      
+  volumes:
+  - name: tls-certs
+    emptyDir: {}
+  - name: nginx-config
+    configMap:
+      name: nginx-ssl-config</code></pre>
+<p>---</p>
+<h3>Container Communication Within Pods</h3>
+<h4>Network Communication</h4>
+<p>All containers in a pod share the same network namespace, which means:</p>
+<p>1. <strong>Same IP Address</strong>: All containers have the same IP
+2. <strong>Localhost Communication</strong>: Containers can reach each other via <code>localhost</code>
+3. <strong>Port Sharing</strong>: No two containers can bind to the same port</p>
+<h4>Example: App with Redis Cache</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-cache
+spec:
+  containers:
+  # Redis cache
+  - name: redis
+    image: redis:6.2-alpine
+    ports:
+    - containerPort: 6379
+    command:
+    - redis-server
+    - --bind
+    - 127.0.0.1  # Only bind to localhost
+    - --port
+    - "6379"
+    
+  # Main application
+  - name: web-app
+    image: my-company/web-app:latest
+    ports:
+    - containerPort: 8080
+    env:
+    # App connects to Redis via localhost
+    - name: REDIS_URL
+      value: "redis://localhost:6379"
+    - name: PORT
+      value: "8080"</code></pre>
+<strong>Why This Works:</strong>
+<li>Both containers share the same network interface</li>
+<li>The app can connect to Redis using <code>localhost:6379</code></li>
+<li>External traffic can only reach the web app on port 8080</li>
+<li>Redis is not accessible from outside the pod (security benefit)</li>
+<h4>Process Communication</h4>
+<p>Containers can also share process namespace for advanced use cases:</p>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-process-namespace
+spec:
+  shareProcessNamespace: true  # Enable process sharing
+  containers:
+  - name: main-app
+    image: my-app:latest
+    
+  - name: debug-utils
+    image: nicolaka/netshoot
+    command:
+    - sleep
+    - infinity
+    # This container can see processes from main-app
+    # Useful for debugging without modifying main image</code></pre>
+<h4>Inter-Process Communication (IPC)</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-ipc
+spec:
+  containers:
+  - name: producer
+    image: my-producer:latest
+    securityContext:
+      capabilities:
+        add: ["IPC_LOCK"]
+    
+  - name: consumer  
+    image: my-consumer:latest
+    # Both containers can use shared memory, semaphores, etc.</code></pre>
+<p>---</p>
+<h3>Shared Volumes Between Containers</h3>
+<h4>Volume Types and Use Cases</h4>
+<h4>1. EmptyDir - Temporary Shared Storage</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-storage-example
+spec:
+  containers:
+  # File processor
+  - name: file-processor
+    image: my-company/processor:latest
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data/input
+    - name: shared-data
+      mountPath: /data/output
+      subPath: processed  # Write to subdirectory
+      
+  # File uploader  
+  - name: file-uploader
+    image: my-company/uploader:latest
+    volumeMounts:
+    - name: shared-data
+      mountPath: /upload
+      subPath: processed  # Read from processed subdirectory
+    env:
+    - name: S3_BUCKET
+      value: my-processed-files
+      
+  volumes:
+  - name: shared-data
+    emptyDir:
+      sizeLimit: 1Gi  # Limit storage usage</code></pre>
+<strong>Use Case</strong>: File processing pipeline where one container processes files and another uploads them.
+<h4>2. ConfigMap and Secret Volumes</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: config-sharing-example
+spec:
+  containers:
+  # Main application
+  - name: web-app
+    image: my-app:latest
+    volumeMounts:
+    - name: app-config
+      mountPath: /app/config
+    - name: database-secret
+      mountPath: /app/secrets
+      
+  # Configuration validator sidecar
+  - name: config-validator
+    image: my-company/config-validator:latest
+    volumeMounts:
+    - name: app-config
+      mountPath: /config
+      readOnly: true
+    command:
+    - /validator
+    - --config-path=/config
+    - --validate-on-change
+    
+  volumes:
+  - name: app-config
+    configMap:
+      name: my-app-config
+  - name: database-secret
+    secret:
+      secretName: db-credentials</code></pre>
+<h4>3. Persistent Volume Claims</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: database-with-backup
+spec:
+  containers:
+  # Main database
+  - name: postgres
+    image: postgres:13
+    env:
+    - name: POSTGRES_DB
+      value: myapp
+    - name: PGDATA
+      value: /var/lib/postgresql/data/pgdata
+    volumeMounts:
+    - name: postgres-storage
+      mountPath: /var/lib/postgresql/data
+      
+  # Backup sidecar
+  - name: backup-agent
+    image: my-company/pg-backup:latest
+    env:
+    - name: BACKUP_SCHEDULE
+      value: "0 2 <em> </em> *"  # Daily at 2 AM
+    - name: PGDATA
+      value: /var/lib/postgresql/data/pgdata
+    volumeMounts:
+    - name: postgres-storage
+      mountPath: /var/lib/postgresql/data
+      readOnly: true
+    - name: backup-storage
+      mountPath: /backups
+      
+  volumes:
+  - name: postgres-storage
+    persistentVolumeClaim:
+      claimName: postgres-pvc
+  - name: backup-storage
+    persistentVolumeClaim:
+      claimName: backup-pvc</code></pre>
+<p>---</p>
+<h3>Advanced Patterns and Real-World Scenarios</h3>
+<h4>1. Ambassador Pattern</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-ambassador
+spec:
+  containers:
+  # Main application (connects to localhost:3306)
+  - name: web-app
+    image: my-app:latest
+    env:
+    - name: DB_HOST
+      value: localhost
+    - name: DB_PORT
+      value: "3306"
+      
+  # Ambassador proxy (handles connection pooling, load balancing)
+  - name: db-ambassador
+    image: haproxy:2.4
+    ports:
+    - containerPort: 3306
+    volumeMounts:
+    - name: haproxy-config
+      mountPath: /usr/local/etc/haproxy
+      
+  volumes:
+  - name: haproxy-config
+    configMap:
+      name: db-proxy-config</code></pre>
+<strong>Why Use Ambassador Pattern:</strong>
+<li>Application connects to simple localhost interface</li>
+<li>Ambassador handles complex routing, failover, connection pooling</li>
+<li>Can switch database endpoints without changing application code</li>
+<h4>2. Adapter Pattern</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: legacy-app-with-adapter
+spec:
+  containers:
+  # Legacy application (outputs logs in proprietary format)
+  - name: legacy-app
+    image: company/legacy-system:v2.1
+    volumeMounts:
+    - name: app-logs
+      mountPath: /var/log/app
+      
+  # Adapter container (converts logs to standard format)
+  - name: log-adapter
+    image: my-company/log-adapter:latest
+    volumeMounts:
+    - name: app-logs
+      mountPath: /input
+      readOnly: true
+    - name: standard-logs
+      mountPath: /output
+    env:
+    - name: INPUT_FORMAT
+      value: "proprietary_v2"
+    - name: OUTPUT_FORMAT
+      value: "json"
+      
+  # Log shipper (ships standard format logs)
+  - name: log-shipper
+    image: elastic/filebeat:7.15.0
+    volumeMounts:
+    - name: standard-logs
+      mountPath: /logs
+      readOnly: true
+      
+  volumes:
+  - name: app-logs
+    emptyDir: {}
+  - name: standard-logs
+    emptyDir: {}</code></pre>
+<p>---</p>
+<h3>Troubleshooting Multi-Container Pods</h3>
+<h4>Common Issues and Solutions</h4>
+<h4>1. Container Startup Dependencies</h4>
+<strong>Problem</strong>: Main container starts before sidecar is ready
+<strong>Solution</strong>: Use readiness/liveness probes and init containers
+<pre><code>spec:
+  initContainers:
+  - name: wait-for-sidecar-ready
+    image: busybox
+    command:
+    - sh
+    - -c
+    - |
+      until wget -q --spider http://localhost:8081/health; do
+        echo "Waiting for sidecar..."
+        sleep 2
+      done
+      
+  containers:
+  - name: sidecar
+    image: my-sidecar:latest
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 8081
+      initialDelaySeconds: 5
+      
+  - name: main-app
+    image: my-app:latest</code></pre>
+<h4>2. Resource Conflicts</h4>
+<strong>Problem</strong>: Containers competing for resources
+<strong>Solution</strong>: Proper resource requests and limits
+<pre><code>spec:
+  containers:
+  - name: cpu-intensive-app
+    resources:
+      requests:
+        cpu: "1000m"
+        memory: "2Gi"
+      limits:
+        cpu: "2000m"
+        memory: "4Gi"
+        
+  - name: memory-intensive-sidecar
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "1Gi"
+      limits:
+        cpu: "200m"
+        memory: "2Gi"</code></pre>
+<h4>3. Volume Permission Issues</h4>
+<strong>Problem</strong>: Containers can't access shared volumes due to user ID mismatches
+<strong>Solution</strong>: Use securityContext to align user IDs
+<pre><code>spec:
+  securityContext:
+    fsGroup: 2000  # Set group for volume access
+    
+  containers:
+  - name: writer-container
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 2000
+      
+  - name: reader-container
+    securityContext:
+      runAsUser: 1001
+      runAsGroup: 2000  # Same group for shared access</code></pre>
+<p>---</p>
+<h3>When NOT to Use Multi-Container Pods</h3>
+<h4>Anti-Patterns</h4>
+<p>1. <strong>Microservices in Same Pod</strong>: Don't put independent services in one pod
+2. <strong>Database + Application</strong>: These should scale independently
+3. <strong>Different Lifecycle Requirements</strong>: If containers need different update schedules
+4. <strong>Network Isolation Needs</strong>: If containers shouldn't share network namespace</p>
+<h4>Decision Framework</h4>
+<p>Ask these questions:</p>
+<p>1. Do containers need to be deployed together?
+2. Do they share the same lifecycle?
+3. Do they need to share storage or network?
+4. Are they tightly coupled functionally?</p>
+<p>If any answer is "no," consider separate pods.</p>
+<p>---</p>
+<h3>Summary</h3>
+<p>Multi-container pods are powerful when used correctly:</p>
+<li><strong>Sidecar Pattern</strong>: For auxiliary functionality</li>
+<li><strong>Init Containers</strong>: For setup and prerequisites</li>
+<li><strong>Shared Resources</strong>: For tightly coupled processes</li>
+<li><strong>Clear Communication</strong>: Through localhost and shared volumes</li></ul>
+<p>The key is understanding <strong>why</strong> each pattern exists and <strong>when</strong> to apply them. Use multi-container pods to solve real architectural problems, not just because you can.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

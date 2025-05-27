@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Modules - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Exam Modules</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                General (k8s) • Updated May 27, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <p>Here are the key modules you should study for the Certified Kubernetes Application Developer (CKAD) exam:</p>
+<h3>Core Application Lifecycle Management</h3>
+<ul><li>Understanding deployment strategies (rolling updates, blue-green, canary)</li>
+<li>Creating and managing Deployments, ReplicaSets, and Pods</li>
+<li>Scaling applications up and down</li>
+<li>Managing application rollouts and rollbacks</li>
+<h3>Configuration</h3>
+<li>Working with ConfigMaps and Secrets</li>
+<li>Environment variables and configuration injection</li>
+<li>Volume mounts for configuration data</li>
+<li>Managing sensitive information securely</li>
+<h3>Multi-Container Pods</h3>
+<li>Sidecar container patterns</li>
+<li>Init containers and their use cases</li>
+<li>Container communication within pods</li>
+<li>Shared volumes between containers</li>
+<h3>Observability</h3>
+<li>Implementing health checks (liveness, readiness, startup probes)</li>
+<li>Container logging and log analysis</li>
+<li>Monitoring and debugging applications</li>
+<li>Understanding pod and container metrics</li>
+<h3>Pod Design</h3>
+<li>Labels and selectors</li>
+<li>Annotations and their proper usage</li>
+<li>Service discovery mechanisms</li>
+<li>Pod networking fundamentals</li>
+<h3>Services and Networking</h3>
+<li>Creating and configuring Services (ClusterIP, NodePort, LoadBalancer)</li>
+<li>Ingress controllers and routing</li>
+<li>Network policies for security</li>
+<li>DNS resolution in Kubernetes</li>
+<h3>State Persistence</h3>
+<li>Persistent Volumes and Persistent Volume Claims</li>
+<li>Storage classes and dynamic provisioning</li>
+<li>StatefulSets for stateful applications</li>
+<li>Data backup and recovery concepts</li></ul>
+<p>The exam is entirely hands-on, so focus on practical exercises with kubectl commands and YAML manifests rather than just theory. Practice creating, modifying, and troubleshooting these resources in a real Kubernetes environment.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Application Lifecycle Management in Kubernetes: A Deep Dive - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Core Application Lifecycle Management in Kubernetes: A Deep Dive</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                General (k8s) • Updated May 27, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Core Application Lifecycle Management in Kubernetes: A Deep Dive</h2>
+<h3>The Fundamental Challenge: Why Kubernetes Exists</h3>
+<p>Before diving into deployment strategies, it's crucial to understand <strong>why</strong> Kubernetes was created. Traditional application deployment was like managing a single server where you'd manually install software, configure it, and pray nothing breaks. When something did break, you'd scramble to fix it while your application was down.</p>
+<p>Kubernetes solves the fundamental problem of <strong>distributed application management</strong> - running applications across multiple machines reliably, with automatic recovery, scaling, and updates. It treats your infrastructure as a pool of resources rather than individual servers.</p>
+<h3>Understanding the Building Blocks</h3>
+<h4>Pods: The Atomic Unit</h4>
+<p>A Pod is the smallest deployable unit in Kubernetes. Think of it as a "wrapper" around one or more containers that share storage and network.</p>
+<strong>Why Pods exist instead of just containers?</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+spec:
+  containers:
+  - name: web-server
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+  - name: log-collector
+    image: fluent/fluent-bit
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log
+  volumes:
+  - name: shared-logs
+    emptyDir: {}</code></pre>
+<p>This Pod runs two containers that share the same network (localhost) and volume. The log collector can access nginx logs directly. You couldn't achieve this tight coupling with just containers.</p>
+<h4>ReplicaSets: Ensuring Availability</h4>
+<p>ReplicaSets ensure a specified number of Pod replicas are running at any time.</p>
+<strong>Why not just run Pods directly?</strong>
+<pre><code>apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: web-replicaset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.21</code></pre>
+<p>If you run Pods directly, when a node fails, your Pod dies permanently. ReplicaSets monitor and replace failed Pods automatically. It's like having a supervisor that ensures you always have exactly 3 copies of your application running.</p>
+<h4>Deployments: The Management Layer</h4>
+<p>Deployments manage ReplicaSets and provide declarative updates.</p>
+<strong>Why use Deployments instead of ReplicaSets directly?</strong>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.21
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1</code></pre>
+<p>Deployments provide versioning and rollback capabilities. When you update your application, Deployment creates a new ReplicaSet while gradually scaling down the old one. This gives you controlled, reversible updates.</p>
+<h3>Deployment Strategies: The How and Why</h3>
+<h4>Rolling Updates: The Default Strategy</h4>
+<strong>What it is:</strong> Gradually replace old Pods with new ones, maintaining service availability.
+<strong>Why use it:</strong> Zero-downtime updates for most applications. It's the safest general-purpose strategy.
+<strong>Deep Example:</strong>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: myapp:v1.0
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 2    # Never have fewer than 4 pods
+      maxSurge: 2          # Never have more than 8 pods</code></pre>
+<strong>The Process:</strong>
+<p>1. Current state: 6 pods running v1.0
+2. Create 2 new pods with v1.1 (now 8 total)
+3. Wait for readiness probes to pass
+4. Terminate 2 old pods (back to 6 total)
+5. Repeat until all pods are v1.1</p>
+<strong>Why these settings matter:</strong>
+<ul><li><code>maxUnavailable: 2</code>: Ensures you never drop below 4/6 capacity (66%)</li>
+<li><code>maxSurge: 2</code>: Limits resource usage during updates</li>
+<li><code>readinessProbe</code>: Prevents routing traffic to unhealthy pods</li>
+<strong>When to use:</strong> Most web applications, APIs, microservices where brief mixed versions are acceptable.
+<h4>Blue-Green Deployments: The Safe Bet</h4>
+<strong>What it is:</strong> Maintain two identical production environments, switching traffic between them.
+<strong>Why use it:</strong> Complete isolation between versions, instant rollback capability, perfect for high-stakes updates.
+<strong>Deep Example:</strong>
+<pre><code><h2>Blue environment (current)</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-blue
+  labels:
+    version: blue
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: myapp
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: blue
+    spec:
+      containers:
+      - name: app
+        image: myapp:v1.0
+<p>---
+<h2>Green environment (new)</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-green
+  labels:
+    version: green
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: myapp
+      version: green
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: green
+    spec:
+      containers:
+      - name: app
+        image: myapp:v1.1</p>
+<p>---
+<h2>Service switches between blue and green</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  selector:
+    app: myapp
+    version: blue  # Change this to 'green' to switch
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre></p>
+<strong>The Process:</strong>
+<p>1. Deploy green environment alongside blue
+2. Test green thoroughly in isolation
+3. Switch service selector from blue to green
+4. Monitor for issues
+5. If problems arise, switch back to blue instantly
+6. Decommission blue after confidence in green</p>
+<strong>Why this approach:</strong>
+<li><strong>Resource cost:</strong> Doubles infrastructure during deployment</li>
+<li><strong>Database challenges:</strong> Both versions might need the same database</li>
+<li><strong>Perfect for:</strong> Critical applications, major version changes, regulated environments</li>
+<strong>Real-world example:</strong> A banking application updating its payment processing system would use blue-green to ensure zero transaction loss and instant rollback capability.
+<h4>Canary Deployments: The Gradual Approach</h4>
+<strong>What it is:</strong> Deploy new version to a small subset of users, gradually increasing traffic.
+<strong>Why use it:</strong> Minimize blast radius of issues, gather real-world performance data, perfect for incremental confidence building.
+<strong>Deep Example with Istio:</strong>
+<pre><code><h2>Original deployment</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-v1
+spec:
+  replicas: 9
+  selector:
+    matchLabels:
+      app: myapp
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: v1
+    spec:
+      containers:
+      - name: app
+        image: myapp:v1.0
+<p>---
+<h2>Canary deployment</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-v2
+spec:
+  replicas: 1  # Start small
+  selector:
+    matchLabels:
+      app: myapp
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: v2
+    spec:
+      containers:
+      - name: app
+        image: myapp:v2.0</p>
+<p>---
+<h2>Traffic splitting with Istio</h2>
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: app-vs
+spec:
+  http:
+  - match:
+    - headers:
+        canary:
+          exact: "true"
+    route:
+    - destination:
+        host: app-service
+        subset: v2
+  - route:
+    - destination:
+        host: app-service
+        subset: v1
+      weight: 90
+    - destination:
+        host: app-service
+        subset: v2
+      weight: 10  # 10% of traffic to canary</code></pre></p>
+<strong>The Progressive Process:</strong>
+<p>1. <strong>Week 1:</strong> Deploy v2 with 1 replica (10% traffic)
+2. <strong>Week 2:</strong> Monitor metrics, scale to 3 replicas (25% traffic)
+3. <strong>Week 3:</strong> If healthy, scale to 5 replicas (50% traffic)
+4. <strong>Week 4:</strong> Full deployment (100% traffic)</p>
+<strong>Why this timeline:</strong>
+<li><strong>Week 1:</strong> Catch obvious bugs with minimal impact</li>
+<li><strong>Week 2:</strong> Observe resource usage patterns</li>
+<li><strong>Week 3:</strong> Validate performance under load</li>
+<li><strong>Week 4:</strong> Complete confidence in stability</li>
+<strong>Advanced Canary with Flagger:</strong>
+<pre><code>apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: app-canary
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app
+  service:
+    port: 80
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+    metrics:
+    - name: request-success-rate
+      thresholdRange:
+        min: 99
+    - name: request-duration
+      thresholdRange:
+        max: 500
+  webhooks:
+  - name: load-test
+    url: http://flagger-loadtester.test/</code></pre>
+<p>This automatically promotes the canary based on success rate and response time metrics, rolling back if thresholds aren't met.</p>
+<h3>Scaling Applications: The Dynamic Response</h3>
+<h4>Horizontal Pod Autoscaler (HPA)</h4>
+<strong>Why auto-scaling matters:</strong> Manual scaling is reactive and error-prone. By the time you notice high CPU, users are already experiencing slow response times.
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app-deployment
+  minReplicas: 3
+  maxReplicas: 100
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "100"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60</code></pre>
+<strong>Why these settings:</strong>
+<li><strong>Multiple metrics:</strong> Prevents scaling based on a single misleading metric</li>
+<li><strong>Stabilization windows:</strong> Prevents thrashing during traffic spikes</li>
+<li><strong>Asymmetric scaling:</strong> Scale up quickly (100% in 60s), scale down slowly (10% per minute)</li>
+<li><strong>Custom metrics:</strong> Requests per second is often more meaningful than CPU for web apps</li>
+<h4>Vertical Pod Autoscaler (VPA)</h4>
+<strong>Why VPA exists:</strong> Right-sizing containers prevents resource waste and ensures performance.
+<pre><code>apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: app-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app-deployment
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: app
+      minAllowed:
+        cpu: 100m
+        memory: 128Mi
+      maxAllowed:
+        cpu: 2
+        memory: 4Gi
+      controlledResources: ["cpu", "memory"]</code></pre>
+<strong>Why these limits:</strong>
+<li><strong>minAllowed:</strong> Prevents under-provisioning that causes crashes</li>
+<li><strong>maxAllowed:</strong> Prevents runaway resource consumption</li>
+<li><strong>updateMode: Auto:</strong> Automatically restarts pods with new resource requests</li>
+<h3>Rollouts and Rollbacks: The Safety Net</h3>
+<h4>Deployment History and Rollbacks</h4>
+<strong>Why rollback capability is critical:</strong> Even with thorough testing, production environments reveal issues testing cannot predict.
+<pre><code><h2>View rollout history</h2>
+kubectl rollout history deployment/app-deployment
+<h2>Detailed history of a specific revision</h2>
+kubectl rollout history deployment/app-deployment --revision=3
+<h2>Rollback to previous version</h2>
+kubectl rollout undo deployment/app-deployment
+<h2>Rollback to specific revision</h2>
+kubectl rollout undo deployment/app-deployment --to-revision=2
+<h2>Monitor rollback progress</h2>
+kubectl rollout status deployment/app-deployment</code></pre>
+<strong>Advanced Rollout Configuration:</strong>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  annotations:
+    deployment.kubernetes.io/revision: "3"
+spec:
+  revisionHistoryLimit: 10  # Keep 10 previous versions
+  progressDeadlineSeconds: 600  # Fail deployment after 10 minutes
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:v1.3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3</code></pre>
+<strong>Why these settings matter:</strong>
+<li><strong>revisionHistoryLimit:</strong> Balances storage usage with rollback options</li>
+<li><strong>progressDeadlineSeconds:</strong> Prevents infinite hanging deployments</li>
+<li><strong>Liveness vs Readiness probes:</strong></li>
+    - Liveness: Restarts unhealthy containers
+    - Readiness: Stops routing traffic to containers that aren't ready
+<h3>Real-World Integration Example</h3>
+<p>Here's how these concepts work together in a production e-commerce application:</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-api
+  labels:
+    app: ecommerce-api
+    tier: backend
+spec:
+  replicas: 5
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: ecommerce-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
+  template:
+    metadata:
+      labels:
+        app: ecommerce-api
+        version: v2.1
+    spec:
+      containers:
+      - name: api
+        image: ecommerce/api:v2.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_CONNECTION_POOL_SIZE
+          value: "20"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+<p>---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ecommerce-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ecommerce-api
+  minReplicas: 5
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 120
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60</code></pre></p>
+<strong>Why this configuration for e-commerce:</strong>
+<li><strong>5 minimum replicas:</strong> Ensures availability during traffic spikes</li>
+<li><strong>Rolling update with maxSurge: 2:</strong> Faster deployments during business hours</li>
+<li><strong>Conservative scaling:</strong> Prevents over-provisioning during flash sales</li>
+<li><strong>Longer stabilization:</strong> Prevents rapid scaling during checkout surges</li></ul>
+<h3>Key Takeaways</h3>
+<p>1. <strong>Layered Architecture:</strong> Pods → ReplicaSets → Deployments each solve specific problems
+2. <strong>Strategy Selection:</strong> Choose based on risk tolerance and infrastructure constraints
+3. <strong>Proactive Monitoring:</strong> Use multiple metrics for scaling decisions
+4. <strong>Safety First:</strong> Always configure rollback mechanisms before deploying
+5. <strong>Real-world Testing:</strong> Canary deployments provide the best balance of safety and speed</p>
+<p>The beauty of Kubernetes lifecycle management is that it transforms application deployment from a manual, error-prone process into a declarative, repeatable, and self-healing system. Each component exists to solve specific real-world problems that emerge when running applications at scale.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

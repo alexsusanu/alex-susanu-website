@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Configuration Management: A Deep Dive - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Configuration Management: A Deep Dive</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                General (k8s) • Updated May 27, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Configuration Management: A Deep Dive</h2>
+<h3>The Fundamental Problem: Why Configuration Management Matters</h3>
+<p>Before diving into Kubernetes-specific solutions, let's understand the core problem. Applications need configuration data to function - database URLs, API keys, feature flags, environment-specific settings. The challenge is making this data available to containers while maintaining security, flexibility, and operational sanity.</p>
+<strong>The Anti-Pattern</strong>: Hardcoding configuration directly into container images creates brittle, insecure, and unmaintainable applications. You'd need different images for dev/staging/prod, secrets would be baked into images, and any config change would require rebuilding and redeploying.
+<p>---</p>
+<h3>ConfigMaps: The Foundation of Non-Sensitive Configuration</h3>
+<h4>What ConfigMaps Really Are</h4>
+<p>ConfigMaps are Kubernetes objects that store non-confidential data in key-value pairs. Think of them as a dictionary that lives in your cluster, accessible to any Pod that needs it.</p>
+<h4>Why Use ConfigMaps Instead of Environment Variables?</h4>
+<strong>The Problem with Hardcoded Environment Variables:</strong>
+<pre><code><h2>DON'T DO THIS - Hardcoded in deployment</h2>
+spec:
+  containers:
+  - name: app
+    env:
+    - name: DATABASE_HOST
+      value: "prod-db.company.com"  # Now you need different manifests per environment
+    - name: LOG_LEVEL
+      value: "INFO"</code></pre>
+<strong>The ConfigMap Solution:</strong>
+<pre><code><h2>ConfigMap - Centralized configuration</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+data:
+  database.host: "prod-db.company.com"
+  database.port: "5432"
+  log.level: "INFO"
+  feature.newUI: "true"
+  app.properties: |
+    # Multi-line configuration file
+    server.port=8080
+    spring.datasource.url=jdbc:postgresql://prod-db.company.com:5432/myapp
+    logging.level.com.company=INFO</code></pre>
+<h4>Deep Example: Real-World ConfigMap Usage</h4>
+<p>Let's say you're running a microservice that needs different configurations across environments:</p>
+<pre><code><h2>Development ConfigMap</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-service-config
+  namespace: development
+data:
+  # Simple key-value pairs
+  PAYMENT_GATEWAY_URL: "https://sandbox.stripe.com"
+  MAX_RETRY_ATTEMPTS: "3"
+  TIMEOUT_SECONDS: "30"
+  DEBUG_MODE: "true"
+  
+  # Complex configuration file
+  application.yml: |
+    server:
+      port: 8080
+    payment:
+      gateway:
+        url: https://sandbox.stripe.com
+        timeout: 30s
+      retry:
+        maxAttempts: 3
+        backoff: exponential
+    logging:
+      level:
+        com.company.payment: DEBUG
+        
+  # JSON configuration
+  features.json: |
+    {
+      "enableNewCheckout": true,
+      "enableApplePay": false,
+      "maxTransactionAmount": 1000
+    }
+<p>---
+<h2>Production ConfigMap (same structure, different values)</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-service-config
+  namespace: production
+data:
+  PAYMENT_GATEWAY_URL: "https://api.stripe.com"
+  MAX_RETRY_ATTEMPTS: "5"
+  TIMEOUT_SECONDS: "10"
+  DEBUG_MODE: "false"
+  
+  application.yml: |
+    server:
+      port: 8080
+    payment:
+      gateway:
+        url: https://api.stripe.com
+        timeout: 10s
+      retry:
+        maxAttempts: 5
+        backoff: exponential
+    logging:
+      level:
+        com.company.payment: WARN</code></pre></p>
+<strong>Why This Approach Works:</strong>
+<p>1. <strong>Environment Parity</strong>: Same application code, different configs per environment
+2. <strong>Centralized Management</strong>: All config in one place per environment
+3. <strong>Version Control</strong>: ConfigMaps can be stored in Git and applied via CI/CD
+4. <strong>Hot Reloading</strong>: Some applications can reload config without restart</p>
+<p>---</p>
+<h3>Secrets: Handling Sensitive Information</h3>
+<h4>The Critical Difference: Why Secrets Exist</h4>
+<p>Secrets solve the fundamental security problem of storing sensitive data. While ConfigMaps are stored in plain text in etcd, Secrets provide:</p>
+<p>1. <strong>Base64 encoding</strong> (not encryption, but obfuscation)
+2. <strong>Memory-only storage</strong> in Pods (not written to disk)
+3. <strong>RBAC integration</strong> for access control
+4. <strong>Audit trail</strong> capabilities</p>
+<h4>Deep Example: Database Credentials Management</h4>
+<pre><code><h2>Creating a Secret for database credentials</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-credentials
+  namespace: production
+type: Opaque
+data:
+  # Base64 encoded values
+  username: cG9zdGdyZXNfYWRtaW4=  # postgres_admin
+  password: c3VwZXJfc2VjdXJlX3Bhc3N3b3JkXzEyMw==  # super_secure_password_123
+  connection-string: cG9zdGdyZXNxbDovL3Bvc3RncmVzX2FkbWluOnN1cGVyX3NlY3VyZV9wYXNzd29yZF8xMjNAcHJvZC1kYi5jb21wYW55LmNvbTo1NDMyL215YXBw
+<p>---
+<h2>TLS Secret for HTTPS</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tls-secret
+  namespace: production
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTi... # Base64 encoded certificate
+  tls.key: LS0tLS1CRUdJTi... # Base64 encoded private key</code></pre></p>
+<h4>Why Use Different Secret Types?</h4>
+<p>Kubernetes provides several Secret types for different use cases:</p>
+<pre><code><h2>Docker registry credentials</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registry-secret
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJyZWdpc3RyeS5jb21wYW55LmNvbSI6eyJ1c2VybmFtZSI6ImRlcGxveWVyIiwicGFzc3dvcmQiOiJzZWNyZXQiLCJhdXRoIjoiWkdWd2JHOTVaWEk2YzJWamNtVjAifX19
+<p>---
+<h2>Service account token</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: service-account-token
+type: kubernetes.io/service-account-token</code></pre></p>
+<strong>Why This Matters:</strong>
+<ul><li>Kubernetes can automatically inject registry secrets into Pod specifications</li>
+<li>TLS secrets integrate with Ingress controllers</li>
+<li>Service account tokens enable secure pod-to-pod communication</li>
+<p>---</p>
+<h3>Configuration Injection Patterns: Environment Variables vs Volume Mounts</h3>
+<h4>Environment Variables: When and Why</h4>
+<p>Environment variables are perfect for simple configuration values that applications read at startup.</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: company/payment-service:v1.2.3
+        env:
+        # Direct value injection
+        - name: SERVICE_PORT
+          value: "8080"
+        
+        # From ConfigMap - individual keys
+        - name: PAYMENT_GATEWAY_URL
+          valueFrom:
+            configMapKeyRef:
+              name: payment-service-config
+              key: PAYMENT_GATEWAY_URL
+        
+        # From Secret - individual keys
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: password
+        
+        # Bulk injection from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: payment-service-config
+        
+        # Bulk injection from Secret
+        - secretRef:
+            name: database-credentials</code></pre>
+<strong>When to Use Environment Variables:</strong>
+<li>Simple key-value configuration</li>
+<li>Application reads config once at startup</li>
+<li>Legacy applications expecting environment variables</li>
+<li>12-factor app methodology compliance</li>
+<strong>Limitations of Environment Variables:</strong>
+<li>Limited to simple strings</li>
+<li>Visible in process lists (<code>ps aux</code>)</li>
+<li>No hot reloading without pod restart</li>
+<li>Size limitations (typically ~32KB total)</li>
+<h4>Volume Mounts: For Complex Configuration</h4>
+<p>Volume mounts are ideal for configuration files, certificates, and scenarios requiring hot reloading.</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        volumeMounts:
+        # ConfigMap as volume - entire config
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+        
+        # ConfigMap as volume - specific file
+        - name: app-properties
+          mountPath: /app/config/application.properties
+          subPath: application.properties
+          readOnly: true
+        
+        # Secret as volume - TLS certificates
+        - name: tls-certs
+          mountPath: /etc/ssl/certs
+          readOnly: true
+        
+        # Secret as volume - specific file with custom name
+        - name: database-config
+          mountPath: /app/secrets/db.conf
+          subPath: connection-string
+          readOnly: true
+      
+      volumes:
+      # ConfigMap volumes
+      - name: nginx-config
+        configMap:
+          name: nginx-configuration
+          # Set file permissions
+          defaultMode: 0644
+      
+      - name: app-properties
+        configMap:
+          name: app-config
+          items:
+          - key: application.yml
+            path: application.properties
+            mode: 0600
+      
+      # Secret volumes
+      - name: tls-certs
+        secret:
+          secretName: tls-secret
+          defaultMode: 0400
+      
+      - name: database-config
+        secret:
+          secretName: database-credentials
+          items:
+          - key: connection-string
+            path: db.conf
+            mode: 0600</code></pre>
+<h4>Real-World Example: Multi-Tier Application Configuration</h4>
+<p>Let's configure a complete web application stack:</p>
+<pre><code><h2>Frontend ConfigMap</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name app.company.com;
+        
+        location / {
+            root /usr/share/nginx/html;
+            try_files $uri $uri/ /index.html;
+        }
+        
+        location /api {
+            proxy_pass http://backend-service:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+  
+  app-config.js: |
+    window.APP_CONFIG = {
+      API_BASE_URL: '/api',
+      FEATURE_FLAGS: {
+        ENABLE_DARK_MODE: true,
+        ENABLE_NOTIFICATIONS: true
+      },
+      ANALYTICS_ID: 'GA-XXXX-XXXX'
+    };
+<p>---
+<h2>Backend ConfigMap</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+data:
+  DATABASE_HOST: "postgres-service"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "myapp"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  LOG_LEVEL: "INFO"
+  
+  application.yml: |
+    server:
+      port: 8080
+    spring:
+      datasource:
+        url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+        username: ${DATABASE_USER}
+        password: ${DATABASE_PASSWORD}
+      redis:
+        host: ${REDIS_HOST}
+        port: ${REDIS_PORT}
+    logging:
+      level:
+        com.company: ${LOG_LEVEL}</p>
+<p>---
+<h2>Database Credentials Secret</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-secret
+type: Opaque
+data:
+  username: bXlhcHBfdXNlcg==  # myapp_user
+  password: cGFzc3dvcmQxMjM=  # password123</p>
+<p>---
+<h2>Frontend Deployment</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+        - name: app-config
+          mountPath: /usr/share/nginx/html/config.js
+          subPath: app-config.js
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: frontend-config
+      - name: app-config
+        configMap:
+          name: frontend-config</p>
+<p>---
+<h2>Backend Deployment</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: app
+        image: company/backend:v2.1.0
+        ports:
+        - containerPort: 8080
+        env:
+        # From ConfigMap
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: DATABASE_HOST
+        - name: DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: DATABASE_PORT
+        - name: DATABASE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: DATABASE_NAME
+        
+        # From Secret
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: password
+        
+        volumeMounts:
+        - name: app-config
+          mountPath: /app/config/application.yml
+          subPath: application.yml
+      volumes:
+      - name: app-config
+        configMap:
+          name: backend-config</code></pre></p>
+<p>---</p>
+<h3>Advanced Configuration Patterns</h3>
+<h4>1. Configuration Hot Reloading</h4>
+<p>Some applications can reload configuration without restart. Here's how to enable it:</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: configurable-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: company/configurable-app:latest
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        # Enable config file watching
+        env:
+        - name: CONFIG_WATCH_ENABLED
+          value: "true"
+        - name: CONFIG_RELOAD_INTERVAL
+          value: "30s"
+      volumes:
+      - name: config
+        configMap:
+          name: app-config</code></pre>
+<strong>Why This Matters:</strong>
+<li>Zero-downtime configuration updates</li>
+<li>Faster iteration during development</li>
+<li>Reduced deployment complexity for config-only changes</li>
+<h4>2. Configuration Templating with Init Containers</h4>
+<p>For complex configuration generation:</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: templated-app
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: config-generator
+        image: company/config-templater:latest
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        volumeMounts:
+        - name: config-template
+          mountPath: /templates
+        - name: generated-config
+          mountPath: /output
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Generate configuration from templates
+          envsubst < /templates/app.conf.template > /output/app.conf
+          
+      containers:
+      - name: app
+        image: company/app:latest
+        volumeMounts:
+        - name: generated-config
+          mountPath: /app/config
+      
+      volumes:
+      - name: config-template
+        configMap:
+          name: config-templates
+      - name: generated-config
+        emptyDir: {}</code></pre>
+<h4>3. Secret Management Integration</h4>
+<p>For production environments, integrate with external secret management:</p>
+<pre><code><h2>Using External Secrets Operator</h2>
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault-backend
+spec:
+  provider:
+    vault:
+      server: "https://vault.company.com"
+      path: "secret"
+      version: "v2"
+      auth:
+        kubernetes:
+          mountPath: "kubernetes"
+          role: "myapp"
+<p>---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: database-credentials
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: database-secret
+    creationPolicy: Owner
+  data:
+  - secretKey: username
+    remoteRef:
+      key: database/prod
+      property: username
+  - secretKey: password
+    remoteRef:
+      key: database/prod
+      property: password</code></pre></p>
+<p>---</p>
+<h3>Security Best Practices: The "Why" Behind Each Decision</h3>
+<h4>1. Principle of Least Privilege</h4>
+<pre><code><h2>RBAC for ConfigMap/Secret access</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: config-reader
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["configmaps"]
+  resourceNames: ["app-config", "shared-config"]
+  verbs: ["get", "list"]
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  resourceNames: ["app-secrets"]
+  verbs: ["get"]
+<p>---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-config-binding
+subjects:
+<li>kind: ServiceAccount</li>
+  name: app-service-account
+roleRef:
+  kind: Role
+  name: config-reader
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<strong>Why This Matters:</strong>
+<li>Applications can only access the specific configs they need</li>
+<li>Prevents lateral movement in case of compromise</li>
+<li>Audit trail for config access</li>
+<h4>2. Secret Rotation Strategy</h4>
+<pre><code><h2>Deployment with secret rotation awareness</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rotation-aware-app
+spec:
+  template:
+    metadata:
+      annotations:
+        # Force pod restart when secret changes
+        secret-hash: "{{ .Values.secretHash }}"
+    spec:
+      containers:
+      - name: app
+        image: company/app:latest
+        env:
+        - name: SECRET_RELOAD_SIGNAL
+          value: "SIGUSR1"
+        volumeMounts:
+        - name: secrets
+          mountPath: /app/secrets
+        # Health check that validates secret validity
+        livenessProbe:
+          exec:
+            command:
+            - /app/health-check
+            - --validate-secrets
+          initialDelaySeconds: 30
+          periodSeconds: 60
+      volumes:
+      - name: secrets
+        secret:
+          secretName: app-secrets</code></pre>
+<h4>3. Configuration Validation</h4>
+<pre><code><h2>ConfigMap with validation</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: validated-config
+  annotations:
+    config.kubernetes.io/validation: |
+      type: object
+      properties:
+        database:
+          type: object
+          properties:
+            host:
+              type: string
+              pattern: "^[a-zA-Z0-9.-]+$"
+            port:
+              type: integer
+              minimum: 1
+              maximum: 65535
+          required: ["host", "port"]
+      required: ["database"]
+data:
+  config.yaml: |
+    database:
+      host: "postgres.company.com"
+      port: 5432
+    features:
+      enableNewUI: true
+      maxConnections: 100</code></pre>
+<p>---</p>
+<h3>Operational Considerations: Making It Work in Practice</h3>
+<h4>Configuration Drift Prevention</h4>
+<pre><code><h2>GitOps approach - all configs in version control</h2>
+<h2>Directory structure:</h2>
+configs/
+├── base/
+│   ├── configmap.yaml
+│   └── secret-template.yaml
+├── environments/
+│   ├── development/
+│   │   ├── kustomization.yaml
+│   │   └── config-patch.yaml
+│   ├── staging/
+│   │   ├── kustomization.yaml
+│   │   └── config-patch.yaml
+│   └── production/
+│       ├── kustomization.yaml
+│       └── config-patch.yaml</code></pre>
+<h4>Monitoring and Alerting</h4>
+<pre><code><h2>ServiceMonitor for configuration-related metrics</h2>
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: config-metrics
+spec:
+  selector:
+    matchLabels:
+      app: my-app
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s</code></pre>
+<strong>Key Metrics to Monitor:</strong>
+<li>Configuration reload frequency</li>
+<li>Failed configuration validations</li>
+<li>Secret rotation events</li>
+<li>Configuration drift detection</li>
+<h4>Troubleshooting Configuration Issues</h4>
+<pre><code><h2>Debug configuration in running pods</h2>
+kubectl exec -it pod-name -- env | grep -E "(DATABASE|API)"
+kubectl exec -it pod-name -- cat /app/config/application.yml
+kubectl exec -it pod-name -- ls -la /app/secrets/
+<h2>Check ConfigMap/Secret contents</h2>
+kubectl get configmap app-config -o yaml
+kubectl get secret app-secrets -o jsonpath='{.data}' | base64 -d
+<h2>Verify volume mounts</h2>
+kubectl describe pod pod-name | grep -A 10 "Mounts:"</code></pre>
+<p>---</p>
+<h3>Decision Framework: When to Use What</h3>
+<h4>Use ConfigMaps When:</h4>
+<li>Non-sensitive configuration data</li>
+<li>Environment-specific settings</li>
+<li>Application properties files</li>
+<li>Feature flags</li>
+<li>Static content (HTML, JS, CSS)</li>
+<h4>Use Secrets When:</h4>
+<li>Database passwords</li>
+<li>API keys</li>
+<li>TLS certificates</li>
+<li>SSH keys</li>
+<li>OAuth tokens</li>
+<li>Any credential or sensitive data</li>
+<h4>Use Environment Variables When:</h4>
+<li>Simple key-value pairs</li>
+<li>12-factor app compliance</li>
+<li>Legacy application compatibility</li>
+<li>Container startup configuration</li>
+<h4>Use Volume Mounts When:</h4>
+<li>Complex configuration files</li>
+<li>Binary data</li>
+<li>Hot reloading requirements</li>
+<li>File-based configuration (nginx.conf, etc.)</li>
+<li>Multiple configuration files</li>
+<h4>Use External Secret Management When:</h4>
+<li>Enterprise security requirements</li>
+<li>Centralized secret governance</li>
+<li>Automatic secret rotation</li>
+<li>Compliance requirements (SOX, PCI-DSS)</li>
+<li>Multi-cluster secret sharing</li></ul>
+<p>---</p>
+<h3>Common Pitfalls and How to Avoid Them</h3>
+<h4>1. Configuration Sprawl</h4>
+<strong>Problem</strong>: Too many ConfigMaps and Secrets making management difficult. <strong>Solution</strong>: Use consistent naming conventions and namespace organization.
+<h4>2. Secret Leakage</h4>
+<strong>Problem</strong>: Secrets exposed in logs or environment variable lists. <strong>Solution</strong>: Use volume mounts for secrets, implement proper logging practices.
+<h4>3. Configuration Drift</h4>
+<strong>Problem</strong>: Manual changes causing inconsistency between environments. <strong>Solution</strong>: GitOps workflows, immutable infrastructure principles.
+<h4>4. Performance Issues</h4>
+<strong>Problem</strong>: Large ConfigMaps causing slow pod startup. <strong>Solution</strong>: Split large configs, use init containers for processing.
+<h4>5. Update Propagation</h4>
+<strong>Problem</strong>: Configuration changes not reflected in running applications. <strong>Solution</strong>: Implement proper restart strategies, use deployment annotations.
+<p>The key to successful Kubernetes configuration management is understanding not just the "how" but the "why" behind each approach. Choose the right tool for each use case, implement proper security practices, and maintain operational visibility into your configuration state.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

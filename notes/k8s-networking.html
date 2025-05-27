@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Services and Networking: Deep Dive - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Services and Networking: Deep Dive</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                General (k8s) • Updated May 27, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Services and Networking: Deep Dive</h2>
+<h3>Table of Contents</h3>
+<p>1. [The Fundamental Problem: Why Services Exist](#the-fundamental-problem)</p>
+<p>2. [Service Types Deep Dive](#service-types)</p>
+<p>3. [Ingress Controllers and Routing](#ingress-controllers)</p>
+<p>4. [Network Policies for Security](#network-policies)</p>
+<p>5. [DNS Resolution in Kubernetes](#dns-resolution)</p>
+<p>6. [Real-World Architecture Examples](#architecture-examples)</p>
+<p>---</p>
+<h3>The Fundamental Problem: Why Services Exist {#the-fundamental-problem}</h3>
+<h4>The Core Challenge</h4>
+<p>In Kubernetes, <strong>Pods are ephemeral and mortal</strong>. They can be:</p>
+<ul><li>Killed and recreated by deployments</li>
+<li>Moved between nodes</li>
+<li>Scaled up/down dynamically</li>
+<li>Assigned different IP addresses each time</li>
+<strong>Without Services, your application architecture would be chaos:</strong>
+<pre><code><h2>Imagine trying to connect to a database without Services</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: web
+        image: nginx
+        env:
+        - name: DB_HOST
+          value: "10.244.1.5"  # ❌ WRONG! This IP changes when Pod restarts</code></pre>
+<strong>The Service Abstraction solves this by:</strong>
+<p>1. <strong>Providing stable endpoints</strong> - A consistent IP/DNS name
+2. <strong>Load balancing</strong> - Distributing traffic across healthy Pods
+3. <strong>Service discovery</strong> - Automatic registration/deregistration of Pods
+4. <strong>Health checking</strong> - Only routing to ready Pods</p>
+<p>---</p>
+<h3>Service Types Deep Dive {#service-types}</h3>
+<h4>1. ClusterIP Service</h4>
+<strong>What it is:</strong> Internal-only service accessible within the cluster.
+<strong>Why use it:</strong>
+<li><strong>Microservice communication</strong> - Services talking to each other</li>
+<li><strong>Database access</strong> - Applications connecting to databases</li>
+<li><strong>Internal APIs</strong> - Backend services not exposed to outside world</li>
+<strong>Deep Example - Microservice Architecture:</strong>
+<pre><code><h2>Database Service (ClusterIP)</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: production
+spec:
+  type: ClusterIP  # Default type
+  selector:
+    app: postgres
+    tier: database
+  ports:
+  - port: 5432        # Service port (what clients connect to)
+    targetPort: 5432  # Pod port (where container listens)
+    protocol: TCP
+---
+<h2>Application using the database</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:v1.0
+        env:
+        - name: DATABASE_URL
+          # ✅ CORRECT: Uses service name, not Pod IP
+          value: "postgresql://postgres-service.production.svc.cluster.local:5432/mydb"</code></pre>
+<strong>Why this works:</strong>
+<li>Service <code>postgres-service</code> gets a stable cluster IP (e.g., 10.96.45.123)</li>
+<li>DNS name <code>postgres-service.production.svc.cluster.local</code> always resolves to this IP</li>
+<li>When database Pods restart, Service automatically updates its endpoint list</li>
+<li>Applications never need to know actual Pod IPs</li>
+<strong>Traffic Flow:</strong>
+<pre><code>Web App Pod → ClusterIP Service → iptables rules → Healthy Database Pod</code></pre>
+<h4>2. NodePort Service</h4>
+<strong>What it is:</strong> Exposes service on each node's IP at a static port (30000-32767).
+<strong>Why use it:</strong>
+<li><strong>Development/Testing</strong> - Quick external access without load balancer</li>
+<li><strong>Legacy integration</strong> - Systems that need direct node access</li>
+<li><strong>Cost optimization</strong> - Avoid cloud load balancer costs in non-production</li>
+<strong>Deep Example - External API Access:</strong>
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: api-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: api-server
+  ports:
+  - port: 80          # ClusterIP port
+    targetPort: 8080  # Pod port  
+    nodePort: 30080   # External port on each node (optional, auto-assigned if omitted)</code></pre>
+<strong>Why this architecture:</strong>
+<pre><code>External Client → Node IP:30080 → ClusterIP:80 → Pod:8080
+     ↓
+Any Node in Cluster (even if Pod isn't running on that node)</code></pre>
+<strong>Real-world considerations:</strong>
+<li><strong>Security risk:</strong> Opens ports on all nodes</li>
+<li><strong>No load balancing:</strong> Client must implement failover between nodes</li>
+<li><strong>Port management:</strong> Limited port range, potential conflicts</li>
+<strong>Better alternative for production:</strong>
+<pre><code><h2>Use with external load balancer pointing to NodePort</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-nodeport
+  annotations:
+    # Cloud provider creates external LB pointing to NodePort
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: NodePort
+  # External LB → NodePort → Pods</code></pre>
+<h4>3. LoadBalancer Service</h4>
+<strong>What it is:</strong> Cloud provider provisions external load balancer pointing to service.
+<strong>Why use it:</strong>
+<li><strong>Production web applications</strong> - Need external access with HA</li>
+<li><strong>API gateways</strong> - External clients accessing your services</li>
+<li><strong>Automatic cloud integration</strong> - Leverages cloud provider's load balancing</li>
+<strong>Deep Example - Production Web Service:</strong>
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: web-loadbalancer
+  annotations:
+    # AWS-specific annotations
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:123456789:certificate/abc123"
+    # Google Cloud annotations
+    # cloud.google.com/load-balancer-type: "External"
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-server
+    tier: frontend
+  ports:
+  - name: https
+    port: 443
+    targetPort: 8443
+    protocol: TCP
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP</code></pre>
+<strong>Architecture flow:</strong>
+<pre><code>Internet → Cloud Load Balancer → NodePort (auto-created) → ClusterIP → Pods
+                ↓
+        (External IP: 203.0.113.10)</code></pre>
+<strong>Why LoadBalancer over NodePort:</strong>
+<li><strong>High Availability:</strong> Cloud LB handles node failures</li>
+<li><strong>SSL Termination:</strong> Offload TLS processing from Pods</li>
+<li><strong>Health Checks:</strong> Cloud provider monitors node health</li>
+<li><strong>Geographic routing:</strong> Route to closest region</li>
+<li><strong>DDoS protection:</strong> Cloud provider's built-in protections</li>
+<strong>Cost consideration:</strong>
+<pre><code><h2>Each LoadBalancer Service = One cloud load balancer = $$$ per month</h2>
+<h2>For multiple services, consider Ingress instead</h2></code></pre>
+<p>---</p>
+<h3>Ingress Controllers and Routing {#ingress-controllers}</h3>
+<h4>The Problem LoadBalancer Services Create</h4>
+<strong>Scenario:</strong> You have 5 microservices that need external access
+<li>5 LoadBalancer Services = 5 cloud load balancers = $$$$ per month</li>
+<li>Each gets different external IP</li>
+<li>No shared SSL certificates</li>
+<li>No path-based routing</li>
+<h4>Why Ingress Exists</h4>
+<strong>Ingress provides:</strong>
+<li><strong>Single entry point</strong> - One load balancer for multiple services</li>
+<li><strong>Path-based routing</strong> - <code>/api/users</code> → user-service, <code>/api/orders</code> → order-service</li>
+<li><strong>Host-based routing</strong> - <code>api.company.com</code> → api-service, <code>www.company.com</code> → web-service</li>
+<li><strong>SSL termination</strong> - Centralized certificate management</li>
+<li><strong>Advanced routing</strong> - Headers, query parameters, weighted routing</li>
+<h4>Deep Example - Production E-commerce Platform</h4>
+<pre><code><h2>Ingress Controller (nginx-ingress, istio, traefik, etc.)</h2>
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ecommerce-ingress
+  annotations:
+    # Nginx-specific annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    # Certificate management
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - api.ecommerce.com
+    - www.ecommerce.com
+    secretName: ecommerce-tls
+  rules:
+  # API routing
+  - host: api.ecommerce.com
+    http:
+      paths:
+      - path: /users
+        pathType: Prefix
+        backend:
+          service:
+            name: user-service
+            port:
+              number: 80
+      - path: /products  
+        pathType: Prefix
+        backend:
+          service:
+            name: product-service
+            port:
+              number: 80
+      - path: /orders
+        pathType: Prefix  
+        backend:
+          service:
+            name: order-service
+            port:
+              number: 80
+  # Frontend routing
+  - host: www.ecommerce.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+---
+<h2>Backend Services (ClusterIP - internal only)</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+spec:
+  type: ClusterIP  # No external access needed
+  selector:
+    app: user-api
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+<h4>Traffic Flow Architecture</h4>
+<pre><code>Internet → Cloud Load Balancer → Ingress Controller Pod → Service → Backend Pods
+            (Single External IP)      ↓
+                              Route based on:
+                              - Host header
+                              - URL path  
+                              - HTTP headers
+                              - Query parameters</code></pre>
+<h4>Advanced Ingress Features</h4>
+<strong>1. Canary Deployments:</strong>
+<pre><code><h2>Route 10% of traffic to new version</h2>
+apiVersion: networking.k8s.io/v1
+kind: Ingress  
+metadata:
+  name: canary-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "10"
+spec:
+  rules:
+  - host: api.company.com
+    http:
+      paths:
+      - path: /
+        backend:
+          service:
+            name: api-service-v2  # New version
+            port:
+              number: 80</code></pre>
+<strong>2. Authentication/Authorization:</strong>
+<pre><code>metadata:
+  annotations:
+    # OAuth2 authentication
+    nginx.ingress.kubernetes.io/auth-url: "https://auth.company.com/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://auth.company.com/oauth2/start"
+    # Rate limiting per user
+    nginx.ingress.kubernetes.io/rate-limit-rps: "10"</code></pre>
+<h4>Why Choose Different Ingress Controllers</h4>
+<strong>NGINX Ingress:</strong>
+<li><strong>Best for:</strong> General-purpose web applications</li>
+<li><strong>Pros:</strong> Mature, well-documented, high performance</li>
+<li><strong>Cons:</strong> Limited advanced routing features</li>
+<strong>Istio Gateway:</strong>
+<li><strong>Best for:</strong> Microservices with service mesh</li>
+<li><strong>Pros:</strong> Advanced traffic management, security, observability</li>
+<li><strong>Cons:</strong> Complex setup, resource-intensive</li>
+<strong>Traefik:</strong>
+<li><strong>Best for:</strong> Dynamic environments, container-native</li>
+<li><strong>Pros:</strong> Automatic service discovery, built-in Let's Encrypt</li>
+<li><strong>Cons:</strong> Less enterprise features than others</li>
+<p>---</p>
+<h3>Network Policies for Security {#network-policies}</h3>
+<h4>The Security Problem</h4>
+<strong>Default Kubernetes networking:</strong> All Pods can communicate with all other Pods across all namespaces.
+<pre><code><h2>Without Network Policies - SECURITY RISK</h2>
+frontend-pod → database-pod  ✅ (should be allowed)
+frontend-pod → payment-pod   ✅ (should be allowed)  
+frontend-pod → admin-pod     ✅ (should be BLOCKED!)
+random-pod  → database-pod   ✅ (should be BLOCKED!)</code></pre>
+<h4>Why Network Policies</h4>
+<strong>Zero-trust networking:</strong>
+<li><strong>Principle of least privilege</strong> - Only allow necessary communication</li>
+<li><strong>Namespace isolation</strong> - Prevent cross-namespace access</li>
+<li><strong>Compliance requirements</strong> - PCI-DSS, HIPAA, SOC2</li>
+<li><strong>Blast radius reduction</strong> - Limit impact of compromised Pods</li>
+<h4>Deep Example - Multi-tier Application Security</h4>
+<pre><code><h2>Database tier - most restrictive</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      tier: database
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Only allow API tier to connect to database
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: production
+    - podSelector:
+        matchLabels:
+          tier: api
+    ports:
+    - protocol: TCP
+      port: 5432
+  egress:
+  # Database can only connect to DNS and nowhere else
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53  # DNS
+---
+<h2>API tier - moderate restrictions  </h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      tier: api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow frontend and ingress controller
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: frontend
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+  egress:
+  # API can connect to database and external services
+  - to:
+    - podSelector:
+        matchLabels:
+          tier: database
+  - to: []  # External traffic (payment APIs, etc.)
+    ports:
+    - protocol: TCP
+      port: 443
+---
+<h2>Frontend tier - least restrictive</h2>
+apiVersion: networking.k8s.io/v1  
+kind: NetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      tier: frontend
+  policyTypes:
+  - Egress
+  egress:
+  # Frontend can connect to API tier and external CDNs
+  - to:
+    - podSelector:
+        matchLabels:
+          tier: api
+  - to: []  # CDNs, external APIs
+    ports:
+    - protocol: TCP
+      port: 443</code></pre>
+<h4>Advanced Network Policy Patterns</h4>
+<strong>1. Namespace Isolation:</strong>
+<pre><code><h2>Block all cross-namespace traffic by default</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-namespaces
+  namespace: production
+spec:
+  podSelector: {}  # All pods in namespace
+  policyTypes:
+  - Ingress
+  ingress:
+  # Only allow traffic from same namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: production</code></pre>
+<strong>2. Development Environment Isolation:</strong>
+<pre><code><h2>Developers can't access production database</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy  
+metadata:
+  name: block-dev-to-prod
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      tier: database
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: production  # Only production namespace
+    # Explicitly deny development namespace
+    - namespaceSelector:
+        matchExpressions:
+        - key: name
+          operator: NotIn
+          values: ["development", "staging"]</code></pre>
+<h4>Why Network Policy Implementation Matters</h4>
+<strong>CNI Plugin Requirements:</strong> Not all Container Network Interface (CNI) plugins support Network Policies:
+<li><strong>Calico:</strong> ✅ Full support, high performance</li>
+<li><strong>Cilium:</strong> ✅ Advanced features (L7 policies, eBPF)</li>
+<li><strong>Weave:</strong> ✅ Basic support</li>
+<li><strong>Flannel:</strong> ❌ No support (common mistake!)</li>
+<strong>Testing Network Policies:</strong>
+<pre><code><h2>Test connectivity between pods</h2>
+kubectl exec -it frontend-pod -- nc -zv database-service 5432
+<h2>Should fail if policy is working:</h2>
+<h2>nc: database-service (10.96.45.123:5432): Connection refused</h2></code></pre>
+<p>---</p>
+<h3>DNS Resolution in Kubernetes {#dns-resolution}</h3>
+<h4>The DNS Architecture</h4>
+<p>Kubernetes runs <strong>CoreDNS</strong> (or kube-dns in older versions) as a cluster add-on to provide service discovery.</p>
+<h4>DNS Naming Convention</h4>
+<strong>Full DNS Format:</strong>
+<pre><code><service-name>.<namespace>.svc.<cluster-domain></code></pre>
+<strong>Default cluster domain:</strong> <code>cluster.local</code>
+<h4>Deep Example - Service Discovery</h4>
+<pre><code><h2>Services in different namespaces</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-api
+  namespace: backend
+---
+apiVersion: v1  
+kind: Service
+metadata:
+  name: payment-api
+  namespace: payment
+---
+apiVersion: v1
+kind: Service  
+metadata:
+  name: frontend
+  namespace: frontend</code></pre>
+<strong>DNS Resolution from any Pod:</strong>
+<pre><code><h2>From frontend Pod connecting to backend services:</h2>
+<h2>Same namespace - short name works</h2>
+curl http://frontend/health
+<h2>Different namespace - need namespace qualifier  </h2>
+curl http://user-api.backend/users/123
+curl http://payment-api.payment/process
+<h2>Full FQDN (always works)</h2>
+curl http://user-api.backend.svc.cluster.local/users/123
+<h2>Cross-cluster (if federated)</h2>
+curl http://user-api.backend.svc.us-west-2.cluster.local/users/123</code></pre>
+<h4>DNS Search Domains</h4>
+<strong>Inside a Pod in namespace <code>frontend</code>:</strong>
+<pre><code><h2>/etc/resolv.conf contains:</h2>
+search frontend.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10  # CoreDNS service IP</code></pre>
+<strong>Resolution order:</strong>
+<p>1. <code>user-api</code> → <code>user-api.frontend.svc.cluster.local</code> (same namespace)
+2. <code>user-api</code> → <code>user-api.svc.cluster.local</code> (cluster-wide search)
+3. <code>user-api</code> → <code>user-api.cluster.local</code> (external DNS)</p>
+<h4>Advanced DNS Features</h4>
+<strong>1. Custom DNS Configuration:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: custom-dns-pod
+spec:
+  dnsPolicy: "None"  # Override default DNS
+  dnsConfig:
+    nameservers:
+    - 8.8.8.8  # Google DNS
+    - 1.1.1.1  # Cloudflare DNS
+    searches:
+    - company.internal
+    options:
+    - name: ndots
+      value: "2"
+  containers:
+  - name: app
+    image: nginx</code></pre>
+<strong>2. Headless Services (StatefulSets):</strong>
+<pre><code><h2>Headless service for StatefulSet</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: database-headless
+spec:
+  clusterIP: None  # Headless - no cluster IP
+  selector:
+    app: database
+  ports:
+  - port: 5432</code></pre>
+<strong>DNS records for headless service:</strong>
+<pre><code><h2>Each Pod gets individual DNS record:</h2>
+database-0.database-headless.default.svc.cluster.local → 10.244.1.10
+database-1.database-headless.default.svc.cluster.local → 10.244.1.11  
+database-2.database-headless.default.svc.cluster.local → 10.244.1.12
+<h2>Service DNS returns all Pod IPs:</h2>
+database-headless.default.svc.cluster.local → 10.244.1.10,10.244.1.11,10.244.1.12</code></pre>
+<strong>Why headless services:</strong>
+<li><strong>Database clustering</strong> - Connect to specific database replicas</li>
+<li><strong>Peer discovery</strong> - Pods finding each other for clustering</li>
+<li><strong>Custom load balancing</strong> - Application-level load balancing logic</li>
+<h4>DNS Performance Optimization</h4>
+<strong>1. DNS Caching:</strong>
+<pre><code><h2>NodeLocal DNSCache - cache DNS responses on each node</h2>
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-local-dns
+spec:
+  template:
+    spec:
+      containers:
+      - name: node-cache
+        image: k8s.gcr.io/dns/k8s-dns-node-cache:1.21.1
+        # Caches DNS responses locally on each node
+        # Reduces load on CoreDNS and improves response time</code></pre>
+<strong>2. DNS Policy Tuning:</strong>
+<pre><code><h2>For Pods that primarily connect to external services</h2>
+apiVersion: v1
+kind: Pod
+spec:
+  dnsPolicy: Default  # Use node's DNS, not cluster DNS
+  # Faster for external DNS lookups</code></pre>
+<p>---</p>
+<h3>Real-World Architecture Examples {#architecture-examples}</h3>
+<h4>Example 1: E-commerce Microservices Platform</h4>
+<pre><code><h2>Production architecture combining all concepts</h2>
+---
+<h2>1. Internal Services (ClusterIP)</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: user-api
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+<h2>2. Database with Network Policy</h2>
+apiVersion: v1
+kind: Service  
+metadata:
+  name: postgres
+  namespace: data
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-access
+  namespace: data
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: backend
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+<h2>3. External Access via Ingress</h2>
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    cert-manager.io/cluster-issuer: "letsencrypt"
+spec:
+  tls:
+  - hosts: [api.ecommerce.com]
+    secretName: api-tls
+  rules:
+  - host: api.ecommerce.com
+    http:
+      paths:
+      - path: /users
+        backend:
+          service:
+            name: user-service
+            port: 
+              number: 80</code></pre>
+<strong>Traffic Flow:</strong>
+<pre><code>Customer → Ingress (nginx) → user-service (ClusterIP) → User Pod
+                    ↓
+User Pod → postgres.data.svc.cluster.local:5432 → Database Pod</code></pre>
+<h4>Example 2: Multi-Environment Setup</h4>
+<pre><code><h2>Production namespace with strict policies</h2>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    environment: production
+---
+<h2>Staging namespace  </h2>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+  labels:
+    environment: staging
+---
+<h2>Block production access from staging</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prod-isolation
+  namespace: production
+spec:
+  podSelector: {}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          environment: production</code></pre>
+<strong>DNS resolution across environments:</strong>
+<pre><code><h2>From staging Pod:</h2>
+curl http://api-service.staging/health        # ✅ Same environment
+curl http://api-service.production/health     # ❌ Blocked by Network Policy
+<h2>From production Pod:  </h2>
+curl http://api-service.production/health     # ✅ Same environment
+curl http://api-service.staging/health        # ✅ Production can access staging (for monitoring)</code></pre>
+<h4>Key Architecture Decisions</h4>
+<strong>1. Service Type Selection:</strong>
+<li><strong>ClusterIP:</strong> Internal microservice communication (95% of services)</li>
+<li><strong>LoadBalancer:</strong> Main application entry points (1-2 per cluster)</li>
+<li><strong>Ingress:</strong> Multiple services sharing single load balancer (recommended)</li>
+<strong>2. Security Layers:</strong>
+<li><strong>Network Policies:</strong> Control traffic between Pods/namespaces</li>
+<li><strong>Service mesh (Istio/Linkerd):</strong> mTLS, advanced routing, observability</li>
+<li><strong>API Gateway:</strong> Authentication, rate limiting, API versioning</li>
+<strong>3. DNS Strategy:</strong>
+<li><strong>Use short names</strong> within same namespace for performance</li>
+<li><strong>Use FQDN</strong> for cross-namespace communication for clarity</li>
+<li><strong>Implement DNS caching</strong> for high-traffic applications</li></ul>
+<p>This architecture provides scalable, secure, and maintainable networking for production Kubernetes deployments.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
