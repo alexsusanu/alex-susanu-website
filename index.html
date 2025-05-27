@@ -60,10 +60,16 @@
             font-style: italic;
         }
         
-        .contact-info {
-            margin-top: 15px;
-            font-size: 0.95em;
-            opacity: 0.8;
+        .contact-info a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+
+        .contact-info a:hover {
+            opacity: 1;
+            text-decoration: underline;
         }
         
         /* FIXED NAVIGATION */
@@ -453,7 +459,11 @@
             <h1>Alex Susanu</h1>
             <div class="subtitle">Customer-Focused Engineer & Problem Solver</div>
             <div class="contact-info">
-                London, UK | +44 7478620086 | alex@susanu.com | GitHub | LinkedIn
+                London, UK | 
+                <a href="tel:+447478620086">+44 7478620086</a> | 
+                <a href="mailto:alex@susanu.com">alex@susanu.com</a> | 
+                <a href="https://github.com/alexsusanu" target="_blank">GitHub</a> | 
+                <a href="https://linkedin.com/in/alexsusanu" target="_blank">LinkedIn</a>
             </div>
         </div>
         
