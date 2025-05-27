@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex Susanu - Customer-Focused Engineer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 20px solid #357abd;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        
+        .contact-info {
+            margin-top: 15px;
+            font-size: 0.95em;
+            opacity: 0.8;
+        }
+        
+        .nav {
+            background: #f8f9ff;
+            padding: 0;
+            text-align: center;
+            border-bottom: 2px solid #e8f0ff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            color: #4a90e2;
+            font-weight: bold;
+            font-family: Georgia, serif;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background: #4a90e2;
+            color: white;
+        }
+        
+        .nav-btn.active {
+            background: #4a90e2;
+            color: white;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .greeting {
+            font-size: 1.3em;
+            color: #4a90e2;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            color: #4a90e2;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 30px 0 15px 0;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        
+        .job-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+            margin: 20px 0 5px 0;
+        }
+        
+        .company-info {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        
+        .role-subtitle {
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 8px;
+        }
+        
+        ul {
+            margin: 8px 0 15px 0;
+            padding-left: 20px;
+        }
+        
+        li {
+            margin-bottom: 5px;
+            text-align: justify;
+        }
+        
+        .nested-list {
+            margin: 5px 0;
+            padding-left: 18px;
+        }
+        
+        .nested-list li {
+            margin-bottom: 3px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+            font-size: 1.05em;
+        }
+        
+        .highlight {
+            background: #f8f9ff;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #4a90e2;
+            font-weight: bold;
+        }
+        
+        .signature {
+            margin-top: 30px;
+            text-align: right;
+            font-size: 1.1em;
+        }
+        
+        .signature .name {
+            font-weight: bold;
+            color: #4a90e2;
+            font-size: 1.2em;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+        
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .print-btn:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+        
+        @media print {
+            .nav, .print-btn, .footer { display: none; }
+            .container { box-shadow: none; }
+            body { background: white; }
+            .section { display: block !important; }
+        }
+        
+        @media (max-width: 768px) {
+            .content { padding: 20px 15px; }
+            .header { padding: 30px 15px; }
+            .header h1 { font-size: 2em; }
+            .nav-btn { padding: 12px 20px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Alex Susanu</h1>
+            <div class="subtitle">Customer-Focused Engineer & Problem Solver</div>
+            <div class="contact-info">
+                London, UK | +44 7478620086 | alex@susanu.com | GitHub | LinkedIn
+            </div>
+        </div>
+        
+        <div class="nav">
+            <button class="nav-btn active" onclick="showSection('intro')">About Me</button>
+            <button class="nav-btn" onclick="showSection('cv')">Experience & CV</button>
+        </div>
+        
+        <div class="content">
+            <div class="section active" id="intro">
+                <div class="greeting">Hello there! 👋</div>
+                
+                <p>I'm Alex, and I absolutely love what I do! I'm a customer-focused engineer who thrives on solving problems and making technology work better for everyone. Over the past few years, I've had the pleasure of working in some really exciting, fast-paced environments where no two days are the same.</p>
+                
+                <p>My journey has taken me through building <span class="highlight">Java microservices</span>, diving into production firefighting (the fun kind!), crafting automation scripts that make everyone's lives easier, and keeping systems humming along smoothly. There's something incredibly satisfying about improving uptime, creating tools that genuinely help the team, or being the person who jumps in when things get critical.</p>
+                
+                <p>I'm pretty comfortable with a variety of tools—<span class="highlight">Java, Bash, Kubernetes, Docker, AWS</span>—but honestly, what excites me most is learning something new when a challenge calls for it. There's always another cool technology or approach to explore!</p>
+                
+                <p>What I think sets me apart is how much I enjoy the people side of tech. I've spent plenty of time working directly with clients, writing documentation that people actually want to read, running training sessions, and helping translate between the technical and non-technical worlds. I genuinely believe that the best solutions come from understanding what people really need.</p>
+                
+                <p>I'm excited about opportunities where I can bring together my technical skills with my people-first approach—whether that's in <span class="highlight">tech support, DevOps, backend engineering</span>, or wherever there's a good problem to solve and great people to work with.</p>
+                
+                <p>Thanks so much for taking the time to get to know me a bit! I'd love to chat more about how we might work together—feel free to reach out anytime.</p>
+                
+                <div class="signature">
+                    <div>Cheers,</div>
+                    <div class="name">Alex Susanu</div>
+                </div>
+            </div>
+            
+            <div class="section" id="cv">
+                <div class="section-title">Summary</div>
+                <p>Customer-focused engineer with extensive experience in Java, APIs, DevOps, coding, client communication, and technical support. Proven track record of providing responsive support, resolving issues efficiently, and maintaining clear communication with clients and stakeholders. Adept at troubleshooting and automating solutions that improve performance and reduce downtime. Technically proficient with Java, Bash, AWS, Kubernetes, and Linux, emphasizing proactive support with minimal operational disruption.</p>
+                
+                <p>Combines strong technical expertise with exceptional interpersonal skills and business acumen. Excels in collaborative, multilingual environments, effectively bridging gaps between technical and non-technical teams.</p>
+                
+                <p>Solution-oriented professional known for building client trust and contributing to team success through empathy and adaptability. Balances technical execution with business priorities while staying current with emerging tools to deliver practical, user-focused outcomes.</p>
+                
+                <div class="section-title">Experience</div>
+                
+                <div class="job-title">Technical and Development Engineer</div>
+                <div class="company-info">10x Banking – London, UK | Nov 2021 – Jul 2024</div>
+                
+                <div class="role-subtitle">DevOps & Development Support Associate Engineer</div>
+                <ul>
+                    <li><strong>Contributed to Java Spring Boot microservices development:</strong>
+                        <ul class="nested-list">
+                            <li>Enhanced features and fixed bugs across account and transaction services</li>
+                            <li>Participated in code reviews improving quality and consistency</li>
+                            <li>Followed API development best practices for versioning and documentation</li>
+                        </ul>
+                    </li>
+                    <li><strong>Enhanced infrastructure monitoring and reliability:</strong>
+                        <ul class="nested-list">
+                            <li>Achieved 99.99% uptime for mission-critical banking services using New Relic and CloudWatch</li>
+                            <li>Reduced system downtime by 35% through proactive incident prevention</li>
+                            <li>Created shared dashboards increasing cross-team visibility and early anomaly detection</li>
+                        </ul>
+                    </li>
+                    <li><strong>Streamlined development and deployment processes:</strong>
+                        <ul class="nested-list">
+                            <li>Reduced cycle time by 30% by optimizing Jenkins CI/CD pipelines</li>
+                            <li>Built Docker-based testing environments accelerating bug fixes and feature rollouts</li>
+                            <li>Collaborated with QA to define test cases, decreasing defect rates by 15%</li>
+                        </ul>
+                    </li>
+                    <li><strong>Improved platform stability and user experience:</strong>
+                        <ul class="nested-list">
+                            <li>Deployed API integration fixes, reducing transaction errors by 25%</li>
+                            <li>Troubleshot Kubernetes-managed microservices, decreasing escalations by 15%</li>
+                            <li>Leveraged Linux expertise to minimize operational disruptions</li>
+                        </ul>
+                    </li>
+                    <li><strong>Excelled in customer support and client relationship management:</strong>
+                        <ul class="nested-list">
+                            <li>Created clear technical updates and guidance for stakeholders, reducing follow-up inquiries by 30%</li>
+                            <li>Authored knowledge base articles enabling 40% faster issue resolution and improved self-service capabilities</li>
+                            <li>Built strong relationships increasing client confidence in platform stability</li>
+                            <li>Reduced average response time to critical customer issues from 2 hours to 30 minutes</li>
+                            <li>Implemented structured ticket escalation system decreasing resolution time by 25%</li>
+                            <li>Facilitated technical training sessions for clients, resulting in 40% fewer recurring support requests</li>
+                        </ul>
+                    </li>
+                    <li><strong>Leveraged technical expertise to automate support and operational tasks:</strong>
+                        <ul class="nested-list">
+                            <li>Developed Bash scripts for log analysis that identified recurring issues, reducing troubleshooting time by 60%</li>
+                            <li>Created a Spring Boot microservice for automated health checks across 30+ production endpoints</li>
+                            <li>Built Python scripts automating customer data verification, freeing 20% of team capacity</li>
+                            <li>Implemented Jenkins pipeline automation reducing deployment-related support tickets by 35%</li>
+                            <li>Designed a custom CLI tool in Golang enabling support engineers to quickly diagnose common API issues</li>
+                            <li>Automated database integrity checks using SQL scripts, preventing potential customer-facing data issues</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <div class="job-title">Associate Software Developer (Freelance)</div>
+                <div class="company-info">Remote | 2023 - 2024</div>
+                <ul>
+                    <li><strong>Delivered comprehensive technical solutions improving client business outcomes:</strong>
+                        <ul class="nested-list">
+                            <li>Developed Golang tools and implemented SEO strategies increasing website traffic and revenue</li>
+                            <li>Created Bash scripts for system integrations, simplifying data workflows</li>
+                            <li>Automated client processes enabling focus on business growth while maintaining reliable technical performance</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <div class="job-title">Java Developer (Bootcamp Project Work)</div>
+                <div class="company-info">Coders Campus – Remote | 2020 – 2021</div>
+                <ul>
+                    <li><strong>Developed robust Spring Boot applications with MySQL databases for high transaction volumes:</strong>
+                        <ul class="nested-list">
+                            <li>Designed RESTful APIs following industry best practices for scalability and security</li>
+                            <li>Wrote comprehensive automated tests using JUnit and Mockito ensuring code quality</li>
+                            <li>Led code reviews and provided mentorship to junior developers</li>
+                            <li>Collaborated effectively in Agile sprint cycles for timely delivery</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <div class="job-title">Technical Solutions & Customer Support Specialist (Self-Employed)</div>
+                <div class="company-info">Remote | 2015 – 2021</div>
+                <ul>
+                    <li><strong>Created tailored automation solutions transforming client operations:</strong>
+                        <ul class="nested-list">
+                            <li>Developed custom tools using Python, Bash, and SQL streamlining workflows</li>
+                            <li>Implemented data entry automation with APIs reducing errors while accelerating processing</li>
+                            <li>Designed scripts integrating third-party services (social media platforms, marketing tools)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Delivered exceptional customer support and technical assistance:</strong>
+                        <ul class="nested-list">
+                            <li>Maintained 98% customer satisfaction rating across diverse client base</li>
+                            <li>Established 24-hour SLA for critical issues with 100% compliance record</li>
+                            <li>Created personalized onboarding processes reducing client ramp-up time by 50%</li>
+                            <li>Developed troubleshooting guides that empowered customers to resolve 65% of common issues independently</li>
+                            <li>Conducted regular check-ins with key accounts, resulting in 85% retention rate</li>
+                        </ul>
+                    </li>
+                    <li><strong>Leveraged technical expertise driving measurable business results:</strong>
+                        <ul class="nested-list">
+                            <li>Built customer support chatbot using NodeJS and natural language processing, handling 40% of initial inquiries</li>
+                            <li>Developed Bash-based monitoring system alerting clients of potential issues before they impacted operations</li>
+                            <li>Created custom REST API endpoints in Spring Boot allowing clients to access support resources programmatically</li>
+                            <li>Implemented PostgreSQL database solutions to track customer issues, identifying patterns that led to proactive fixes</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <div class="section-title">Education & Certifications</div>
+                <ul>
+                    <li><strong>BSc Computer Science</strong> – Pursuing at Birkbeck, University of London</li>
+                    <li><strong>CompTIA Security+</strong> – Expected June 2025
+                        <ul class="nested-list">
+                            <li>Focusing on network security, risk management, and threat identification/mitigation</li>
+                        </ul>
+                    </li>
+                    <li><strong>Active Hack The Box (HTB)</strong> – Pentesting
+                        <ul class="nested-list">
+                            <li>Developing skills in network enumeration, web application vulnerabilities, and privilege escalation techniques</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <div class="section-title">Languages</div>
+                <p>I am a multilingual professional, fluent in Romanian (native), English and Italian (C2), with upper beginner/intermediate proficiency in French and Spanish (A2/B1).</p>
+                <p>My language skills reflect my cultural adaptability and enable me to engage effectively across different international markets and teams.</p>
+                <p>Currently studying Russian to further enhance my communication capabilities in diverse professional settings.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 Alex Susanu | Available for new opportunities | Let's build something amazing together!</p>
+        </div>
+    </div>
+    
+    <button class="print-btn" onclick="window.print()">📄 Print/PDF</button>
+    
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
