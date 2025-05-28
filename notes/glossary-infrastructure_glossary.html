@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure & Networking Glossary - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Infrastructure & Networking Glossary</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (glossary) • Updated May 28, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">glossary</span><span class="tag">infrastructure</span><span class="tag">networking</span><span class="tag">servers</span><span class="tag">cloud</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Infrastructure & Networking Glossary</h2>
+<h3>Server</h3>
+<strong>What it is:</strong> A computer or software program that provides services, data, or resources to other computers (clients) over a network.
+<strong>Why it matters:</strong> Servers are the backbone of the internet. They host websites, store data, process requests, and enable communication between applications and users.
+<strong>Types:</strong>
+<ul><li><strong>Web Server</strong> - Serves web pages (Apache, Nginx)</li>
+<li><strong>Database Server</strong> - Manages databases (MySQL, PostgreSQL)</li>
+<li><strong>Application Server</strong> - Runs business logic (Tomcat, Node.js)</li>
+<li><strong>File Server</strong> - Stores and shares files</li>
+<li><strong>Mail Server</strong> - Handles email (Exchange, Postfix)</li>
+<strong>Physical vs Virtual:</strong>
+<li><strong>Physical Server</strong> - Dedicated hardware machine</li>
+<li><strong>Virtual Server (VM)</strong> - Software-based server running on physical hardware</li>
+<li><strong>Container</strong> - Lightweight virtualization (Docker)</li>
+<strong>When you'll encounter it:</strong> Every web application needs servers. Understanding server architecture is crucial for deployment and scaling.
+<h3>Cloud Computing</h3>
+<strong>What it is:</strong> Delivery of computing services (servers, storage, databases, networking) over the internet ("the cloud").
+<strong>Why it matters:</strong> Cloud computing eliminates the need to buy and maintain physical hardware, provides scalability on demand, and enables global deployment with reduced costs and complexity.
+<strong>Service Models:</strong>
+<li><strong>IaaS</strong> (Infrastructure as a Service) - Virtual machines, storage (AWS EC2, Azure VMs)</li>
+<li><strong>PaaS</strong> (Platform as a Service) - Development platforms (Heroku, Google App Engine)</li>
+<li><strong>SaaS</strong> (Software as a Service) - Ready-to-use applications (Gmail, Salesforce)</li>
+<strong>Major Providers:</strong>
+<li><strong>AWS</strong> - Amazon Web Services (market leader)</li>
+<li><strong>Azure</strong> - Microsoft's cloud platform</li>
+<li><strong>GCP</strong> - Google Cloud Platform</li>
+<li><strong>DigitalOcean</strong> - Developer-friendly, simpler pricing</li>
+<strong>Key Benefits:</strong>
+<li><strong>Scalability</strong> - Scale up/down based on demand</li>
+<li><strong>Cost-effective</strong> - Pay only for what you use</li>
+<li><strong>Global reach</strong> - Deploy worldwide instantly</li>
+<li><strong>Reliability</strong> - Built-in redundancy and backups</li>
+<strong>When you'll use it:</strong> Most modern applications use cloud services for hosting, storage, or additional functionality.
+<h3>Docker & Containers</h3>
+<strong>What it is:</strong> Docker is a platform that packages applications and their dependencies into lightweight, portable containers.
+<strong>Why it matters:</strong> Containers solve the "it works on my machine" problem by ensuring applications run consistently across different environments. They're faster than VMs and enable microservices architecture.
+<strong>Key Concepts:</strong>
+<li><strong>Container</strong> - Running instance of an image</li>
+<li><strong>Image</strong> - Template containing application code and dependencies</li>
+<li><strong>Dockerfile</strong> - Instructions to build an image</li>
+<li><strong>Registry</strong> - Storage for images (Docker Hub)</li>
+<strong>Benefits:</strong>
+<li><strong>Consistency</strong> - Same environment everywhere</li>
+<li><strong>Isolation</strong> - Applications don't interfere with each other</li>
+<li><strong>Efficiency</strong> - Lighter than virtual machines</li>
+<li><strong>Scalability</strong> - Easy to replicate and scale</li>
+<strong>Common Commands:</strong>
+<pre><code>docker build -t myapp .        # Build image
+docker run -p 8080:80 myapp    # Run container
+docker ps                      # List running containers
+docker stop container_id       # Stop container</code></pre>
+<strong>When you'll use it:</strong> Modern development workflows, microservices, CI/CD pipelines, and cloud deployments.
+<h3>Load Balancer</h3>
+<strong>What it is:</strong> A device or software that distributes incoming network traffic across multiple servers.
+<strong>Why it matters:</strong> Load balancers prevent any single server from becoming overwhelmed, improve application availability, and enable horizontal scaling.
+<strong>Types:</strong>
+<li><strong>Layer 4 (Transport)</strong> - Routes based on IP and port</li>
+<li><strong>Layer 7 (Application)</strong> - Routes based on content (HTTP headers, URLs)</li>
+<strong>Algorithms:</strong>
+<li><strong>Round Robin</strong> - Requests distributed sequentially</li>
+<li><strong>Least Connections</strong> - Routes to server with fewest active connections</li>
+<li><strong>IP Hash</strong> - Routes based on client IP</li>
+<li><strong>Weighted</strong> - Different servers handle different loads</li>
+<strong>Benefits:</strong>
+<li><strong>High Availability</strong> - If one server fails, others continue</li>
+<li><strong>Scalability</strong> - Add more servers to handle increased load</li>
+<li><strong>Performance</strong> - Distribute load evenly</li>
+<li><strong>Flexibility</strong> - Route traffic based on various criteria</li>
+<strong>When you'll use it:</strong> Any application expecting significant traffic or requiring high availability.
+<h3>CDN (Content Delivery Network)</h3>
+<strong>What it is:</strong> A network of geographically distributed servers that deliver web content to users from the nearest location.
+<strong>Why it matters:</strong> CDNs dramatically improve website performance by reducing latency, decrease server load, and provide better user experience globally.
+<strong>How it works:</strong>
+1. User requests a file (image, CSS, JavaScript)
+2. CDN serves it from the nearest edge server
+3. If not cached, CDN fetches from origin server
+4. File is cached for future requests
+<strong>Popular CDNs:</strong>
+<li><strong>Cloudflare</strong> - Free tier available, security features</li>
+<li><strong>AWS CloudFront</strong> - Integrated with AWS services</li>
+<li><strong>Fastly</strong> - Real-time analytics, edge computing</li>
+<li><strong>KeyCDN</strong> - Simple, affordable</li>
+<strong>Benefits:</strong>
+<li><strong>Faster loading</strong> - Content served from nearby servers</li>
+<li><strong>Reduced bandwidth costs</strong> - Less load on origin server</li>
+<li><strong>Global reach</strong> - Consistent performance worldwide</li>
+<li><strong>DDoS protection</strong> - Distributed traffic absorption</li>
+<strong>When you'll use it:</strong> Websites with global users, media-heavy sites, or any application prioritizing performance.
+<h3>DNS (Domain Name System)</h3>
+<strong>What it is:</strong> The system that translates human-readable domain names (google.com) into IP addresses (142.250.80.14) that computers use.
+<strong>Why it matters:</strong> DNS is fundamental to how the internet works. Without it, we'd have to remember IP addresses for every website.
+<strong>How it works:</strong>
+1. You type "google.com" in browser
+2. Browser asks DNS resolver "What's the IP for google.com?"
+3. DNS resolver queries authoritative servers
+4. IP address returned and cached
+5. Browser connects to the IP address
+<strong>DNS Record Types:</strong>
+<li><strong>A Record</strong> - Maps domain to IPv4 address</li>
+<li><strong>AAAA Record</strong> - Maps domain to IPv6 address</li>
+<li><strong>CNAME</strong> - Maps domain to another domain</li>
+<li><strong>MX Record</strong> - Mail server information</li>
+<li><strong>TXT Record</strong> - Text information (verification, SPF)</li>
+<strong>When you'll encounter it:</strong> Setting up websites, configuring email, SSL certificates, and troubleshooting connectivity issues.
+<h3>Kubernetes</h3>
+<strong>What it is:</strong> Open-source container orchestration platform that automates deployment, scaling, and management of containerized applications.
+<strong>Why it matters:</strong> As applications become more complex and distributed, manually managing containers becomes impossible. Kubernetes provides automation, scaling, and resilience.
+<strong>Key concepts:</strong>
+<li><strong>Pod</strong> - Smallest deployable unit (one or more containers)</li>
+<li><strong>Service</strong> - Stable network endpoint for pods</li>
+<li><strong>Deployment</strong> - Manages pod replicas and updates</li>
+<li><strong>Namespace</strong> - Virtual cluster for resource isolation</li>
+<strong>Benefits:</strong>
+<li><strong>Auto-scaling</strong> - Automatically adjust resources based on demand</li>
+<li><strong>Self-healing</strong> - Restart failed containers, replace unhealthy nodes</li>
+<li><strong>Service discovery</strong> - Automatic networking between services</li>
+<li><strong>Rolling updates</strong> - Deploy new versions without downtime</li>
+<strong>When you'll use it:</strong> Large-scale applications, microservices architectures, when you need container orchestration.
+<h3>Cache</h3>
+<strong>What it is:</strong> Temporary storage that saves frequently accessed data for faster retrieval.
+<strong>Why it matters:</strong> Caching dramatically improves performance by reducing database queries, API calls, and computation time. It's one of the most effective performance optimizations.
+<strong>Types of caching:</strong>
+<li><strong>Browser cache</strong> - Stores files locally on user's device</li>
+<li><strong>CDN cache</strong> - Content cached at edge servers globally</li>
+<li><strong>Application cache</strong> - In-memory storage (Redis, Memcached)</li>
+<li><strong>Database cache</strong> - Query results stored in memory</li>
+<strong>Cache strategies:</strong>
+<li><strong>Cache-aside</strong> - Application manages cache explicitly</li>
+<li><strong>Write-through</strong> - Write to cache and database simultaneously</li>
+<li><strong>Write-behind</strong> - Write to cache immediately, database later</li>
+<li><strong>Refresh-ahead</strong> - Proactively refresh cache before expiration</li>
+<strong>Cache invalidation:</strong>
+<li><strong>TTL (Time To Live)</strong> - Automatic expiration after set time</li>
+<li><strong>Manual invalidation</strong> - Explicitly remove outdated data</li>
+<li><strong>Event-based</strong> - Invalidate when underlying data changes</li>
+<strong>When you'll use it:</strong> Almost every application benefits from caching. It's essential for performance optimization.
+<h3>Microservices</h3>
+<strong>What it is:</strong> Architectural approach where applications are built as a collection of small, independent services that communicate over networks.
+<strong>Why it matters:</strong> Microservices enable teams to develop, deploy, and scale parts of an application independently, leading to faster development and better resilience.
+<strong>Characteristics:</strong>
+<li><strong>Small and focused</strong> - Each service has single responsibility</li>
+<li><strong>Independently deployable</strong> - Can update services separately</li>
+<li><strong>Technology agnostic</strong> - Different services can use different technologies</li>
+<li><strong>Decentralized</strong> - Services manage their own data</li>
+<strong>Benefits:</strong>
+<li><strong>Scalability</strong> - Scale individual services based on demand</li>
+<li><strong>Resilience</strong> - Failure in one service doesn't crash entire system</li>
+<li><strong>Team autonomy</strong> - Different teams can own different services</li>
+<li><strong>Technology diversity</strong> - Use best tool for each job</li>
+<strong>Challenges:</strong>
+<li><strong>Complexity</strong> - More moving parts to manage</li>
+<li><strong>Network latency</strong> - Services communicate over network</li>
+<li><strong>Data consistency</strong> - Managing transactions across services</li>
+<li><strong>Monitoring</strong> - Tracking requests across multiple services</li>
+<strong>When you'll use it:</strong> Large applications, teams that need to move independently, when different parts have different scaling requirements.
+<h3>API Gateway</h3>
+<strong>What it is:</strong> Entry point that sits between clients and backend services, managing API requests and responses.
+<strong>Why it matters:</strong> API gateways provide centralized management of cross-cutting concerns like authentication, rate limiting, and monitoring across multiple services.
+<strong>Key functions:</strong>
+<li><strong>Request routing</strong> - Forward requests to appropriate backend service</li>
+<li><strong>Authentication</strong> - Verify client credentials</li>
+<li><strong>Rate limiting</strong> - Prevent abuse and ensure fair usage</li>
+<li><strong>Response transformation</strong> - Modify responses before sending to client</li>
+<li><strong>Monitoring</strong> - Log requests, track performance metrics</li>
+<strong>Popular solutions:</strong>
+<li><strong>AWS API Gateway</strong> - Managed service with AWS integration</li>
+<li><strong>Kong</strong> - Open-source with enterprise features</li>
+<li><strong>Ambassador</strong> - Kubernetes-native API gateway</li>
+<li><strong>Zuul</strong> - Netflix's API gateway (now part of Spring Cloud)</li>
+<strong>When you'll use it:</strong> Microservices architectures, when you need centralized API management, mobile app backends.
+<h3>Reverse Proxy</h3>
+<strong>What it is:</strong> Server that sits between clients and backend servers, forwarding client requests to backend servers and returning responses.
+<strong>Why it matters:</strong> Reverse proxies provide load balancing, SSL termination, caching, and security benefits while hiding backend server details from clients.
+<strong>Functions:</strong>
+<li><strong>Load balancing</strong> - Distribute requests across multiple servers</li>
+<li><strong>SSL termination</strong> - Handle encryption/decryption</li>
+<li><strong>Caching</strong> - Store frequently requested content</li>
+<li><strong>Compression</strong> - Reduce bandwidth usage</li>
+<li><strong>Security</strong> - Hide backend infrastructure, filter malicious requests</li>
+<strong>Popular reverse proxies:</strong>
+<li><strong>Nginx</strong> - High-performance web server and reverse proxy</li>
+<li><strong>HAProxy</strong> - Focused on load balancing and high availability</li>
+<li><strong>Apache HTTP Server</strong> - Traditional web server with proxy capabilities</li>
+<li><strong>Cloudflare</strong> - Cloud-based reverse proxy with security features</li>
+<strong>When you'll use it:</strong> High-traffic websites, when you need SSL termination, load balancing, or want to add caching layer.
+<h3>Virtual Private Cloud (VPC)</h3>
+<strong>What it is:</strong> Logically isolated section of cloud provider's infrastructure where you can launch resources in a virtual network you define.
+<strong>Why it matters:</strong> VPCs provide network isolation, security, and control over your cloud resources, similar to having your own private data center.
+<strong>Key components:</strong>
+<li><strong>Subnets</strong> - Segments of VPC IP address range</li>
+<li><strong>Route tables</strong> - Rules for network traffic routing</li>
+<li><strong>Internet gateway</strong> - Connection to internet</li>
+<li><strong>NAT gateway</strong> - Outbound internet access for private subnets</li>
+<li><strong>Security groups</strong> - Virtual firewalls for instances</li>
+<strong>Benefits:</strong>
+<li><strong>Isolation</strong> - Your resources are separated from other customers</li>
+<li><strong>Security</strong> - Control network access with security groups and NACLs</li>
+<li><strong>Flexibility</strong> - Design network topology to meet your needs</li>
+<li><strong>Scalability</strong> - Easily add more resources within VPC</li>
+<strong>When you'll use it:</strong> Any serious cloud deployment requires proper network design with VPCs.
+<h3>CI/CD (Continuous Integration/Continuous Deployment)</h3>
+<strong>What it is:</strong> Development practices where code changes are automatically built, tested, and deployed.
+<strong>Why it matters:</strong> CI/CD reduces manual errors, catches bugs early, enables faster releases, and improves collaboration between development and operations teams.
+<strong>Continuous Integration:</strong>
+<li><strong>Automated builds</strong> - Code is compiled automatically</li>
+<li><strong>Automated testing</strong> - Tests run on every commit</li>
+<li><strong>Fast feedback</strong> - Developers know immediately if they broke something</li>
+<li><strong>Integration issues</strong> - Found early when they're easier to fix</li>
+<strong>Continuous Deployment:</strong>
+<li><strong>Automated deployment</strong> - Successful builds automatically deploy</li>
+<li><strong>Environment consistency</strong> - Same deployment process for all environments</li>
+<li><strong>Rollback capability</strong> - Quick recovery from failed deployments</li>
+<li><strong>Feature flags</strong> - Deploy code but control feature activation</li>
+<strong>Popular tools:</strong>
+<li><strong>Jenkins</strong> - Open-source automation server</li>
+<li><strong>GitHub Actions</strong> - Integrated with GitHub repositories</li>
+<li><strong>GitLab CI/CD</strong> - Built into GitLab platform</li>
+<li><strong>Azure DevOps</strong> - Microsoft's complete DevOps solution</li>
+<strong>When you'll use it:</strong> Professional development teams use CI/CD as standard practice.
+<h3>Monitoring and Observability</h3>
+<strong>What it is:</strong> Practice of collecting, analyzing, and acting on data about system performance and behavior.
+<strong>Why it matters:</strong> You can't improve what you don't measure. Monitoring helps prevent outages, optimize performance, and understand user experience.
+<strong>Three pillars of observability:</strong>
+<li><strong>Metrics</strong> - Numerical data (response time, error rate, CPU usage)</li>
+<li><strong>Logs</strong> - Detailed records of events and errors</li>
+<li><strong>Traces</strong> - Request flow through distributed systems</li>
+<strong>Key metrics to monitor:</strong>
+<li><strong>Availability</strong> - Is the system up and responding?</li>
+<li><strong>Performance</strong> - How fast are requests processed?</li>
+<li><strong>Error rates</strong> - What percentage of requests fail?</li>
+<li><strong>Resource usage</strong> - CPU, memory, disk, network utilization</li>
+<strong>Popular tools:</strong>
+<li><strong>Prometheus</strong> - Open-source metrics collection</li>
+<li><strong>Grafana</strong> - Visualization and dashboards</li>
+<li><strong>ELK Stack</strong> - Elasticsearch, Logstash, Kibana for logs</li>
+<li><strong>New Relic</strong> - Application performance monitoring</li>
+<li><strong>Datadog</strong> - Comprehensive monitoring platform</li>
+<strong>When you'll use it:</strong> Essential for any production system. Start monitoring from day one.
+<h3>Infrastructure as Code (IaC)</h3>
+<strong>What it is:</strong> Practice of managing and provisioning infrastructure through machine-readable definition files rather than manual processes.
+<strong>Why it matters:</strong> IaC enables version control for infrastructure, ensures consistency across environments, and makes infrastructure changes reproducible and auditable.
+<strong>Benefits:</strong>
+<li><strong>Version control</strong> - Track infrastructure changes like code</li>
+<li><strong>Consistency</strong> - Same infrastructure across environments</li>
+<li><strong>Automation</strong> - Reduce manual configuration errors</li>
+<li><strong>Documentation</strong> - Infrastructure is self-documenting</li>
+<li><strong>Disaster recovery</strong> - Quickly rebuild infrastructure</li>
+<strong>Popular tools:</strong>
+<li><strong>Terraform</strong> - Cloud-agnostic infrastructure provisioning</li>
+<li><strong>AWS CloudFormation</strong> - AWS-specific templates</li>
+<li><strong>Ansible</strong> - Configuration management and automation</li>
+<li><strong>Pulumi</strong> - Infrastructure as code using programming languages</li>
+<strong>When you'll use it:</strong> Any serious cloud deployment should use IaC for maintainability and reliability. - Serves web pages (Apache, Nginx)
+<li><strong>Database Server</strong> - Manages databases (MySQL, PostgreSQL)</li>
+<li><strong>Application Server</strong> - Runs business logic (Tomcat, Node.js)</li>
+<li><strong>File Server</strong> - Stores and shares files</li>
+<li><strong>Mail Server</strong> - Handles email (Exchange, Postfix)</li>
+<strong>Physical vs Virtual:</strong>
+<li><strong>Physical Server</strong> - Dedicated hardware machine</li>
+<li><strong>Virtual Server (VM)</strong> - Software-based server running on physical hardware</li>
+<li><strong>Container</strong> - Lightweight virtualization (Docker)</li>
+<strong>When you'll encounter it:</strong> Every web application needs servers. Understanding server architecture is crucial for deployment and scaling.
+<h3>Cloud Computing</h3>
+<strong>What it is:</strong> Delivery of computing services (servers, storage, databases, networking) over the internet ("the cloud").
+<strong>Why it matters:</strong> Cloud computing eliminates the need to buy and maintain physical hardware, provides scalability on demand, and enables global deployment with reduced costs and complexity.
+<strong>Service Models:</strong>
+<li><strong>IaaS</strong> (Infrastructure as a Service) - Virtual machines, storage (AWS EC2, Azure VMs)</li>
+<li><strong>PaaS</strong> (Platform as a Service) - Development platforms (Heroku, Google App Engine)</li>
+<li><strong>SaaS</strong> (Software as a Service) - Ready-to-use applications (Gmail, Salesforce)</li>
+<strong>Major Providers:</strong>
+<li><strong>AWS</strong> - Amazon Web Services (market leader)</li>
+<li><strong>Azure</strong> - Microsoft's cloud platform</li>
+<li><strong>GCP</strong> - Google Cloud Platform</li>
+<li><strong>DigitalOcean</strong> - Developer-friendly, simpler pricing</li>
+<strong>Key Benefits:</strong>
+<li><strong>Scalability</strong> - Scale up/down based on demand</li>
+<li><strong>Cost-effective</strong> - Pay only for what you use</li>
+<li><strong>Global reach</strong> - Deploy worldwide instantly</li>
+<li><strong>Reliability</strong> - Built-in redundancy and backups</li>
+<strong>When you'll use it:</strong> Most modern applications use cloud services for hosting, storage, or additional functionality.
+<h3>Docker & Containers</h3>
+<strong>What it is:</strong> Docker is a platform that packages applications and their dependencies into lightweight, portable containers.
+<strong>Why it matters:</strong> Containers solve the "it works on my machine" problem by ensuring applications run consistently across different environments. They're faster than VMs and enable microservices architecture.
+<strong>Key Concepts:</strong>
+<li><strong>Container</strong> - Running instance of an image</li>
+<li><strong>Image</strong> - Template containing application code and dependencies</li>
+<li><strong>Dockerfile</strong> - Instructions to build an image</li>
+<li><strong>Registry</strong> - Storage for images (Docker Hub)</li>
+<strong>Benefits:</strong>
+<li><strong>Consistency</strong> - Same environment everywhere</li>
+<li><strong>Isolation</strong> - Applications don't interfere with each other</li>
+<li><strong>Efficiency</strong> - Lighter than virtual machines</li>
+<li><strong>Scalability</strong> - Easy to replicate and scale</li>
+<strong>Common Commands:</strong>
+<pre><code>docker build -t myapp .        # Build image
+docker run -p 8080:80 myapp    # Run container
+docker ps                      # List running containers
+docker stop container_id       # Stop container</code></pre>
+<strong>When you'll use it:</strong> Modern development workflows, microservices, CI/CD pipelines, and cloud deployments.
+<h3>Load Balancer</h3>
+<strong>What it is:</strong> A device or software that distributes incoming network traffic across multiple servers.
+<strong>Why it matters:</strong> Load balancers prevent any single server from becoming overwhelmed, improve application availability, and enable horizontal scaling.
+<strong>Types:</strong>
+<li><strong>Layer 4 (Transport)</strong> - Routes based on IP and port</li>
+<li><strong>Layer 7 (Application)</strong> - Routes based on content (HTTP headers, URLs)</li>
+<strong>Algorithms:</strong>
+<li><strong>Round Robin</strong> - Requests distributed sequentially</li>
+<li><strong>Least Connections</strong> - Routes to server with fewest active connections</li>
+<li><strong>IP Hash</strong> - Routes based on client IP</li>
+<li><strong>Weighted</strong> - Different servers handle different loads</li>
+<strong>Benefits:</strong>
+<li><strong>High Availability</strong> - If one server fails, others continue</li>
+<li><strong>Scalability</strong> - Add more servers to handle increased load</li>
+<li><strong>Performance</strong> - Distribute load evenly</li>
+<li><strong>Flexibility</strong> - Route traffic based on various criteria</li>
+<strong>When you'll use it:</strong> Any application expecting significant traffic or requiring high availability.
+<h3>CDN (Content Delivery Network)</h3>
+<strong>What it is:</strong> A network of geographically distributed servers that deliver web content to users from the nearest location.
+<strong>Why it matters:</strong> CDNs dramatically improve website performance by reducing latency, decrease server load, and provide better user experience globally.
+<strong>How it works:</strong>
+1. User requests a file (image, CSS, JavaScript)
+2. CDN serves it from the nearest edge server
+3. If not cached, CDN fetches from origin server
+4. File is cached for future requests
+<strong>Popular CDNs:</strong>
+<li><strong>Cloudflare</strong> - Free tier available, security features</li>
+<li><strong>AWS CloudFront</strong> - Integrated with AWS services</li>
+<li><strong>Fastly</strong> - Real-time analytics, edge computing</li>
+<li><strong>KeyCDN</strong> - Simple, affordable</li>
+<strong>Benefits:</strong>
+<li><strong>Faster loading</strong> - Content served from nearby servers</li>
+<li><strong>Reduced bandwidth costs</strong> - Less load on origin server</li>
+<li><strong>Global reach</strong> - Consistent performance worldwide</li>
+<li><strong>DDoS protection</strong> - Distributed traffic absorption</li>
+<strong>When you'll use it:</strong> Websites with global users, media-heavy sites, or any application prioritizing performance.
+<h3>DNS (Domain Name System)</h3>
+<strong>What it is:</strong> The system that translates human-readable domain names (google.com) into IP addresses (142.250.80.14) that computers use.
+<strong>Why it matters:</strong> DNS is fundamental to how the internet works. Without it, we'd have to remember IP addresses for every website.
+<strong>How it works:</strong>
+1. You type "google.com" in browser
+2. Browser asks DNS resolver "What's the IP for google.com?"
+3. DNS resolver queries authoritative servers
+4. IP address returned and cached
+5. Browser connects to the IP address
+<strong>DNS Record Types:</strong>
+<li><strong>A Record</strong> - Maps domain to IPv4 address</li>
+<li><strong>AAAA Record</strong> - Maps domain to IPv6 address</li>
+<li><strong>CNAME</strong> - Maps domain to another domain</li>
+<li><strong>MX Record</strong> - Mail server information</li>
+<li><strong>TXT Record</strong> - Text information (verification, SPF)</li></ul>
+<strong>When you'll encounter it:</strong> Setting up websites, configuring email, SSL certificates, and troubleshooting connectivity issues.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

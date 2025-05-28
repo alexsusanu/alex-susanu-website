@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance & Optimization Glossary - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Performance & Optimization Glossary</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                Programming (glossary) • Updated May 28, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">glossary</span><span class="tag">performance</span><span class="tag">optimization</span><span class="tag">caching</span><span class="tag">scalability</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Performance & Optimization Glossary</h2>
+<h3>Cache</h3>
+<strong>What it is:</strong> Temporary storage that saves frequently accessed data for faster retrieval.
+<strong>Why it matters:</strong> Caching is one of the most effective performance optimizations. It reduces database queries, API calls, and computation time, dramatically improving user experience.
+<strong>Types of caching:</strong>
+<ul><li><strong>Browser cache</strong> - Stores files locally on user's device</li>
+<li><strong>CDN cache</strong> - Content cached at edge servers globally</li>
+<li><strong>Application cache</strong> - In-memory storage (Redis, Memcached)</li>
+<li><strong>Database cache</strong> - Query results stored in memory</li>
+<li><strong>CPU cache</strong> - Hardware-level caching in processors</li>
+<strong>Cache strategies:</strong>
+<li><strong>Cache-aside (Lazy loading)</strong> - Application manages cache explicitly</li>
+<li><strong>Write-through</strong> - Write to cache and database simultaneously</li>
+<li><strong>Write-behind (Write-back)</strong> - Write to cache immediately, database later</li>
+<li><strong>Refresh-ahead</strong> - Proactively refresh cache before expiration</li>
+<strong>Cache invalidation:</strong>
+<li><strong>TTL (Time To Live)</strong> - Automatic expiration after set time</li>
+<li><strong>Manual invalidation</strong> - Explicitly remove outdated data</li>
+<li><strong>Event-based</strong> - Invalidate when underlying data changes</li>
+<li><strong>LRU (Least Recently Used)</strong> - Remove oldest unused items when full</li>
+<strong>Cache busting techniques:</strong>
+<li><strong>Query parameters</strong> - Add <code>?v=123</code> to URLs</li>
+<li><strong>Filename versioning</strong> - Include version in filename</li>
+<li><strong>Cache headers</strong> - Control browser caching behavior</li>
+<li><strong>CDN purging</strong> - Manually clear CDN caches</li>
+<strong>When you'll use it:</strong> Almost every application benefits from caching. It's fundamental to performance optimization.
+<h3>Load Balancing</h3>
+<strong>What it is:</strong> Distribution of incoming requests across multiple servers to ensure no single server becomes overwhelmed.
+<strong>Why it matters:</strong> Load balancing improves application availability, performance, and scalability by distributing traffic and providing redundancy.
+<strong>Load balancing algorithms:</strong>
+<li><strong>Round Robin</strong> - Requests distributed sequentially to each server</li>
+<li><strong>Least Connections</strong> - Routes to server with fewest active connections</li>
+<li><strong>Weighted Round Robin</strong> - Servers get different amounts of traffic</li>
+<li><strong>IP Hash</strong> - Routes based on client IP address</li>
+<li><strong>Least Response Time</strong> - Routes to fastest responding server</li>
+<li><strong>Random</strong> - Distributes requests randomly</li>
+<strong>Types of load balancers:</strong>
+<li><strong>Layer 4 (Transport)</strong> - Routes based on IP and port information</li>
+<li><strong>Layer 7 (Application)</strong> - Routes based on content (HTTP headers, URLs)</li>
+<li><strong>Hardware load balancers</strong> - Dedicated physical devices</li>
+<li><strong>Software load balancers</strong> - Applications running on standard servers</li>
+<li><strong>Cloud load balancers</strong> - Managed services (AWS ELB, Azure Load Balancer)</li>
+<strong>Health checks:</strong>
+<li><strong>Active monitoring</strong> - Load balancer actively checks server health</li>
+<li><strong>Passive monitoring</strong> - Monitor server responses to real requests</li>
+<li><strong>Custom health endpoints</strong> - Application-specific health checks</li>
+<li><strong>Graceful degradation</strong> - Remove unhealthy servers from rotation</li>
+<strong>When you'll use it:</strong> Any application expecting significant traffic or requiring high availability.
+<h3>Horizontal vs Vertical Scaling</h3>
+<strong>What they are:</strong> Two approaches to increasing system capacity to handle more load.
+<strong>Vertical Scaling (Scale Up):</strong>
+<li><strong>Definition</strong> - Add more power to existing servers (CPU, RAM, storage)</li>
+<li><strong>Pros</strong> - Simple to implement, no application changes needed</li>
+<li><strong>Cons</strong> - Limited by hardware constraints, single point of failure</li>
+<li><strong>Example</strong> - Upgrade server from 8GB to 32GB RAM</li>
+<strong>Horizontal Scaling (Scale Out):</strong>
+<li><strong>Definition</strong> - Add more servers to handle increased load</li>
+<li><strong>Pros</strong> - Virtually unlimited scaling, better fault tolerance</li>
+<li><strong>Cons</strong> - Requires application design for distribution</li>
+<li><strong>Example</strong> - Add 3 more web servers behind load balancer</li>
+<strong>Why it matters:</strong> Understanding scaling options helps architects design systems that can grow with demand and remain available during failures.
+<strong>Design considerations:</strong>
+<li><strong>Stateless applications</strong> - Easier to scale horizontally</li>
+<li><strong>Database scaling</strong> - Often the bottleneck in horizontal scaling</li>
+<li><strong>Session management</strong> - Sticky sessions vs distributed sessions</li>
+<li><strong>Data consistency</strong> - Challenges with distributed data</li>
+<strong>When you'll use it:</strong> 
+<li><strong>Vertical scaling</strong> - Quick fixes, legacy applications, database servers</li>
+<li><strong>Horizontal scaling</strong> - Web applications, microservices, cloud-native apps</li>
+<h3>Database Optimization</h3>
+<strong>What it is:</strong> Techniques to improve database performance, reduce query times, and handle larger datasets efficiently.
+<strong>Why it matters:</strong> Databases are often the bottleneck in application performance. Optimizing database operations can dramatically improve overall system performance.
+<strong>Query optimization:</strong>
+<li><strong>Indexing</strong> - Create indexes on frequently queried columns</li>
+<li><strong>Query analysis</strong> - Use EXPLAIN to understand query execution</li>
+<li><strong>Query rewriting</strong> - Optimize SQL for better performance</li>
+<li><strong>Avoiding N+1 queries</strong> - Fetch related data in single query</li>
+<strong>Database design optimization:</strong>
+<li><strong>Normalization</strong> - Reduce data redundancy</li>
+<li><strong>Denormalization</strong> - Strategic redundancy for performance</li>
+<li><strong>Partitioning</strong> - Split large tables across multiple storage units</li>
+<li><strong>Sharding</strong> - Distribute data across multiple database servers</li>
+<strong>Indexing strategies:</strong>
+<li><strong>Primary indexes</strong> - Unique identifiers (usually automatic)</li>
+<li><strong>Secondary indexes</strong> - Additional indexes on frequently queried columns</li>
+<li><strong>Composite indexes</strong> - Indexes on multiple columns</li>
+<li><strong>Covering indexes</strong> - Include all needed columns in index</li>
+<strong>Connection management:</strong>
+<li><strong>Connection pooling</strong> - Reuse database connections</li>
+<li><strong>Connection limits</strong> - Prevent database overload</li>
+<li><strong>Read replicas</strong> - Distribute read operations across multiple databases</li>
+<li><strong>Write/read separation</strong> - Route queries to appropriate servers</li>
+<strong>When you'll use it:</strong> Any application with significant database usage needs optimization for good performance.
+<h3>Lazy Loading</h3>
+<strong>What it is:</strong> Design pattern that defers loading of non-critical resources until they're actually needed.
+<strong>Why it matters:</strong> Lazy loading improves initial page load times, reduces bandwidth usage, and provides better user experience by loading content progressively.
+<strong>Types of lazy loading:</strong>
+<li><strong>Image lazy loading</strong> - Load images as they enter viewport</li>
+<li><strong>Code splitting</strong> - Load JavaScript modules on demand</li>
+<li><strong>Data lazy loading</strong> - Fetch additional data when needed</li>
+<li><strong>Route-based loading</strong> - Load page components when navigating</li>
+<strong>Implementation techniques:</strong>
+<li><strong>Intersection Observer API</strong> - Modern browser API for viewport detection</li>
+<li><strong>Scroll event listeners</strong> - Traditional approach (less efficient)</li>
+<li><strong>Libraries</strong> - LazyLoad, Lozad.js, react-lazyload</li>
+<li><strong>Native loading="lazy"</strong> - Browser support for images and iframes</li>
+<strong>Benefits:</strong>
+<li><strong>Faster initial load</strong> - Reduced initial payload size</li>
+<li><strong>Bandwidth savings</strong> - Don't load unused content</li>
+<li><strong>Better perceived performance</strong> - Content appears to load faster</li>
+<li><strong>Improved mobile experience</strong> - Especially important on slower connections</li>
+<strong>Best practices:</strong>
+<li><strong>Placeholder content</strong> - Show skeleton or blur while loading</li>
+<li><strong>Progressive enhancement</strong> - Ensure functionality without JavaScript</li>
+<li><strong>Preload critical content</strong> - Don't lazy load above-the-fold content</li>
+<li><strong>Error handling</strong> - Graceful degradation when loading fails</li>
+<strong>When you'll use it:</strong> Any application with images, large datasets, or code that isn't immediately needed.
+<h3>Content Delivery Network (CDN)</h3>
+<strong>What it is:</strong> Network of geographically distributed servers that deliver web content to users from the nearest location.
+<strong>Why it matters:</strong> CDNs dramatically improve website performance by reducing latency, decrease server load, and provide better user experience globally.
+<strong>How CDNs work:</strong>
+1. <strong>User requests content</strong> - Browser requests image, CSS, JavaScript
+2. <strong>CDN edge server responds</strong> - Nearest server provides cached content
+3. <strong>Cache miss handling</strong> - If not cached, fetch from origin server
+4. <strong>Content caching</strong> - Store content at edge for future requests
+5. <strong>Cache expiration</strong> - Content refreshed based on TTL settings
+<strong>Types of CDN content:</strong>
+<li><strong>Static assets</strong> - Images, CSS, JavaScript files</li>
+<li><strong>Dynamic content</strong> - API responses, personalized content</li>
+<li><strong>Video streaming</strong> - Optimized for media delivery</li>
+<li><strong>Software downloads</strong> - Large files distributed globally</li>
+<strong>Popular CDN providers:</strong>
+<li><strong>Cloudflare</strong> - Free tier, DDoS protection, security features</li>
+<li><strong>AWS CloudFront</strong> - Integrated with AWS ecosystem</li>
+<li><strong>Fastly</strong> - Real-time analytics, edge computing capabilities</li>
+<li><strong>KeyCDN</strong> - Simple pricing, good performance</li>
+<li><strong>Azure CDN</strong> - Microsoft's global network</li>
+<strong>CDN optimization techniques:</strong>
+<li><strong>Cache headers</strong> - Control how long content is cached</li>
+<li><strong>Compression</strong> - Gzip/Brotli compression for text files</li>
+<li><strong>Image optimization</strong> - WebP format, responsive images</li>
+<li><strong>HTTP/2 support</strong> - Multiplexing and server push</li>
+<strong>When you'll use it:</strong> Any website with global users, media content, or performance requirements.
+<h3>Minification</h3>
+<strong>What it is:</strong> Process of removing unnecessary characters from code (whitespace, comments, long variable names) without changing functionality.
+<strong>Why it matters:</strong> Minification reduces file sizes, leading to faster downloads, less bandwidth usage, and improved page load times.
+<strong>What gets minified:</strong>
+<li><strong>JavaScript</strong> - Remove whitespace, shorten variable names, remove comments</li>
+<li><strong>CSS</strong> - Remove whitespace, combine selectors, optimize properties</li>
+<li><strong>HTML</strong> - Remove whitespace, comments, optional tags</li>
+<li><strong>Images</strong> - Compress without quality loss (lossless compression)</li>
+<strong>Minification techniques:</strong>
+<li><strong>Whitespace removal</strong> - Eliminate unnecessary spaces, tabs, newlines</li>
+<li><strong>Comment removal</strong> - Strip out developer comments</li>
+<li><strong>Variable name shortening</strong> - Use shorter variable names (a, b, c)</li>
+<li><strong>Dead code elimination</strong> - Remove unused functions and variables</li>
+<li><strong>Property optimization</strong> - Shorthand CSS properties</li>
+<strong>Popular minification tools:</strong>
+<li><strong>JavaScript</strong> - UglifyJS, Terser, esbuild</li>
+<li><strong>CSS</strong> - cssnano, clean-css, PurgeCSS</li>
+<li><strong>HTML</strong> - HTMLMinifier, html-minifier-terser</li>
+<li><strong>Build tools</strong> - Webpack, Rollup, Parcel (built-in minification)</li>
+<strong>Best practices:</strong>
+<li><strong>Source maps</strong> - Maintain debugging capability in production</li>
+<li><strong>Automated process</strong> - Integrate into build pipeline</li>
+<li><strong>Test minified code</strong> - Ensure functionality isn't broken</li>
+<li><strong>Separate concerns</strong> - Different strategies for different file types</li>
+<strong>When you'll use it:</strong> Every production web application should minify assets for optimal performance.
+<h3>Bundling</h3>
+<strong>What it is:</strong> Process of combining multiple files into single files to reduce the number of HTTP requests.
+<strong>Why it matters:</strong> Bundling reduces network overhead, improves caching efficiency, and can significantly improve page load times, especially for applications with many small files.
+<strong>Types of bundling:</strong>
+<li><strong>JavaScript bundling</strong> - Combine multiple JS files into one</li>
+<li><strong>CSS bundling</strong> - Merge stylesheets into single file</li>
+<li><strong>Asset bundling</strong> - Include images, fonts as data URLs</li>
+<li><strong>Code splitting</strong> - Strategic bundling with multiple output files</li>
+<strong>Bundling strategies:</strong>
+<li><strong>Single bundle</strong> - Everything in one file (simple but not optimal)</li>
+<li><strong>Vendor bundling</strong> - Separate bundle for third-party libraries</li>
+<li><strong>Route-based bundling</strong> - Different bundles for different pages</li>
+<li><strong>Dynamic imports</strong> - Load bundles on demand</li>
+<strong>Popular bundling tools:</strong>
+<li><strong>Webpack</strong> - Most popular, highly configurable</li>
+<li><strong>Rollup</strong> - Tree-shaking focus, good for libraries</li>
+<li><strong>Parcel</strong> - Zero-configuration bundler</li>
+<li><strong>esbuild</strong> - Extremely fast Go-based bundler</li>
+<li><strong>Vite</strong> - Fast development with optimized production builds</li>
+<strong>Bundle optimization:</strong>
+<li><strong>Tree shaking</strong> - Remove unused code from bundles</li>
+<li><strong>Code splitting</strong> - Split bundles for better caching</li>
+<li><strong>Chunk optimization</strong> - Balance bundle sizes</li>
+<li><strong>Compression</strong> - Gzip/Brotli compression</li>
+<strong>When you'll use it:</strong> Any modern web application with multiple JavaScript or CSS files.
+<h3>Debouncing and Throttling</h3>
+<strong>What they are:</strong> Techniques to control the frequency of function execution, particularly useful for performance optimization of event handlers.
+<strong>Debouncing:</strong>
+<li><strong>Definition</strong> - Delay function execution until after a specified time has passed since the last call</li>
+<li><strong>Use case</strong> - Search suggestions, form validation, resize events</li>
+<li><strong>Example</strong> - Only send search request 300ms after user stops typing</li>
+<strong>Throttling:</strong>
+<li><strong>Definition</strong> - Limit function execution to at most once per specified time interval</li>
+<li><strong>Use case</strong> - Scroll events, mousemove events, API rate limiting</li>
+<li><strong>Example</strong> - Update scroll position indicator at most once every 100ms</li>
+<strong>Why they matter:</strong> These techniques prevent performance issues from high-frequency events, reduce server load, and improve user experience.
+<strong>Implementation examples:</strong>
+<strong>Debounce:</strong>
+<pre><code>function debounce(func, delay) {
+  let timeoutId;
+  return function(...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+<p>// Usage
+const debouncedSearch = debounce(searchFunction, 300);
+searchInput.addEventListener('input', debouncedSearch);</code></pre></p>
+<strong>Throttle:</strong>
+<pre><code>function throttle(func, delay) {
+  let timeoutId;
+  let lastExecTime = 0;
+  return function(...args) {
+    const currentTime = Date.now();
+    if (currentTime - lastExecTime > delay) {
+      func.apply(this, args);
+      lastExecTime = currentTime;
+    }
+  };
+}
+<p>// Usage
+const throttledScroll = throttle(handleScroll, 100);
+window.addEventListener('scroll', throttledScroll);</code></pre></p>
+<strong>When you'll use them:</strong>
+<li><strong>Debouncing</strong> - User input, API calls, expensive calculations</li>
+<li><strong>Throttling</strong> - Animation, scroll events, mouse tracking</li>
+<h3>Memory Management</h3>
+<strong>What it is:</strong> Process of allocating, using, and freeing memory efficiently in applications to prevent memory leaks and optimize performance.
+<strong>Why it matters:</strong> Poor memory management leads to memory leaks, performance degradation, and application crashes. Good memory management ensures stable, performant applications.
+<strong>Memory concepts:</strong>
+<li><strong>Stack memory</strong> - Fast, automatic, limited size (local variables)</li>
+<li><strong>Heap memory</strong> - Slower, manual management, larger (objects, arrays)</li>
+<li><strong>Garbage collection</strong> - Automatic memory cleanup in managed languages</li>
+<li><strong>Memory leaks</strong> - Memory that's allocated but never freed</li>
+<strong>Common memory issues:</strong>
+<li><strong>Memory leaks</strong> - Objects not properly disposed</li>
+<li><strong>Circular references</strong> - Objects referencing each other prevent cleanup</li>
+<li><strong>Event listener leaks</strong> - Forgotten event handlers</li>
+<li><strong>Closure leaks</strong> - Functions holding onto unnecessary scope</li>
+<li><strong>DOM leaks</strong> - Detached DOM nodes still referenced</li>
+<strong>Memory optimization techniques:</strong>
+<li><strong>Object pooling</strong> - Reuse objects instead of creating new ones</li>
+<li><strong>Weak references</strong> - References that don't prevent garbage collection</li>
+<li><strong>Manual cleanup</strong> - Explicitly remove references when done</li>
+<li><strong>Efficient data structures</strong> - Choose appropriate data types</li>
+<strong>Memory profiling tools:</strong>
+<li><strong>Browser DevTools</strong> - Memory tab for heap snapshots</li>
+<li><strong>Node.js</strong> - Built-in memory usage monitoring</li>
+<li><strong>Application monitoring</strong> - New Relic, Datadog memory metrics</li>
+<li><strong>Language-specific tools</strong> - JProfiler (Java), Instruments (iOS)</li>
+<strong>When you'll use it:</strong> Any long-running application, especially those with dynamic content creation or event handling.
+<h3>Performance Monitoring</h3>
+<strong>What it is:</strong> Continuous measurement and analysis of application performance metrics to identify issues and optimization opportunities.
+<strong>Why it matters:</strong> You can't improve what you don't measure. Performance monitoring helps identify bottlenecks, track improvements, and ensure good user experience.
+<strong>Key performance metrics:</strong>
+<li><strong>Response time</strong> - How long requests take to complete</li>
+<li><strong>Throughput</strong> - Number of requests processed per second</li>
+<li><strong>Error rate</strong> - Percentage of failed requests</li>
+<li><strong>Availability</strong> - Percentage of time system is operational</li>
+<li><strong>Resource utilization</strong> - CPU, memory, disk, network usage</li>
+<strong>Client-side metrics:</strong>
+<li><strong>First Contentful Paint (FCP)</strong> - When first content appears</li>
+<li><strong>Largest Contentful Paint (LCP)</strong> - When main content loads</li>
+<li><strong>First Input Delay (FID)</strong> - Time to interactive</li>
+<li><strong>Cumulative Layout Shift (CLS)</strong> - Visual stability</li>
+<li><strong>Time to Interactive (TTI)</strong> - When page becomes fully interactive</li>
+<strong>Server-side metrics:</strong>
+<li><strong>Database query time</strong> - How long database operations take</li>
+<li><strong>API response time</strong> - Time for API endpoints to respond</li>
+<li><strong>Background job processing</strong> - Queue processing times</li>
+<li><strong>Cache hit rates</strong> - Effectiveness of caching strategies</li>
+<strong>Performance monitoring tools:</strong>
+<li><strong>Real User Monitoring (RUM)</strong> - Google Analytics, New Relic Browser</li>
+<li><strong>Synthetic monitoring</strong> - Pingdom, GTmetrix, WebPageTest</li>
+<li><strong>Application Performance Monitoring</strong> - New Relic, Datadog, AppDynamics</li>
+<li><strong>Open source</strong> - Prometheus + Grafana, ELK stack</li>
+<strong>When you'll use it:</strong> Every production application should have performance monitoring to ensure good user experience.
+<h3>Database Indexing</h3>
+<strong>What it is:</strong> Database optimization technique that creates additional data structures to speed up data retrieval operations.
+<strong>Why it matters:</strong> Proper indexing can make database queries orders of magnitude faster, while poor indexing can severely degrade performance.
+<strong>How indexes work:</strong>
+<li><strong>Data structure</strong> - Usually B-trees or hash tables</li>
+<li><strong>Pointer system</strong> - Indexes point to actual data locations</li>
+<li><strong>Trade-offs</strong> - Faster reads but slower writes and more storage</li>
+<strong>Types of indexes:</strong>
+<li><strong>Primary index</strong> - Usually on primary key (automatic)</li>
+<li><strong>Secondary index</strong> - Additional indexes on other columns</li>
+<li><strong>Composite index</strong> - Index on multiple columns</li>
+<li><strong>Unique index</strong> - Ensures uniqueness while optimizing lookups</li>
+<li><strong>Partial index</strong> - Index only subset of rows meeting condition</li>
+<li><strong>Full-text index</strong> - For text search operations</li>
+<strong>Indexing strategies:</strong>
+<li><strong>Query analysis</strong> - Identify frequently used WHERE clauses</li>
+<li><strong>Composite index order</strong> - Most selective columns first</li>
+<li><strong>Covering indexes</strong> - Include all needed columns in index</li>
+<li><strong>Index maintenance</strong> - Regular analysis and optimization</li>
+<strong>Index performance considerations:</strong>
+<li><strong>Selectivity</strong> - Indexes work best on columns with many unique values</li>
+<li><strong>Cardinality</strong> - High cardinality columns benefit more from indexing</li>
+<li><strong>Update frequency</strong> - Frequently updated columns have indexing overhead</li>
+<li><strong>Index size</strong> - Large indexes may not fit in memory</li></ul>
+<strong>When you'll use it:</strong> Any database with performance requirements needs strategic indexing on frequently queried columns.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

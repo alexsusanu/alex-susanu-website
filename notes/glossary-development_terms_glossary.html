@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Terms Glossary - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Development Terms Glossary</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                Programming (glossary) • Updated May 28, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">glossary</span><span class="tag">development</span><span class="tag">programming</span><span class="tag">terminology</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Development Terms Glossary</h2>
+<h3>API (Application Programming Interface)</h3>
+<strong>What it is:</strong> A set of rules and protocols that allows different software applications to communicate with each other.
+<strong>Why it matters:</strong> APIs are the backbone of modern software. They enable integration between services, allow third-party developers to build on existing platforms, and make modular, scalable architectures possible.
+<strong>Real-world analogy:</strong> Like a waiter in a restaurant - you don't go directly to the kitchen, you tell the waiter (API) what you want, and they bring it back to you.
+<strong>Examples:</strong>
+<ul><li><strong>REST APIs</strong> - Most common, uses HTTP methods (GET, POST, PUT, DELETE)</li>
+<li><strong>GraphQL</strong> - Query language that lets clients request exactly the data they need</li>
+<li><strong>WebSocket APIs</strong> - For real-time, two-way communication</li>
+<strong>When you'll use it:</strong> Building web apps, mobile apps, integrating payment systems, social media features, or any time you need data from external services.
+<h3>Git</h3>
+<strong>What it is:</strong> A distributed version control system that tracks changes to files and coordinates work among multiple developers.
+<strong>Why it matters:</strong> Git is essential for collaboration, backup, and maintaining code history. It prevents code loss, enables parallel development, and provides a complete audit trail of changes.
+<strong>Key concepts:</strong>
+<li><strong>Repository (repo)</strong> - Container for your project and its history</li>
+<li><strong>Commit</strong> - Snapshot of changes with a descriptive message</li>
+<li><strong>Branch</strong> - Parallel version of code for new features</li>
+<li><strong>Merge</strong> - Combining changes from different branches</li>
+<strong>Essential commands:</strong>
+<pre><code>git clone    # Copy a repository
+git add      # Stage changes
+git commit   # Save changes with message
+git push     # Upload to remote repository
+git pull     # Download latest changes</code></pre>
+<strong>When you'll use it:</strong> Every software project. Period.
+<h3>Database</h3>
+<strong>What it is:</strong> Organized collection of structured information, or data, stored electronically in a computer system.
+<strong>Why it matters:</strong> Applications need persistent storage. Databases provide efficient ways to store, retrieve, update, and delete data while maintaining integrity and supporting concurrent access.
+<strong>Types:</strong>
+<li><strong>Relational (SQL)</strong> - Structured data in tables (MySQL, PostgreSQL, Oracle)</li>
+<li><strong>NoSQL</strong> - Flexible schemas for varied data (MongoDB, Cassandra, Redis)</li>
+<li><strong>Graph</strong> - Relationships between data points (Neo4j, Amazon Neptune)</li>
+<strong>Key concepts:</strong>
+<li><strong>CRUD</strong> - Create, Read, Update, Delete operations</li>
+<li><strong>Normalization</strong> - Organizing data to reduce redundancy</li>
+<li><strong>Indexing</strong> - Speed up data retrieval</li>
+<li><strong>ACID</strong> - Atomicity, Consistency, Isolation, Durability</li>
+<strong>When you'll use it:</strong> Any application that needs to store user data, content, transactions, or state.
+<h3>Framework</h3>
+<strong>What it is:</strong> Pre-written code that provides a foundation and structure for building applications.
+<strong>Why it matters:</strong> Frameworks save time by providing common functionality, enforce best practices, and offer tested, optimized solutions to common problems.
+<strong>Examples by language:</strong>
+<li><strong>JavaScript</strong> - React, Angular, Vue.js (frontend), Node.js/Express (backend)</li>
+<li><strong>Python</strong> - Django, Flask, FastAPI</li>
+<li><strong>Java</strong> - Spring Boot, Hibernate</li>
+<li><strong>PHP</strong> - Laravel, Symfony</li>
+<strong>Benefits:</strong>
+<li><strong>Faster development</strong> - Don't reinvent the wheel</li>
+<li><strong>Best practices</strong> - Built-in security, performance optimizations</li>
+<li><strong>Community support</strong> - Documentation, tutorials, plugins</li>
+<li><strong>Maintainability</strong> - Standardized code structure</li>
+<strong>When you'll use it:</strong> Almost every project. Choosing the right framework is crucial for project success.
+<h3>IDE (Integrated Development Environment)</h3>
+<strong>What it is:</strong> Software application providing comprehensive facilities for software development including code editor, debugger, and build tools.
+<strong>Why it matters:</strong> IDEs boost productivity with features like syntax highlighting, auto-completion, debugging, and integrated tools that streamline the development workflow.
+<strong>Popular IDEs:</strong>
+<li><strong>VS Code</strong> - Lightweight, extensible, free</li>
+<li><strong>IntelliJ IDEA</strong> - Powerful for Java, many language plugins</li>
+<li><strong>PyCharm</strong> - Python-focused with Django support</li>
+<li><strong>Xcode</strong> - Apple's IDE for iOS/macOS development</li>
+<strong>Key features:</strong>
+<li><strong>Syntax highlighting</strong> - Color-codes different parts of code</li>
+<li><strong>Auto-completion</strong> - Suggests code as you type</li>
+<li><strong>Debugging</strong> - Step through code to find issues</li>
+<li><strong>Version control integration</strong> - Git commands built-in</li>
+<li><strong>Extensions</strong> - Add functionality for specific needs</li>
+<strong>When you'll use it:</strong> Daily coding work. The right IDE can significantly impact your productivity.
+<h3>Library vs Framework</h3>
+<strong>What's the difference:</strong> 
+<li><strong>Library</strong> - You call its functions when you need them</li>
+<li><strong>Framework</strong> - It calls your code when it needs it (inversion of control)</li>
+<strong>Library example:</strong> jQuery - you decide when to use <code>$.ajax()</code>
+<strong>Framework example:</strong> React - React decides when to call your component functions
+<strong>Why it matters:</strong> Understanding this distinction helps you choose the right tools and understand how to structure your code within different architectures.
+<h3>SDK (Software Development Kit)</h3>
+<strong>What it is:</strong> Collection of software development tools, including libraries, documentation, code samples, and guides.
+<strong>Why it matters:</strong> SDKs provide everything needed to develop applications for specific platforms or services, standardizing how developers interact with systems.
+<strong>Examples:</strong>
+<li><strong>Android SDK</strong> - Tools for building Android apps</li>
+<li><strong>iOS SDK</strong> - Apple's tools for iPhone/iPad apps</li>
+<li><strong>AWS SDK</strong> - Libraries for interacting with Amazon Web Services</li>
+<li><strong>Stripe SDK</strong> - Payment processing integration</li>
+<strong>Components typically included:</strong>
+<li><strong>APIs and libraries</strong> - Pre-built functions</li>
+<li><strong>Documentation</strong> - How-to guides and references</li>
+<li><strong>Code examples</strong> - Sample implementations</li>
+<li><strong>Development tools</strong> - Compilers, debuggers, emulators</li>
+<strong>When you'll use it:</strong> When building for specific platforms (mobile, cloud services, payment systems).
+<h3>Package Manager</h3>
+<strong>What it is:</strong> Tool that automates installing, updating, and managing software packages and their dependencies.
+<strong>Why it matters:</strong> Package managers prevent "dependency hell," ensure consistent environments, and make sharing code easy across teams and projects.
+<strong>Examples by language:</strong>
+<li><strong>npm</strong> - Node.js/JavaScript packages</li>
+<li><strong>pip</strong> - Python packages</li>
+<li><strong>Maven/Gradle</strong> - Java dependencies</li>
+<li><strong>Composer</strong> - PHP packages</li>
+<li><strong>NuGet</strong> - .NET packages</li>
+<strong>Key concepts:</strong>
+<li><strong>Package</strong> - Bundled code with metadata</li>
+<li><strong>Dependency</strong> - Code your project needs to function</li>
+<li><strong>Version lock</strong> - Ensuring consistent dependency versions</li>
+<li><strong>Registry</strong> - Central repository of packages</li>
+<strong>When you'll use it:</strong> Every modern development project uses package managers.
+<h3>Debugging</h3>
+<strong>What it is:</strong> Process of finding and fixing bugs (errors) in computer programs.
+<strong>Why it matters:</strong> Debugging is essential for creating reliable software. Good debugging skills separate professional developers from beginners.
+<strong>Types of bugs:</strong>
+<li><strong>Syntax errors</strong> - Code doesn't follow language rules</li>
+<li><strong>Logic errors</strong> - Code runs but produces wrong results</li>
+<li><strong>Runtime errors</strong> - Code crashes during execution</li>
+<li><strong>Performance issues</strong> - Code is slow or inefficient</li>
+<strong>Debugging techniques:</strong>
+<li><strong>Print debugging</strong> - Add console.log/print statements</li>
+<li><strong>Breakpoints</strong> - Pause execution at specific lines</li>
+<li><strong>Step debugging</strong> - Execute code line by line</li>
+<li><strong>Stack traces</strong> - Follow the path that led to an error</li>
+<strong>Tools:</strong>
+<li><strong>Browser DevTools</strong> - Built into Chrome, Firefox</li>
+<li><strong>IDE debuggers</strong> - Integrated debugging features</li>
+<li><strong>Logging frameworks</strong> - Structured error tracking</li>
+<strong>When you'll use it:</strong> Every day as a developer. Bugs are inevitable.
+<h3>Testing</h3>
+<strong>What it is:</strong> Process of executing code to find defects and verify that software behaves as expected.
+<strong>Why it matters:</strong> Testing prevents bugs from reaching users, ensures code quality, and provides confidence when making changes.
+<strong>Types of testing:</strong>
+<li><strong>Unit tests</strong> - Test individual functions/components</li>
+<li><strong>Integration tests</strong> - Test how parts work together</li>
+<li><strong>End-to-end tests</strong> - Test complete user workflows</li>
+<li><strong>Performance tests</strong> - Test speed and scalability</li>
+<strong>Testing frameworks:</strong>
+<li><strong>JavaScript</strong> - Jest, Mocha, Cypress</li>
+<li><strong>Python</strong> - pytest, unittest</li>
+<li><strong>Java</strong> - JUnit, TestNG</li>
+<li><strong>C#</strong> - NUnit, MSTest</li>
+<strong>Best practices:</strong>
+<li><strong>Test early and often</strong> - Don't wait until the end</li>
+<li><strong>Write testable code</strong> - Design for easy testing</li>
+<li><strong>Test edge cases</strong> - What happens with invalid input?</li>
+<li><strong>Maintain tests</strong> - Keep them updated with code changes</li>
+<strong>When you'll use it:</strong> Professional development requires testing. It's not optional.
+<h3>Refactoring</h3>
+<strong>What it is:</strong> Process of restructuring existing code without changing its external behavior to improve readability, reduce complexity, or improve performance.
+<strong>Why it matters:</strong> Code becomes messy over time. Refactoring keeps codebases maintainable, makes adding features easier, and reduces technical debt.
+<strong>Common refactoring techniques:</strong>
+<li><strong>Extract method</strong> - Break large functions into smaller ones</li>
+<li><strong>Rename variables</strong> - Use clearer, more descriptive names</li>
+<li><strong>Remove duplication</strong> - DRY (Don't Repeat Yourself)</li>
+<li><strong>Simplify conditionals</strong> - Make if/else logic clearer</li>
+<strong>When to refactor:</strong>
+<li><strong>Before adding new features</strong> - Clean foundation</li>
+<li><strong>When fixing bugs</strong> - Understand and improve problematic code</li>
+<li><strong>During code reviews</strong> - Team identifies improvement opportunities</li>
+<li><strong>Regular maintenance</strong> - Prevent technical debt accumulation</li>
+<strong>When you'll use it:</strong> Continuously throughout your career. Clean code is professional code.
+<h3>Version Control</h3>
+<strong>What it is:</strong> System for tracking changes to files over time, allowing multiple people to collaborate and maintaining history of modifications.
+<strong>Why it matters:</strong> Version control is essential for any serious development work. It enables collaboration, provides backup, and allows you to experiment safely.
+<strong>Key concepts:</strong>
+<li><strong>Repository</strong> - Storage location for your code and its history</li>
+<li><strong>Commit</strong> - Snapshot of changes with a message</li>
+<li><strong>Branch</strong> - Independent line of development</li>
+<li><strong>Merge</strong> - Combining changes from different branches</li>
+<li><strong>Tag</strong> - Marking specific versions (releases)</li>
+<strong>Popular systems:</strong>
+<li><strong>Git</strong> - Most popular, distributed system</li>
+<li><strong>Subversion (SVN)</strong> - Centralized system, still used in some enterprises</li>
+<li><strong>Mercurial</strong> - Similar to Git, less popular</li>
+<strong>Workflow patterns:</strong>
+<li><strong>Feature branches</strong> - Create branch per feature</li>
+<li><strong>Git flow</strong> - Structured branching model</li>
+<li><strong>GitHub flow</strong> - Simpler model for continuous deployment</li>
+<strong>When you'll use it:</strong> Every professional development project.
+<h3>Code Review</h3>
+<strong>What it is:</strong> Systematic examination of code changes by team members before merging into the main codebase.
+<strong>Why it matters:</strong> Code reviews catch bugs, ensure code quality, share knowledge across the team, and maintain coding standards.
+<strong>What reviewers look for:</strong>
+<li><strong>Correctness</strong> - Does the code work as intended?</li>
+<li><strong>Style</strong> - Does it follow team conventions?</li>
+<li><strong>Performance</strong> - Are there efficiency issues?</li>
+<li><strong>Security</strong> - Any vulnerabilities introduced?</li>
+<li><strong>Maintainability</strong> - Is it easy to understand and modify?</li>
+<strong>Best practices:</strong>
+<li><strong>Review small changes</strong> - Large reviews are less effective</li>
+<li><strong>Be constructive</strong> - Suggest improvements, don't just criticize</li>
+<li><strong>Automate what you can</strong> - Use linters, formatters</li>
+<li><strong>Focus on important issues</strong> - Don't nitpick minor style issues</li>
+<strong>Tools:</strong>
+<li><strong>GitHub Pull Requests</strong> - Most common for Git workflows</li>
+<li><strong>GitLab Merge Requests</strong> - Similar functionality</li>
+<li><strong>Bitbucket Pull Requests</strong> - Atlassian's solution</li>
+<li><strong>Review Board</strong> - Dedicated code review tool</li>
+<strong>When you'll use it:</strong> Any team development environment. Essential for code quality.
+<h3>Deployment</h3>
+<strong>What it is:</strong> Process of making software available for use, typically by moving it from development environment to production.
+<strong>Why it matters:</strong> Even great code is useless if users can't access it. Reliable deployment processes are crucial for delivering value.
+<strong>Deployment environments:</strong>
+<li><strong>Development</strong> - Where developers write and test code</li>
+<li><strong>Staging</strong> - Production-like environment for final testing</li>
+<li><strong>Production</strong> - Live environment where real users access the application</li>
+<strong>Deployment strategies:</strong>
+<li><strong>Blue-Green</strong> - Two identical environments, switch traffic instantly</li>
+<li><strong>Rolling</strong> - Gradually replace old version with new version</li>
+<li><strong>Canary</strong> - Deploy to small subset of users first</li>
+<li><strong>Feature flags</strong> - Deploy code but control feature activation</li>
+<strong>Tools and platforms:</strong>
+<li><strong>Heroku</strong> - Simple platform-as-a-service</li>
+<li><strong>AWS</strong> - Comprehensive cloud services</li>
+<li><strong>Netlify/Vercel</strong> - Static site deployment</li>
+<li><strong>Docker</strong> - Containerized deployment</li></ul>
+<strong>When you'll use it:</strong> Every time you want users to see your changes.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

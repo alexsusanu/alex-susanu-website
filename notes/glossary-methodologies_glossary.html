@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Methodologies & Practices Glossary - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Methodologies & Practices Glossary</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                General (glossary) • Updated May 28, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">glossary</span><span class="tag">methodologies</span><span class="tag">agile</span><span class="tag">devops</span><span class="tag">practices</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Methodologies & Practices Glossary</h2>
+<h3>Agile</h3>
+<strong>What it is:</strong> Set of principles and practices for software development that emphasizes collaboration, flexibility, and rapid iteration.
+<strong>Why it matters:</strong> Agile helps teams respond to changing requirements, deliver value faster, and improve product quality through continuous feedback and adaptation.
+<strong>Core values (Agile Manifesto):</strong>
+<ul><li><strong>Individuals and interactions</strong> over processes and tools</li>
+<li><strong>Working software</strong> over comprehensive documentation</li>
+<li><strong>Customer collaboration</strong> over contract negotiation</li>
+<li><strong>Responding to change</strong> over following a plan</li>
+<strong>Key principles:</strong>
+<li><strong>Customer satisfaction</strong> through early and continuous delivery</li>
+<li><strong>Welcome changing requirements</strong> even late in development</li>
+<li><strong>Deliver working software frequently</strong> (weeks rather than months)</li>
+<li><strong>Business people and developers</strong> must work together daily</li>
+<strong>Common frameworks:</strong>
+<li><strong>Scrum</strong> - Most popular, uses sprints and specific roles</li>
+<li><strong>Kanban</strong> - Visual workflow management with continuous flow</li>
+<li><strong>Lean</strong> - Focus on eliminating waste and maximizing value</li>
+<li><strong>Extreme Programming (XP)</strong> - Engineering practices focus</li>
+<strong>When you'll use it:</strong> Most modern software development teams use some form of Agile methodology.
+<h3>Scrum</h3>
+<strong>What it is:</strong> Agile framework that organizes work into time-boxed iterations called sprints, with specific roles, events, and artifacts.
+<strong>Why it matters:</strong> Scrum provides structure for Agile development, helping teams collaborate effectively and deliver working software regularly.
+<strong>Key roles:</strong>
+<li><strong>Product Owner</strong> - Defines requirements and priorities</li>
+<li><strong>Scrum Master</strong> - Facilitates process and removes obstacles</li>
+<li><strong>Development Team</strong> - Cross-functional group that builds the product</li>
+<strong>Scrum events:</strong>
+<li><strong>Sprint</strong> - Time-boxed iteration (usually 2-4 weeks)</li>
+<li><strong>Sprint Planning</strong> - Plan work for upcoming sprint</li>
+<li><strong>Daily Scrum</strong> - Brief daily coordination meeting</li>
+<li><strong>Sprint Review</strong> - Demonstrate completed work to stakeholders</li>
+<li><strong>Sprint Retrospective</strong> - Team reflects on process improvements</li>
+<strong>Scrum artifacts:</strong>
+<li><strong>Product Backlog</strong> - Prioritized list of features and requirements</li>
+<li><strong>Sprint Backlog</strong> - Work selected for current sprint</li>
+<li><strong>Increment</strong> - Working product at end of sprint</li>
+<strong>Benefits:</strong>
+<li><strong>Predictable delivery</strong> - Regular sprint cycles</li>
+<li><strong>Transparency</strong> - Clear visibility into progress</li>
+<li><strong>Adaptability</strong> - Can change direction between sprints</li>
+<li><strong>Team empowerment</strong> - Self-organizing teams</li>
+<strong>When you'll use it:</strong> Teams that want structured Agile process with regular delivery cycles.
+<h3>DevOps</h3>
+<strong>What it is:</strong> Cultural and technical movement that emphasizes collaboration between development and operations teams to deliver software faster and more reliably.
+<strong>Why it matters:</strong> DevOps breaks down silos between development and operations, enabling faster delivery, higher quality, and better collaboration.
+<strong>Core principles:</strong>
+<li><strong>Culture of collaboration</strong> - Shared responsibility for outcomes</li>
+<li><strong>Automation</strong> - Reduce manual, error-prone processes</li>
+<li><strong>Measurement</strong> - Use metrics to drive improvements</li>
+<li><strong>Sharing</strong> - Knowledge and tools across teams</li>
+<strong>Key practices:</strong>
+<li><strong>Continuous Integration/Continuous Deployment</strong> - Automated build and deployment</li>
+<li><strong>Infrastructure as Code</strong> - Manage infrastructure like software</li>
+<li><strong>Monitoring and logging</strong> - Comprehensive system observability</li>
+<li><strong>Configuration management</strong> - Automated system configuration</li>
+<strong>Popular tools:</strong>
+<li><strong>Version control</strong> - Git, GitHub, GitLab</li>
+<li><strong>CI/CD</strong> - Jenkins, GitHub Actions, Azure DevOps</li>
+<li><strong>Configuration management</strong> - Ansible, Puppet, Chef</li>
+<li><strong>Containerization</strong> - Docker, Kubernetes</li>
+<li><strong>Monitoring</strong> - Prometheus, Grafana, ELK stack</li>
+<strong>Benefits:</strong>
+<li><strong>Faster time to market</strong> - Reduced deployment friction</li>
+<li><strong>Higher quality</strong> - Automated testing and deployment</li>
+<li><strong>Better reliability</strong> - Infrastructure as code and monitoring</li>
+<li><strong>Improved collaboration</strong> - Shared tools and processes</li>
+<strong>When you'll use it:</strong> Any organization looking to improve software delivery speed and quality.
+<h3>Lean</h3>
+<strong>What it is:</strong> Methodology focused on maximizing customer value while minimizing waste in processes and resources.
+<strong>Why it matters:</strong> Lean helps organizations become more efficient by eliminating activities that don't add value, leading to faster delivery and lower costs.
+<strong>Core principles:</strong>
+<li><strong>Identify value</strong> - What do customers actually want?</li>
+<li><strong>Map value stream</strong> - Understand the flow of work</li>
+<li><strong>Create flow</strong> - Eliminate bottlenecks and delays</li>
+<li><strong>Establish pull</strong> - Work is pulled by customer demand</li>
+<li><strong>Pursue perfection</strong> - Continuous improvement</li>
+<strong>Types of waste (Muda):</strong>
+<li><strong>Overproduction</strong> - Building more than needed</li>
+<li><strong>Waiting</strong> - Idle time between activities</li>
+<li><strong>Transportation</strong> - Unnecessary movement of materials</li>
+<li><strong>Overprocessing</strong> - More work than customer values</li>
+<li><strong>Inventory</strong> - Excess work in progress</li>
+<li><strong>Motion</strong> - Unnecessary movement of people</li>
+<li><strong>Defects</strong> - Rework and corrections</li>
+<strong>Lean tools:</strong>
+<li><strong>Value stream mapping</strong> - Visualize entire process flow</li>
+<li><strong>Kaizen</strong> - Continuous small improvements</li>
+<li><strong>5S</strong> - Workplace organization system</li>
+<li><strong>Kanban</strong> - Visual workflow management</li>
+<strong>When you'll use it:</strong> Any process that can benefit from waste reduction and efficiency improvements.
+<h3>Kanban</h3>
+<strong>What it is:</strong> Visual workflow management method that uses boards and cards to represent work items and their progress through different stages.
+<strong>Why it matters:</strong> Kanban provides visibility into work flow, helps identify bottlenecks, and enables teams to optimize their processes continuously.
+<strong>Core principles:</strong>
+<li><strong>Visualize workflow</strong> - Make work and process visible</li>
+<li><strong>Limit work in progress</strong> - Focus on finishing before starting new work</li>
+<li><strong>Manage flow</strong> - Optimize the movement of work items</li>
+<li><strong>Make policies explicit</strong> - Clear rules about how work flows</li>
+<li><strong>Implement feedback loops</strong> - Regular review and improvement</li>
+<li><strong>Improve collaboratively</strong> - Evolve process through experimentation</li>
+<strong>Kanban board structure:</strong>
+<li><strong>Columns</strong> - Represent different stages of work (To Do, In Progress, Done)</li>
+<li><strong>Cards</strong> - Individual work items or tasks</li>
+<li><strong>WIP limits</strong> - Maximum number of items allowed in each column</li>
+<li><strong>Swimlanes</strong> - Horizontal divisions for different types of work</li>
+<strong>Benefits:</strong>
+<li><strong>Improved visibility</strong> - Everyone can see status of all work</li>
+<li><strong>Better flow</strong> - Identify and resolve bottlenecks</li>
+<li><strong>Flexibility</strong> - Easy to adapt to changing priorities</li>
+<li><strong>Continuous improvement</strong> - Regular retrospectives and adjustments</li>
+<strong>When you'll use it:</strong> Teams that want visual workflow management with continuous flow rather than fixed iterations.
+<h3>Test-Driven Development (TDD)</h3>
+<strong>What it is:</strong> Software development practice where tests are written before the code they test, following a red-green-refactor cycle.
+<strong>Why it matters:</strong> TDD improves code quality, design, and confidence in changes by ensuring comprehensive test coverage and forcing developers to think about requirements upfront.
+<strong>TDD cycle:</strong>
+1. <strong>Red</strong> - Write a failing test for desired functionality
+2. <strong>Green</strong> - Write minimal code to make the test pass
+3. <strong>Refactor</strong> - Improve code while keeping tests passing
+4. <strong>Repeat</strong> - Continue cycle for next piece of functionality
+<strong>Benefits:</strong>
+<li><strong>Better design</strong> - Forces thinking about interfaces and requirements</li>
+<li><strong>High test coverage</strong> - Tests written for all functionality</li>
+<li><strong>Confidence in changes</strong> - Regression testing catches breaking changes</li>
+<li><strong>Documentation</strong> - Tests serve as examples of how code should work</li>
+<li><strong>Debugging ease</strong> - Smaller, focused tests make issues easier to isolate</li>
+<strong>Best practices:</strong>
+<li><strong>Write smallest possible test</strong> - Focus on one behavior at a time</li>
+<li><strong>Keep tests simple</strong> - Tests should be easy to understand</li>
+<li><strong>Fast execution</strong> - Tests should run quickly for fast feedback</li>
+<li><strong>Independent tests</strong> - Tests shouldn't depend on each other</li>
+<strong>When you'll use it:</strong> Any development where code quality and maintainability are important priorities.
+<h3>Code Review</h3>
+<strong>What it is:</strong> Systematic examination of source code changes by team members before merging into the main codebase.
+<strong>Why it matters:</strong> Code reviews catch bugs, ensure code quality, share knowledge across the team, and maintain coding standards.
+<strong>Review process:</strong>
+1. <strong>Developer creates pull request</strong> - Proposes changes for review
+2. <strong>Reviewers examine code</strong> - Check for issues and improvements
+3. <strong>Feedback provided</strong> - Comments and suggestions for changes
+4. <strong>Developer addresses feedback</strong> - Makes requested changes
+5. <strong>Approval and merge</strong> - Code integrated into main branch
+<strong>What reviewers look for:</strong>
+<li><strong>Correctness</strong> - Does the code work as intended?</li>
+<li><strong>Style and conventions</strong> - Follows team coding standards?</li>
+<li><strong>Performance</strong> - Any efficiency issues or optimizations?</li>
+<li><strong>Security</strong> - Potential vulnerabilities introduced?</li>
+<li><strong>Maintainability</strong> - Is code easy to understand and modify?</li>
+<li><strong>Testing</strong> - Adequate test coverage for changes?</li>
+<strong>Best practices:</strong>
+<li><strong>Keep changes small</strong> - Easier to review and less risky</li>
+<li><strong>Be constructive</strong> - Suggest improvements, don't just criticize</li>
+<li><strong>Review promptly</strong> - Don't let reviews block progress</li>
+<li><strong>Use automation</strong> - Linters and formatters catch style issues</li>
+<li><strong>Focus on important issues</strong> - Don't nitpick minor style preferences</li>
+<strong>When you'll use it:</strong> Any team development environment. Essential for maintaining code quality.
+<h3>Pair Programming</h3>
+<strong>What it is:</strong> Software development technique where two programmers work together at one workstation, with one writing code while the other reviews.
+<strong>Why it matters:</strong> Pair programming improves code quality, shares knowledge, and can actually increase productivity despite using two developers.
+<strong>Roles:</strong>
+<li><strong>Driver</strong> - Types code and focuses on tactical implementation</li>
+<li><strong>Navigator</strong> - Reviews code, thinks strategically, suggests improvements</li>
+<li><strong>Role switching</strong> - Partners regularly switch roles</li>
+<strong>Benefits:</strong>
+<li><strong>Higher code quality</strong> - Real-time code review catches issues immediately</li>
+<li><strong>Knowledge sharing</strong> - Both developers learn from each other</li>
+<li><strong>Reduced debugging time</strong> - Fewer bugs make it into codebase</li>
+<li><strong>Better design</strong> - Two perspectives lead to better solutions</li>
+<li><strong>Team collaboration</strong> - Improves communication and teamwork</li>
+<strong>When it works best:</strong>
+<li><strong>Complex problems</strong> - Benefit from multiple perspectives</li>
+<li><strong>Knowledge transfer</strong> - Senior developer mentoring junior</li>
+<li><strong>Critical code</strong> - High-importance features that need extra attention</li>
+<li><strong>Learning new technologies</strong> - Shared exploration of unfamiliar tools</li>
+<strong>When you'll use it:</strong> Selectively for complex problems, mentoring, or critical code sections.
+<h3>Continuous Integration (CI)</h3>
+<strong>What it is:</strong> Development practice where developers frequently integrate code changes into shared repository, with automated builds and tests.
+<strong>Why it matters:</strong> CI catches integration issues early, provides fast feedback to developers, and maintains a always-deployable main branch.
+<strong>CI process:</strong>
+1. <strong>Developer commits code</strong> - Changes pushed to version control
+2. <strong>Automated build triggered</strong> - Code compiled and packaged
+3. <strong>Automated tests run</strong> - Unit, integration, and other tests
+4. <strong>Results reported</strong> - Pass/fail status communicated to team
+5. <strong>Issues addressed</strong> - Failed builds fixed immediately
+<strong>Key practices:</strong>
+<li><strong>Frequent commits</strong> - Integrate changes multiple times per day</li>
+<li><strong>Automated builds</strong> - No manual compilation steps</li>
+<li><strong>Comprehensive testing</strong> - High confidence in build quality</li>
+<li><strong>Fast builds</strong> - Quick feedback to developers</li>
+<li><strong>Fix broken builds immediately</strong> - Maintain clean main branch</li>
+<strong>CI tools:</strong>
+<li><strong>Jenkins</strong> - Open-source automation server</li>
+<li><strong>GitHub Actions</strong> - Integrated with GitHub repositories</li>
+<li><strong>GitLab CI/CD</strong> - Built into GitLab platform</li>
+<li><strong>Azure DevOps</strong> - Microsoft's CI/CD solution</li>
+<li><strong>CircleCI</strong> - Cloud-based CI/CD platform</li>
+<strong>When you'll use it:</strong> Every professional software development team should implement CI.
+<h3>Continuous Deployment (CD)</h3>
+<strong>What it is:</strong> Extension of continuous integration where every code change that passes automated tests is automatically deployed to production.
+<strong>Why it matters:</strong> CD enables faster delivery of features to users, reduces deployment risk through automation, and provides rapid feedback on changes.
+<strong>Deployment pipeline stages:</strong>
+1. <strong>Source control</strong> - Code changes trigger pipeline
+2. <strong>Build</strong> - Compile and package application
+3. <strong>Test</strong> - Automated testing at multiple levels
+4. <strong>Staging deployment</strong> - Deploy to production-like environment
+5. <strong>Production deployment</strong> - Automated release to users
+<strong>Deployment strategies:</strong>
+<li><strong>Blue-green deployment</strong> - Switch between two identical environments</li>
+<li><strong>Rolling deployment</strong> - Gradually replace old version with new</li>
+<li><strong>Canary deployment</strong> - Deploy to small subset of users first</li>
+<li><strong>Feature flags</strong> - Deploy code but control feature activation</li>
+<strong>Requirements for successful CD:</strong>
+<li><strong>Comprehensive test suite</strong> - High confidence in automated tests</li>
+<li><strong>Monitoring and alerting</strong> - Detect issues quickly</li>
+<li><strong>Rollback capability</strong> - Quick recovery from problems</li>
+<li><strong>Infrastructure automation</strong> - Consistent, repeatable deployments</li></ul>
+<strong>When you'll use it:</strong> Teams with mature CI practices and comprehensive testing who want to maximize deployment frequency.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
