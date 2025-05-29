@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConfigMap: Inline vs File-Based Configuration   - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>ConfigMap: Inline vs File-Based Configuration  </h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">configmap</span><span class="tag">yaml</span><span class="tag">volumes</span><span class="tag">kubectl</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>ConfigMap: Inline vs File-Based Configuration  </h2>
+<h3>Main Topic 1</h3>
+<p>Understanding the difference between defining Kubernetes ConfigMaps inline vs from external files is important for managing application configurations cleanly and declaratively.</p>
+<h4>Subtopic A: Inline ConfigMap (<code>application.yml: |</code>)</h4>
+<ul><li><strong>Config embedded directly</strong> - File content (like <code>application.yml</code>) is included directly in the YAML manifest using multiline string syntax (<code>|</code>).</li>
+<li><strong>All-in-one manifest</strong> - Easy to version control and deploy as part of GitOps or CI/CD pipelines.</li>
+  - Use this when configs are small and you want to manage everything in one place.
+  - Ideal for templated environments or tools like Helm.
+<h4>Subtopic B: File-Based ConfigMap (<code>--from-file</code>)</h4>
+<li><strong>Reads file from disk</strong> - You create a ConfigMap from a real file using <code>kubectl create configmap --from-file=...</code></li>
+<li><strong>No manual copying</strong> - The file is uploaded to the Kubernetes API server; no need to copy it to the node or container.</li>
+<li><strong>Cleaner for large configs</strong> - Better separation of concerns when you already have config files.</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (if applicable)</h4>
+<pre><code><h2>Inline</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+data:
+  application.yml: |
+    server:
+      port: 8080</code></pre>
+<pre><code><h2>File-based</h2>
+kubectl create configmap backend-config --from-file=application.yml</code></pre>
+<h4>Commands (if applicable)</h4>
+<pre><code>kubectl apply -f configmap-inline.yml
+kubectl create configmap backend-config --from-file=application.yml</code></pre>
+<h3>Key Concepts Summary</h3>
+<li><strong>Inline config</strong> - Embed file contents directly into the ConfigMap YAML.</li>
+<li><strong>File-based config</strong> - Reference external files and upload them using the CLI.</li>
+<li><strong>K8s stores config</strong> - Kubernetes stores the ConfigMap in the API server, not on nodes.</li>
+<li><strong>File gets mounted</strong> - The config file is injected into the container as a real file at runtime.</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Use inline for small or templated configs</strong> - Great for GitOps and human-readability.
+2. <strong>Use file-based for larger files</strong> - Keeps your manifests clean and leverages existing config files.
+3. <strong>Mount ConfigMaps as files</strong> - When the app expects a file (e.g., Spring Boot's <code>application.yml</code>), mount the config as a volume.</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1</h4>
+<li><strong>Symptom:</strong> Spring Boot app fails to find <code>application.yml</code></li>
+<li><strong>Cause:</strong> ConfigMap wasn't mounted correctly or wrong path used  </li>
+<li><strong>Solution:</strong> Mount the file into <code>/config</code> and set <code>--spring.config.location=file:/config/application.yml</code></li>
+<h4>Problem 2</h4>
+<li><strong>Symptom:</strong> ConfigMap value is too large or unmanageable in YAML</li>
+<li><strong>Solution:</strong> Use <code>--from-file</code> method to externalize the content cleanly</li>
+<h3>References / Further Reading</h3>
+<li>[Kubernetes ConfigMap Docs](https://kubernetes.io/docs/concepts/configuration/configmap/)</li>
+<li>[Spring Boot External Config](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config)</li>
+<li>[kubectl create configmap](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create-configmap)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

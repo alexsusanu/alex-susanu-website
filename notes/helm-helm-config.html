@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helm: ConfigMaps and Secrets in Charts   - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Helm: ConfigMaps and Secrets in Charts  </h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (helm) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">helm</span><span class="tag">configmap</span><span class="tag">templating</span><span class="tag">secrets</span><span class="tag">values</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Helm: ConfigMaps and Secrets in Charts  </h2>
+<h3>Main Topic 1</h3>
+<p>Helm templates allow you to inject config and secrets using values files and inline templates. This is powerful for templated deployments and environment-specific setups.</p>
+<h4>Subtopic A: ConfigMap in Helm</h4>
+<pre><code><h2>values.yaml</h2>
+config:
+  application.yml: |
+    server:
+      port: 8080
+    spring:
+      redis:
+        host: redis-service</code></pre>
+<pre><code><h2>templates/configmap.yaml</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mychart.fullname" . }}-config
+data:
+  application.yml: |-
+{{ .Values.config."application.yml" | indent 4 }}</code></pre>
+<h4>Subtopic B: Secret in Helm</h4>
+<pre><code><h2>values.yaml</h2>
+secrets:
+  username: myapp_user
+  password: password123</code></pre>
+<pre><code><h2>templates/secret.yaml</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "mychart.fullname" . }}-secret
+type: Opaque
+data:
+  username: {{ .Values.secrets.username | b64enc | quote }}
+  password: {{ .Values.secrets.password | b64enc | quote }}</code></pre>
+<h3>Main Topic 2</h3>
+<h4>Mounting the Config in Deployment</h4>
+<pre><code>volumes:
+  - name: config-volume
+    configMap:
+      name: {{ include "mychart.fullname" . }}-config
+<p>volumeMounts:
+  - name: config-volume
+    mountPath: /config</code></pre></p>
+<h4>Set values at install time</h4>
+<pre><code>helm install myapp ./mychart -f values-prod.yaml</code></pre>
+<h3>Key Concepts Summary</h3>
+<ul><li><strong>Templates drive resource files</strong> - Use <code>.Values</code>, <code>b64enc</code>, <code>indent</code>, and helpers.</li>
+<li><strong>Helm values control logic</strong> - Great for multi-env configs.</li>
+<li><strong>Secrets templated securely</strong> - Still base64-encoded but separated per environment.</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Don't hardcode secrets</strong> - Pass them via CI/CD pipelines or sealed values.
+2. <strong>Use <code>quote</code> and <code>b64enc</code></strong> - For safety and compatibility.
+3. <strong>Use <code>include</code> helper</strong> - For consistent naming in templates.</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1</h4>
+<li><strong>Symptom:</strong> Secret not base64-encoded</li>
+<li><strong>Cause:</strong> Missing <code>b64enc</code> in template</li>
+<li><strong>Solution:</strong> Wrap secret values with <code>b64enc</code> in Helm</li>
+<h3>References / Further Reading</h3>
+<li>[Helm Docs](https://helm.sh/docs/)</li>
+<li>[Helm Templating](https://helm.sh/docs/chart_template_guide/)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -466,6 +466,16 @@
             <span class="tag">docker</span><span class="tag">containers</span><span class="tag">devops</span><span class="tag">security</span>
         </div>
     </div>
+    <div class="note-card" data-tags="cloud-native,microservices,deployment,scalability" onclick="window.location.href='notes/starting-point-twelve_factor_app_guide.html'">
+        <h3>12-Factor App Methodology Compliance</h3>
+        <div class="note-meta">Architecture (starting-point) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>The Twelve-Factor App methodology is a set of best practices for building software-as-a-service applications that are portable, scalable, and maint...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">cloud-native</span><span class="tag">microservices</span><span class="tag">deployment</span><span class="tag">scalability</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="spring boot,microservices,architecture,java" onclick="window.location.href='notes/starting-point-spring-microservices-patterns.html'">
         <h3>Java Spring Boot - Microservices Patterns</h3>
         <div class="note-meta">Programming (starting-point) • May 27, 2025</div>

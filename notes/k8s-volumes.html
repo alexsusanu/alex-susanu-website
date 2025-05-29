@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Volumes: Mounting ConfigMaps and Secrets   - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Volumes: Mounting ConfigMaps and Secrets  </h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">volumes</span><span class="tag">configmap</span><span class="tag">secret</span><span class="tag">mount</span><span class="tag">pods</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Volumes: Mounting ConfigMaps and Secrets  </h2>
+<h3>Main Topic 1</h3>
+<p>Volumes in Kubernetes are used to mount external data (config files, secrets, storage) into pods. They're essential for injecting files at runtime.</p>
+<h4>Subtopic A: Mount ConfigMap as File</h4>
+<pre><code>volumes:
+  - name: config-volume
+    configMap:
+      name: backend-config
+      items:
+        - key: application.yml
+          path: application.yml
+<p>volumeMounts:
+  - name: config-volume
+    mountPath: /config
+    readOnly: true</code></pre></p>
+<h4>Subtopic B: Mount Secret as File</h4>
+<pre><code>volumes:
+  - name: secret-volume
+    secret:
+      secretName: db-secret
+<p>volumeMounts:
+  - name: secret-volume
+    mountPath: /etc/secrets
+    readOnly: true</code></pre></p>
+<h3>Main Topic 2</h3>
+<h4>Use Cases</h4>
+<ul><li>Applications that require config or secret files on disk</li>
+<li>Avoid passing sensitive data via env vars</li>
+<li>Reading <code>application.yml</code>, <code>.pem</code>, <code>.env</code>, <code>.crt</code> files</li>
+<h3>Key Concepts Summary</h3>
+<li><strong>Files, not env vars</strong> - Some tools expect files, not variables</li>
+<li><strong>Read-only by default</strong> - Best to enforce this explicitly</li>
+<li><strong>Fine-grained control</strong> - <code>items:</code> allows selective mounting</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Use only needed keys</strong> - Don’t mount entire config if only one file is needed.
+2. <strong>Match paths carefully</strong> - Apps must read from correct file paths.
+3. <strong>Enforce readOnly</strong> - Avoid accidental overwrite or tampering.</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1</h4>
+<li><strong>Symptom:</strong> App can’t find the file</li>
+<li><strong>Cause:</strong> Wrong mount path or missing file key</li>
+<li><strong>Solution:</strong> Ensure correct <code>items:</code> and <code>mountPath</code></li>
+<h3>References / Further Reading</h3>
+<li>[K8s Volumes](https://kubernetes.io/docs/concepts/storage/volumes/)</li>
+<li>[ConfigMap Volume Docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
