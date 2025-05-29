@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event-Driven Architecture - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Event-Driven Architecture</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Architecture (architectural-patterns) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">event-driven</span><span class="tag">kafka</span><span class="tag">java</span><span class="tag">kubernetes</span><span class="tag">microservices</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Event-Driven Architecture</h2>
+<h3>Main Topic 1</h3>
+<strong>Event-Driven Architecture (EDA)</strong> is a design paradigm where components communicate through events—emitted, consumed, and reacted upon—decoupling the services.
+<h4>Subtopic A: What It Is</h4>
+<ul><li><strong>Asynchronous communication</strong> – Producers emit events, consumers listen and act</li>
+<li><strong>Loose coupling</strong> – Services do not directly call each other</li>
+<li><strong>High scalability</strong> – Suits high-throughput and reactive systems</li>
+<h4>Subtopic B: Why Use It</h4>
+<li>Enables real-time processing and responsiveness</li>
+<li>Decouples services for better fault tolerance</li>
+<li>Facilitates audit trails and logging through events</li>
+<h4>Subtopic C: When To Use It</h4>
+<li>Real-time systems (e.g. fraud detection, analytics)</li>
+<li>Microservices needing loose coupling</li>
+<li>Need for async workflows and horizontal scaling</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (Java + Spring Kafka)</h4>
+<pre><code>@Component
+public class OrderListener {
+    @KafkaListener(topics = "orders")
+    public void handleOrder(String orderJson) {
+        // process order
+    }
+}</code></pre>
+<h4>Infra Example (Kubernetes + Kafka)</h4>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+    spec:
+      containers:
+      - name: consumer
+        image: myregistry/kafka-consumer:latest
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: kafka:9092</code></pre>
+<h3>Key Concepts Summary</h3>
+<li>Events decouple producers and consumers</li>
+<li>Supports async flows, retry patterns</li>
+<li>Event brokers like Kafka or RabbitMQ act as middleware</li>
+<h3>Best Practices / Tips</h3>
+1. Design events as immutable facts
+2. Use schema validation (e.g., Avro)
+3. Handle idempotency in consumers
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Event loss or duplication</h4>
+<li><strong>Cause:</strong> Consumer restarts or network partition</li>
+<li><strong>Solution:</strong> Use offset management and idempotent processing</li>
+<h4>Problem 2: Hard to trace event flow</h4>
+<li><strong>Cause:</strong> No centralized logging or monitoring</li>
+<li><strong>Solution:</strong> Use distributed tracing and observability tools</li>
+<h3>References / Further Reading</h3>
+<li>https://martinfowler.com/articles/201701-event-driven.html</li>
+<li>https://kafka.apache.org/documentation/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

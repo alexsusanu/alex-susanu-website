@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CQRS (Command Query Responsibility Segregation) - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CQRS (Command Query Responsibility Segregation)</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Architecture (architectural-patterns) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">cqrs</span><span class="tag">java</span><span class="tag">axon</span><span class="tag">eventsourcing</span><span class="tag">kubernetes</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>CQRS (Command Query Responsibility Segregation)</h2>
+<h3>Main Topic 1</h3>
+<strong>CQRS</strong> separates the responsibility for reading and writing data into different models, enhancing scalability and performance for complex systems.
+<h4>Subtopic A: What It Is</h4>
+<ul><li><strong>Command model</strong> handles updates (create/update/delete)</li>
+<li><strong>Query model</strong> handles reads</li>
+<li>Often combined with <strong>Event Sourcing</strong></li>
+<h4>Subtopic B: Why Use It</h4>
+<li>Optimized read/write performance</li>
+<li>Better separation of concerns</li>
+<li>Enables eventual consistency and complex audit trails</li>
+<h4>Subtopic C: When To Use It</h4>
+<li>High-traffic applications with different read/write loads</li>
+<li>Event-driven systems</li>
+<li>Systems requiring auditability or history tracking</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (Java + Axon)</h4>
+<pre><code>@Aggregate
+public class Account {
+    @CommandHandler
+    public Account(CreateAccountCommand cmd) {
+        AggregateLifecycle.apply(new AccountCreatedEvent(cmd.getId()));
+    }
+<p>@EventSourcingHandler
+    public void on(AccountCreatedEvent evt) {
+        // handle event
+    }
+}</code></pre></p>
+<h4>Infra Example (Kubernetes)</h4>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cqrs-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cqrs-app
+  template:
+    metadata:
+      labels:
+        app: cqrs-app
+    spec:
+      containers:
+      - name: cqrs-container
+        image: myregistry/cqrs-app:latest</code></pre>
+<h3>Key Concepts Summary</h3>
+<li>Separate read/write models</li>
+<li>Often used with Event Sourcing</li>
+<li>Enables eventual consistency</li>
+<h3>Best Practices / Tips</h3>
+1. Keep command and query models independent
+2. Use messaging/event systems for syncing models
+3. Monitor latency for eventual consistency
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Increased complexity</h4>
+<li><strong>Cause:</strong> Two data models and sync logic</li>
+<li><strong>Solution:</strong> Only use CQRS where justified</li>
+<h4>Problem 2: Stale reads</h4>
+<li><strong>Cause:</strong> Eventual consistency delay</li>
+<li><strong>Solution:</strong> Use polling or notifications to update UI</li>
+<h3>References / Further Reading</h3>
+<li>https://martinfowler.com/bliki/CQRS.html</li>
+<li>https://docs.axoniq.io/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

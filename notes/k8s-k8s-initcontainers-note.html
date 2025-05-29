@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding `initContainers` in Kubernetes - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Understanding `initContainers` in Kubernetes</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">initcontainers</span><span class="tag">pods</span><span class="tag">orchestration</span><span class="tag">containers</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Understanding <code>initContainers</code> in Kubernetes</h2>
+<h3>Main Topic 1</h3>
+<code>initContainers</code> are a native Kubernetes feature that allow you to run one or more containers <strong>before</strong> your main application containers start. They are defined within the pod specification and serve to prepare the environment or perform prerequisite tasks.
+<h4>Subtopic A: What are <code>initContainers</code>?</h4>
+<ul><li><strong>Built-in Kubernetes keyword</strong> – Part of the PodSpec (<code>spec.initContainers</code>)</li>
+<li><strong>Sequential execution</strong> – Each init container runs to completion before the next one starts</li>
+<li><strong>Blocking behavior</strong> – If any init container fails, the pod restarts and retries the init process</li>
+  - The main app containers do not start until all init containers succeed
+<h4>Subtopic B: Why Use <code>initContainers</code>?</h4>
+<li><strong>Service readiness checks</strong> – Ensure services like databases are available before boot</li>
+<li><strong>Database migrations</strong> – Apply DB schema changes before app starts</li>
+<li><strong>Configuration preparation</strong> – Download files or clone git repos</li>
+<li><strong>Volume preparation</strong> – Copy assets into shared volumes</li>
+<li><strong>Fail-fast checks</strong> – Validate environment, fail early if needed</li>
+<h3>Main Topic 2</h3>
+<h4>Example Overview</h4>
+The following pod spec shows practical uses of init containers:
+<li><strong><code>wait-for-db</code></strong> – Checks if PostgreSQL is reachable</li>
+<li><strong><code>db-migration</code></strong> – Applies database migrations</li>
+<li><strong><code>config-downloader</code></strong> – Clones config repo into a shared volume</li>
+<p>These run <strong>before</strong> the main app container <code>web-app</code> starts.</p>
+<h4>Code Example</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: web-app-with-migration
+spec:
+  initContainers:
+    - name: wait-for-db
+      image: busybox:1.35
+      command: ["sh", "-c", "until nc -z postgres-service 5432; do echo 'Waiting...'; sleep 2; done"]
+<p>- name: db-migration
+      image: my-company/my-app:v1.2.3
+      command: ["/app/migrate", "--database-url=postgresql://user:pass@postgres-service:5432/mydb", "--migrations-path=/app/migrations"]</p>
+<p>- name: config-downloader
+      image: alpine/git:latest
+      command: ["git", "clone", "https://github.com/my-company/app-config.git", "/shared-config"]
+      volumeMounts:
+        - name: config-volume
+          mountPath: /shared-config</p>
+<p>containers:
+    - name: web-app
+      image: my-company/my-app:v1.2.3
+      ports:
+        - containerPort: 8080
+      volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+      env:
+        - name: CONFIG_PATH
+          value: /app/config</p>
+<p>volumes:
+    - name: config-volume
+      emptyDir: {}</code></pre></p>
+<h3>Key Concepts Summary</h3>
+<li><strong>initContainers</strong> – Prep containers that run before app containers</li>
+<li><strong>Sequential and blocking</strong> – Must succeed for pod to proceed</li>
+<li><strong>Use cases</strong> – Service checks, DB migrations, config downloads</li>
+<h3>Best Practices / Tips</h3>
+1. <strong>Keep init containers simple</strong> – Smaller images, minimal logic
+2. <strong>Fail fast</strong> – Make init containers fail if critical checks don't pass
+3. <strong>Use shared volumes</strong> – Use <code>emptyDir</code> or PVCs to pass data to main containers
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Pod stuck in <code>Init</code> state</h4>
+<li><strong>Symptom:</strong> Pod never reaches <code>Running</code> state</li>
+<li><strong>Cause:</strong> One or more init containers failing or retrying</li>
+<li><strong>Solution:</strong> Use <code>kubectl describe pod</code> to check init container logs and exit codes</li>
+<h4>Problem 2: Volume not shared properly</h4>
+<li><strong>Symptom:</strong> Main container can't see downloaded files</li>
+<li><strong>Cause:</strong> Missing or mismatched volumeMounts</li>
+<li><strong>Solution:</strong> Ensure init and main containers mount the same named volume</li>
+<h3>References / Further Reading</h3>
+<li>https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</li>
+<li>https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-init-containers/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

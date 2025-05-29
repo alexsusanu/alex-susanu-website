@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layered Architecture - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Layered Architecture</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Architecture (architectural-patterns) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">layered</span><span class="tag">mvc</span><span class="tag">java</span><span class="tag">design-patterns</span><span class="tag">kubernetes</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Layered Architecture</h2>
+<h3>Main Topic 1</h3>
+<strong>Layered Architecture</strong> (also known as n-tier) divides the system into layers with well-defined responsibilities, such as presentation, business, and data access layers.
+<h4>Subtopic A: What It Is</h4>
+<ul><li><strong>Vertical separation of concerns</strong></li>
+<li>Common layers: UI, Business Logic, Persistence</li>
+<li>Components communicate only with adjacent layers</li>
+<h4>Subtopic B: Why Use It</h4>
+<li><strong>Modularity</strong> – Separation makes code easier to understand and maintain</li>
+<li><strong>Reusability</strong> – Each layer can evolve independently</li>
+<li><strong>Testability</strong> – Unit testing becomes easier</li>
+<h4>Subtopic C: When To Use It</h4>
+<li>Traditional enterprise applications</li>
+<li>Systems with clearly separated concerns</li>
+<li>Long-term maintainability needed</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (Java Spring Boot)</h4>
+<pre><code>// Service layer
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository repository;
+<p>public User getUser(Long id) {
+        return repository.findById(id).orElse(null);
+    }
+}</code></pre></p>
+<h4>Infra Example (Kubernetes)</h4>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+      - name: user-service
+        image: myregistry/user-service:latest</code></pre>
+<h3>Key Concepts Summary</h3>
+<li>Logical layers for structure</li>
+<li>Encourages best practices in OOP and separation of concerns</li>
+<li>Can be deployed as a monolith or microservices</li>
+<h3>Best Practices / Tips</h3>
+1. Avoid business logic in the controller layer
+2. Use DTOs to pass data between layers
+3. Follow SOLID principles
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Tight coupling between layers</h4>
+<li><strong>Cause:</strong> Poor abstraction</li>
+<li><strong>Solution:</strong> Use interfaces and clean boundaries</li>
+<h4>Problem 2: Inefficiency in data mapping</h4>
+<li><strong>Cause:</strong> Overuse of models between layers</li>
+<li><strong>Solution:</strong> Use data transfer objects (DTOs)</li>
+<h3>References / Further Reading</h3>
+<li>https://en.wikipedia.org/wiki/Multitier_architecture</li>
+<li>https://spring.io/guides/gs/accessing-data-jpa/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

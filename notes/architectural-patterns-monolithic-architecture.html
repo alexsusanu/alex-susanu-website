@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monolithic Architecture - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Monolithic Architecture</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Architecture (architectural-patterns) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">monolith</span><span class="tag">java</span><span class="tag">kubernetes</span><span class="tag">devops</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Monolithic Architecture</h2>
+<h3>Main Topic 1</h3>
+A <strong>Monolithic Architecture</strong> is a single-tiered application structure where all functions—UI, business logic, and data access—are tightly coupled and run as one unit.
+<h4>Subtopic A: What It Is</h4>
+<ul><li><strong>Single deployment unit</strong> – All code runs in a single application process.</li>
+<li><strong>Shared memory</strong> – Components directly invoke one another.</li>
+<li><strong>Common in early-stage applications</strong> – Faster to develop and deploy initially.</li>
+<h4>Subtopic B: Why Use It</h4>
+<li><strong>Simplicity</strong> – Easier to develop, test, and deploy initially.</li>
+<li><strong>Speed</strong> – Fewer moving parts, less orchestration needed.</li>
+<li><strong>Tools</strong> – Ideal for small teams or MVPs.</li>
+<h4>Subtopic C: When To Use It</h4>
+<li>Small team or startup phase</li>
+<li>Limited domain complexity</li>
+<li>Fast prototyping required</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (Java Spring Boot)</h4>
+<pre><code>@RestController
+public class GreetingController {
+    @GetMapping("/greet")
+    public String greet() {
+        return "Hello from Monolith!";
+    }
+}</code></pre>
+<h4>Infra Example (Kubernetes)</h4>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monolith-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monolith
+  template:
+    metadata:
+      labels:
+        app: monolith
+    spec:
+      containers:
+      - name: monolith-container
+        image: myregistry/monolith-app:latest
+        ports:
+        - containerPort: 8080</code></pre>
+<h3>Key Concepts Summary</h3>
+<li>All components packaged into one</li>
+<li>Easy to build, hard to scale and maintain over time</li>
+<li>No network overhead between components</li>
+<h3>Best Practices / Tips</h3>
+1. Keep modules logically separated inside the monolith
+2. Use clear package structures to isolate business domains
+3. Containerize early to enable smooth migration later
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Hard to scale specific functions</h4>
+<li><strong>Cause:</strong> Everything is one process</li>
+<li><strong>Solution:</strong> Consider breaking into microservices</li>
+<h4>Problem 2: Deployment downtime</h4>
+<li><strong>Cause:</strong> One failure can bring down entire app</li>
+<li><strong>Solution:</strong> Use rolling updates with health checks in K8s</li>
+<h3>References / Further Reading</h3>
+<li>https://martinfowler.com/bliki/Monolith.html</li>
+<li>https://kubernetes.io/docs/concepts/workloads/controllers/deployment/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

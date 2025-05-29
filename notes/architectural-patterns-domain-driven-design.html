@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain-Driven Design (DDD) - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Domain-Driven Design (DDD)</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Architecture (architectural-patterns) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">ddd</span><span class="tag">java</span><span class="tag">design</span><span class="tag">microservices</span><span class="tag">kubernetes</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Domain-Driven Design (DDD)</h2>
+<h3>Main Topic 1</h3>
+<strong>Domain-Driven Design (DDD)</strong> is an approach to software development that focuses on modeling software based on the business domain, using rich, behavior-focused models.
+<h4>Subtopic A: What It Is</h4>
+<ul><li>Uses <strong>bounded contexts</strong> to divide complex systems</li>
+<li>Rich domain models with entities, value objects, and aggregates</li>
+<li>Collaboration between developers and domain experts</li>
+<h4>Subtopic B: Why Use It</h4>
+<li>Aligns code with real business logic</li>
+<li>Helps manage complexity</li>
+<li>Encourages strategic design decisions</li>
+<h4>Subtopic C: When To Use It</h4>
+<li>Complex business domains</li>
+<li>Multiple subdomains and teams</li>
+<li>Systems needing long-term evolution</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (Java Domain Model)</h4>
+<pre><code>public class Invoice {
+    private List<LineItem> items;
+<p>public BigDecimal getTotal() {
+        return items.stream().map(LineItem::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+}</code></pre></p>
+<h4>Infra Tip (Kubernetes)</h4>
+Use namespaces or Helm charts to separate bounded contexts in microservices deployments.
+<h3>Key Concepts Summary</h3>
+<li>Focus on business logic and models</li>
+<li>Uses Ubiquitous Language between tech and business</li>
+<li>Breaks systems into bounded contexts</li>
+<h3>Best Practices / Tips</h3>
+1. Work closely with domain experts
+2. Use layered architecture within each bounded context
+3. Combine with event-driven or microservices architecture
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Overengineering</h4>
+<li><strong>Cause:</strong> DDD applied to simple domains</li>
+<li><strong>Solution:</strong> Use tactical patterns only where needed</li>
+<h4>Problem 2: Poor context boundaries</h4>
+<li><strong>Cause:</strong> Miscommunication or unclear scope</li>
+<li><strong>Solution:</strong> Use Event Storming to clarify models</li>
+<h3>References / Further Reading</h3>
+<li>https://domainlanguage.com/ddd/</li>
+<li>https://www.dddcommunity.org/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

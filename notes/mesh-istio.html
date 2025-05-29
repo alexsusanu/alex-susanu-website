@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Istio - Service Mesh Overview - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Istio - Service Mesh Overview</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (mesh) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">istio</span><span class="tag">service-mesh</span><span class="tag">kubernetes</span><span class="tag">microservices</span><span class="tag">security</span><span class="tag">observability</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Istio - Service Mesh Overview</h2>
+<h3>Main Topic 1</h3>
+<p>Istio is an open-source service mesh that helps manage service-to-service communication within a Kubernetes cluster (and beyond). It provides advanced traffic control, security, and observability without requiring changes to the application code.</p>
+<h4>Subtopic A: What is a Service Mesh?</h4>
+<p>* <strong>Definition</strong> - A service mesh is a dedicated infrastructure layer that handles communication between microservices.
+* <strong>Purpose</strong> - Offloads operational complexities such as retries, monitoring, encryption, and policy enforcement from your application logic.</p>
+<h4>Subtopic B: Core Features of Istio</h4>
+<p>* <strong>Traffic Management</strong> - Fine-grained control over traffic routing, including load balancing, A/B testing, and canary deployments.
+* <strong>Security</strong> - Automatic mTLS encryption, authentication, and authorization policies.
+* <strong>Observability</strong> - Built-in support for telemetry data collection, distributed tracing, and metrics.
+* <strong>Policy Enforcement</strong> - Centralized configuration to enforce security and resource policies.</p>
+<h3>Main Topic 2</h3>
+<h4>Code Example (if applicable)</h4>
+<pre><code>apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: my-service
+spec:
+  hosts:
+  - my-service
+  http:
+  - route:
+    - destination:
+        host: my-service
+        subset: v1
+      weight: 80
+    - destination:
+        host: my-service
+        subset: v2
+      weight: 20</code></pre>
+<p>This VirtualService routes 80% of traffic to version v1 and 20% to version v2.</p>
+<h4>Commands (if applicable)</h4>
+<pre><code><h2>Enable automatic sidecar injection</h2>
+kubectl label namespace default istio-injection=enabled
+<h2>Apply configuration</h2>
+kubectl apply -f virtual-service.yaml</code></pre>
+<h3>Key Concepts Summary</h3>
+<p>* <strong>Sidecar Proxy</strong> - Envoy proxy is injected into each pod to intercept traffic.
+* <strong>Istiod</strong> - Control plane that manages configuration and certificates.
+* <strong>VirtualService & DestinationRule</strong> - Istio CRDs to control traffic routing.
+* <strong>Telemetry</strong> - Collected automatically via sidecars.
+* <strong>mTLS</strong> - Mutual TLS for encrypted communication.</p>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Start small</strong> - Apply Istio to a small subset of services first.
+2. <strong>Monitor resource usage</strong> - Sidecars can increase memory and CPU overhead.
+3. <strong>Use Kiali and Grafana</strong> - Visualize traffic and monitor telemetry data.
+4. <strong>Understand CRDs</strong> - Learn Istio-specific resources like Gateway, VirtualService, etc.
+5. <strong>Secure by default</strong> - Enable mTLS cluster-wide for secure communication.</p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

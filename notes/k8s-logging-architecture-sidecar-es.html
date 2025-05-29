@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logging Architecture with Sidecar and Elasticsearch   - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Logging Architecture with Sidecar and Elasticsearch  </h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">logging</span><span class="tag">sidecar</span><span class="tag">fluent-bit</span><span class="tag">elasticsearch</span><span class="tag">emptyDir</span><span class="tag">volumes</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Logging Architecture with Sidecar and Elasticsearch  </h2>
+<h3>Main Topic 1</h3>
+<p>This setup demonstrates how to use a sidecar pattern to collect logs from an application container and forward them to Elasticsearch. Logs are first written to a shared volume (<code>emptyDir</code>) and then exported by Fluent Bit.</p>
+<h4>Subtopic A: Sidecar Logging Pattern  </h4>
+<ul><li><strong>Nginx writes logs</strong> to /var/log/nginx, which is mounted to a shared volume.  </li>
+<li><strong>Fluent Bit reads logs</strong> from the same path using the same shared volume.  </li>
+  - This allows decoupling logging from the application.  
+  - Fluent Bit can parse and forward logs to external systems like Elasticsearch.
+<h4>Subtopic B: Sharing with emptyDir  </h4>
+<li>The emptyDir volume is created fresh for each pod and shared between containers.  </li>
+<li>Mounting it at /var/log/nginx in both containers lets them access the same files.  </li>
+<li>This is ephemeral — data is lost when the pod is deleted or restarted.</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (Pod Spec)  </h4>
+apiVersion: v1  
+kind: Pod  
+metadata:  
+  name: web-server-with-logging  
+spec:  
+  containers:  
+  - name: web-server  
+    image: nginx:1.21  
+    ports:  
+    - containerPort: 80  
+    volumeMounts:  
+    - name: shared-logs  
+      mountPath: /var/log/nginx
+<p>- name: log-aggregator  
+    image: fluent/fluent-bit:1.8  
+    volumeMounts:  
+    - name: shared-logs  
+      mountPath: /var/log/nginx  
+      readOnly: true  
+    - name: fluentbit-config  
+      mountPath: /fluent-bit/etc  
+    env:  
+    - name: ELASTICSEARCH_HOST  
+      value: "elasticsearch.logging.svc.cluster.local"</p>
+<p>volumes:  
+  - name: shared-logs  
+    emptyDir: {}  
+  - name: fluentbit-config  
+    configMap:  
+      name: fluentbit-config</p>
+<h4>Commands (if applicable)  </h4>
+<h2>Check logs inside the web-server container  </h2>
+kubectl exec -it web-server-with-logging -c web-server -- tail /var/log/nginx/access.log
+<h2>Logs are forwarded to Elasticsearch via Fluent Bit  </h2>
+<h3>Key Concepts Summary</h3>
+<li>emptyDir – Ephemeral volume shared across containers within a pod  </li>
+<li>Sidecar Container – A helper container (e.g., Fluent Bit) that reads logs  </li>
+<li>Fluent Bit – Lightweight log forwarder to Elasticsearch, etc.  </li>
+<li>Environment Variable (ELASTICSEARCH_HOST) – Tells Fluent Bit where to send logs  </li>
+<li>Elasticsearch – Centralized and persistent log storage  </li></ul>
+<h3>Best Practices / Tips</h3>
+<p>1. Never use emptyDir for long-term storage — it resets on pod restart  
+2. Use ConfigMaps for managing Fluent Bit configs  
+3. Secure the volume mount — make it read-only for sidecars  
+4. Monitor log pipeline health — ensure logs reach Elasticsearch  
+5. Scale Fluent Bit separately if needed in larger clusters</p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

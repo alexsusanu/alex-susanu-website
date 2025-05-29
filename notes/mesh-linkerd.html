@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linkerd - Service Mesh Overview - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Linkerd - Service Mesh Overview</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (mesh) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">linkerd</span><span class="tag">service-mesh</span><span class="tag">kubernetes</span><span class="tag">microservices</span><span class="tag">security</span><span class="tag">observability</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Linkerd - Service Mesh Overview</h2>
+<h3>Main Topic 1</h3>
+<p>Linkerd is a lightweight, open-source service mesh for Kubernetes that provides runtime debugging, observability, reliability, and security for microservices. Unlike Istio, Linkerd focuses on simplicity, performance, and low operational overhead.</p>
+<h4>Subtopic A: What is a Service Mesh?</h4>
+<p>* <strong>Definition</strong> - A dedicated infrastructure layer that transparently handles service-to-service communication.
+* <strong>Purpose</strong> - Manages reliability, telemetry, and security aspects outside of application logic.</p>
+<h4>Subtopic B: Core Features of Linkerd</h4>
+<p>* <strong>Automatic mTLS</strong> - Transparent encryption for all pod-to-pod communication.
+* <strong>Traffic Metrics</strong> - Built-in Prometheus integration with minimal configuration.
+* <strong>Latency-aware Load Balancing</strong> - Sends traffic to the fastest available instance.
+* <strong>Lightweight Architecture</strong> - Written in Rust and Go; minimal performance footprint.
+* <strong>No Custom CRDs</strong> - Most configs use native Kubernetes resources.</p>
+<h3>Main Topic 2</h3>
+<h4>Code Example (if applicable)</h4>
+<pre><code><h2>Install Linkerd CLI</h2>
+curl -sL https://run.linkerd.io/install | sh
+<h2>Validate your Kubernetes cluster</h2>
+linkerd check --pre
+<h2>Install Linkerd into the cluster</h2>
+linkerd install | kubectl apply -f -
+<h2>Verify installation</h2>
+linkerd check
+<h2>Add Linkerd to a namespace</h2>
+kubectl annotate namespace default linkerd.io/inject=enabled
+<h2>Deploy your services</h2>
+kubectl apply -f your-service.yaml</code></pre>
+<h4>Commands (if applicable)</h4>
+<pre><code><h2>View live traffic metrics</h2>
+linkerd viz install | kubectl apply -f -
+linkerd viz dashboard</code></pre>
+<h3>Key Concepts Summary</h3>
+<p>* <strong>Proxy</strong> - Lightweight sidecar proxy automatically injected into each pod.
+* <strong>Control Plane</strong> - Manages certificates, proxy config, and metrics.
+* <strong>Viz</strong> - Built-in observability dashboard.
+* <strong>mTLS by Default</strong> - Secure connections between services out of the box.
+* <strong>Simplicity</strong> - No custom resource definitions required.</p>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Use Viz for observability</strong> - Gain instant visibility into traffic.
+2. <strong>Leverage automatic mTLS</strong> - No manual config needed for encryption.
+3. <strong>Apply injection namespace-wide</strong> - Annotate namespaces instead of individual pods.
+4. <strong>Start with small workloads</strong> - Validate performance before scaling up.
+5. <strong>Keep Linkerd updated</strong> - Benefit from performance and security improvements.</p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

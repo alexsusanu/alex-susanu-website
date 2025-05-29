@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Pod Microservices vs Sidecar Pattern - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Shared Pod Microservices vs Sidecar Pattern</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">sidecar</span><span class="tag">microservices</span><span class="tag">pod-design</span><span class="tag">kubernetes</span><span class="tag">containers</span><span class="tag">architecture</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Shared Pod Microservices vs Sidecar Pattern</h2>
+<h3>Main Topic 1</h3>
+<p>This document explains the difference between running multiple microservices in a single pod (with shared volumes) and using the sidecar pattern. It uses a real YAML configuration as a case study.</p>
+<h4>Subtopic A: Example - Shared Volume with Two Containers</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-storage-example
+spec:
+  containers:
+  # File processor
+  - name: file-processor
+    image: my-company/processor:latest
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data/input
+    - name: shared-data
+      mountPath: /data/output
+      subPath: processed  # Write to subdirectory
+<p># File uploader
+  - name: file-uploader
+    image: my-company/uploader:latest
+    volumeMounts:
+    - name: shared-data
+      mountPath: /upload
+      subPath: processed  # Read from processed subdirectory
+    env:
+    - name: S3_BUCKET
+      value: my-processed-files</p>
+<p>volumes:
+  - name: shared-data
+    emptyDir:
+      sizeLimit: 1Gi  # Limit storage usage</code></pre></p>
+<h4>Subtopic B: How It Works</h4>
+<p>* <strong>file-processor</strong>: Reads files from <code>/data/input</code>, writes to <code>/data/output/processed</code>.
+* <strong>file-uploader</strong>: Reads from <code>/upload</code> (which maps to <code>processed</code> subPath) and uploads to S3.
+* Both use a shared <code>emptyDir</code> volume to exchange files.</p>
+<h3>Main Topic 2</h3>
+<h4>Subtopic A: What This Pattern Is</h4>
+<p>* This setup is <strong>two independent microservices</strong> packaged into one pod.
+* Each container does real, business-level work (processing vs uploading).
+* Communication happens through a shared volume.</p>
+<h4>Subtopic B: What a Sidecar Pattern Is</h4>
+<p>* Sidecar is a <strong>supporting container</strong>, not an independent service.
+* It provides <strong>cross-cutting functionality</strong> like logging, proxying, or secret syncing.
+* It does <strong>not perform primary business logic</strong>, and usually cannot run meaningfully on its own.</p>
+<h3>Comparison Table</h3>
+<p>| Aspect             | Shared Pod Microservices            | Sidecar Pattern                                                    |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------------ |
+| <strong>Purpose</strong>        | Two distinct business services      | Support for a main app                                             |
+| <strong>Responsibility</strong> | Both containers do core logic       | Sidecar handles cross-cutting concerns                             |
+| <strong>Reusability</strong>    | Each container could run separately | Sidecar usually depends on main container                          |
+| <strong>Lifecycle</strong>      | Shared, but can be split            | Bound to the main app's lifecycle                                  |
+| <strong>Communication</strong>  | Shared volume or loopback           | Shared volume or loopback                                          |
+| <strong>Examples</strong>       | Data processor + uploader           | Fluent Bit for logging, Envoy for traffic, Vault Agent for secrets |</p>
+<h3>Key Concepts Summary</h3>
+<p>* <strong>Shared Pod Pattern</strong>: Used for bundling microservices that need tight integration via shared filesystem.
+* <strong>Sidecar Pattern</strong>: Used for extending functionality of a main service without changing its code.
+* <strong>emptyDir</strong>: Ephemeral volume used for short-term storage and communication.
+* <strong>subPath</strong>: Allows mounting subdirectories separately within a volume.</p>
+<h3>Best Practices / Tips</h3>
+<p>1. Use shared pods for jobs that are <strong>tightly coupled and short-lived</strong>.
+2. Prefer sidecars for <strong>reusable support tasks</strong> like log forwarding or TLS termination.
+3. Don’t overload a pod with unrelated business logic — keep clear service boundaries.
+4. Use <code>subPath</code> for clear file separation within shared volumes.
+5. Monitor volume usage when using <code>emptyDir</code> with size limits.</p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

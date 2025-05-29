@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Architecture - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Serverless Architecture</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Architecture (architectural-patterns) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">serverless</span><span class="tag">faas</span><span class="tag">cloud</span><span class="tag">kubernetes</span><span class="tag">java</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Serverless Architecture</h2>
+<h3>Main Topic 1</h3>
+<strong>Serverless Architecture</strong> delegates infrastructure management to the cloud, allowing you to write functions that execute on demand without managing servers.
+<h4>Subtopic A: What It Is</h4>
+<ul><li><strong>Functions as a Service (FaaS)</strong> – Deploy functions, not services</li>
+<li><strong>Auto-scaling and pay-per-use</strong></li>
+<li>Typically stateless and event-triggered</li>
+<h4>Subtopic B: Why Use It</h4>
+<li><strong>Operational simplicity</strong></li>
+<li><strong>Cost efficiency</strong> – Pay only for time used</li>
+<li><strong>Rapid prototyping</strong></li>
+<h4>Subtopic C: When To Use It</h4>
+<li>Lightweight tasks (e.g., webhooks, image processing)</li>
+<li>Event-driven pipelines</li>
+<li>Unpredictable or bursty traffic</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (Java Function)</h4>
+<pre><code>public class HelloHandler implements RequestHandler<Map<String, String>, String> {
+    public String handleRequest(Map<String, String> input, Context context) {
+        return "Hello, " + input.get("name");
+    }
+}</code></pre>
+<h4>Infra Example (Knative on Kubernetes)</h4>
+<pre><code>apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: hello-service
+spec:
+  template:
+    spec:
+      containers:
+      - image: myregistry/hello-fn:latest</code></pre>
+<h3>Key Concepts Summary</h3>
+<li>Function-based execution</li>
+<li>Scales to zero</li>
+<li>Stateless and reactive design</li>
+<h3>Best Practices / Tips</h3>
+1. Keep functions lightweight and fast
+2. Use managed secrets and env vars for config
+3. Externalize state (e.g., use cloud storage or DB)
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Cold start latency</h4>
+<li><strong>Cause:</strong> Function container spin-up delay</li>
+<li><strong>Solution:</strong> Use provisioned concurrency if supported</li>
+<h4>Problem 2: Tight vendor lock-in</h4>
+<li><strong>Cause:</strong> Proprietary cloud interfaces</li>
+<li><strong>Solution:</strong> Use open standards like Knative</li>
+<h3>References / Further Reading</h3>
+<li>https://martinfowler.com/articles/serverless.html</li>
+<li>https://knative.dev/docs/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

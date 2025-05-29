@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hexagonal Architecture (Ports & Adapters) - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Hexagonal Architecture (Ports & Adapters)</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Architecture (architectural-patterns) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">hexagonal</span><span class="tag">clean-architecture</span><span class="tag">java</span><span class="tag">ports-adapters</span><span class="tag">kubernetes</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Hexagonal Architecture (Ports & Adapters)</h2>
+<h3>Main Topic 1</h3>
+<strong>Hexagonal Architecture</strong>, or <strong>Ports and Adapters</strong>, separates the core logic from the infrastructure, allowing independent evolution of business logic and external systems.
+<h4>Subtopic A: What It Is</h4>
+<ul><li><strong>Core business logic</strong> in the center</li>
+<li><strong>Ports</strong> define interfaces the core needs</li>
+<li><strong>Adapters</strong> are implementations like REST, DB, etc.</li>
+<h4>Subtopic B: Why Use It</h4>
+<li>High testability and decoupling</li>
+<li>External tech changes don’t affect the core</li>
+<li>Suitable for systems under frequent infrastructure change</li>
+<h4>Subtopic C: When To Use It</h4>
+<li>Domain-driven systems</li>
+<li>Projects with high focus on maintainability and testing</li>
+<li>Complex integrations</li>
+<h3>Main Topic 2</h3>
+<h4>Code Example (Java)</h4>
+<pre><code>// Port interface
+public interface UserRepository {
+    User findById(Long id);
+}
+<p>// Adapter implementation
+@Repository
+public class JpaUserRepository implements UserRepository {
+    // implementation using Spring Data JPA
+}</code></pre></p>
+<h4>Infra Example (Kubernetes)</h4>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+      - name: user-service
+        image: myregistry/hex-user-service:latest</code></pre>
+<h3>Key Concepts Summary</h3>
+<li>Clean separation of business and tech</li>
+<li>Ports are interfaces; adapters are tech-specific code</li>
+<li>Encourages clean testing and modular design</li>
+<h3>Best Practices / Tips</h3>
+1. Put business rules in the center
+2. Use dependency inversion — core should not depend on adapters
+3. Avoid bloated adapter layers
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Confusion between layers</h4>
+<li><strong>Cause:</strong> Misuse of ports vs adapters</li>
+<li><strong>Solution:</strong> Strict interface contracts and layered package structure</li>
+<h4>Problem 2: Over-architecture for small projects</h4>
+<li><strong>Cause:</strong> Too much separation for basic needs</li>
+<li><strong>Solution:</strong> Use only where complexity demands it</li>
+<h3>References / Further Reading</h3>
+<li>https://alistair.cockburn.us/hexagonal-architecture/</li>
+<li>https://reflectoring.io/spring-hexagonal/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

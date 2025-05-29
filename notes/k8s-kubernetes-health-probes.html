@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Health Probes - Liveness vs Readiness - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Health Probes - Liveness vs Readiness</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">health-checks</span><span class="tag">liveness</span><span class="tag">readiness</span><span class="tag">probes</span><span class="tag">k8s</span><span class="tag">monitoring</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Health Probes - Liveness vs Readiness</h2>
+<h3>Main Topic 1</h3>
+<p>Kubernetes uses health probes to automatically detect when containers are alive and ready to serve traffic. This distinction is critical for high-availability and fault-tolerant systems.</p>
+<h4>Subtopic A: Types of Probes</h4>
+<p>* <strong>Liveness Probe</strong> – Determines if a container is still running. If it fails, Kubernetes will restart the container.
+* <strong>Readiness Probe</strong> – Determines if a container is ready to accept traffic. If it fails, Kubernetes will remove the pod from the Service endpoints.</p>
+<h4>Subtopic B: Why the Difference Matters</h4>
+<p>* Liveness keeps the container from running in a "zombie" state (e.g. stuck or deadlocked).
+* Readiness protects users from hitting an app that is still initializing or temporarily unavailable due to backend issues.</p>
+<h3>Main Topic 2</h3>
+<h4>Example: Liveness Check (Lightweight)</h4>
+<pre><code>// Lightweight liveness check - ensures app is running
+app.get('/health/live', (req, res) => {
+  res.status(200).json({ status: 'alive', timestamp: Date.now() });
+});</code></pre>
+<p>* This will return 200 as long as the server is up and event loop is alive.
+* <strong>It does NOT check whether the app is doing real work or connected to dependencies.</strong></p>
+<h4>Example: Readiness Check (Deeper)</h4>
+<pre><code>// Readiness check - ensure dependencies are available
+app.get('/health/ready', async (req, res) => {
+  try {
+    await checkDatabaseConnection();
+    await checkS3Availability();
+    res.status(200).json({ status: 'ready' });
+  } catch (err) {
+    res.status(503).json({ status: 'unavailable', error: err.message });
+  }
+});</code></pre>
+<p>* This returns 200 only when dependencies (DB, S3, etc.) are reachable.
+* Useful to <strong>gate real traffic</strong> until the app is fully operational.</p>
+<h3>Key Concepts Summary</h3>
+<p>* <strong>Liveness Probe</strong> – Keeps the app from getting stuck or dead.
+* <strong>Readiness Probe</strong> – Prevents traffic from being routed to an unready pod.
+* <strong>Status 200 ≠ healthy</strong> unless it reflects all required services.
+* Keep liveness light; readiness can be deep.</p>
+<h4>Probe Comparison Summary</h4>
+<p>| Probe Type    | What It Checks                     | Result if Failing          | Example Use            |
+| ------------- | ---------------------------------- | -------------------------- | ---------------------- |
+| <strong>Liveness</strong>  | Is the app process running?        | Container is restarted     | Memory leak, deadlock  |
+| <strong>Readiness</strong> | Is the app ready to serve traffic? | Pod removed from endpoints | Waiting for DB, warmup |</p>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Never include external checks in liveness probes.</strong>
+2. <strong>Use readiness probes to delay traffic until app is ready.</strong>
+3. <strong>Separate logic clearly</strong> — don’t reuse <code>/health</code> for both purposes.
+4. <strong>Use different paths and functions</strong> for <code>/health/live</code> vs <code>/health/ready</code>.
+5. Set meaningful initial delays and timeouts based on startup requirements.</p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

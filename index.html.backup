@@ -126,6 +126,16 @@
             
         </div>
     </div>
+    <div class="note-card" data-tags="secrets,security,base64,config,env" onclick="window.location.href='notes/k8s-secrets.html'">
+        <h3>Kubernetes Secrets: Usage and Best Practices  </h3>
+        <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Kubernetes Secrets are used to securely store sensitive information like passwords, tokens, and keys, and expose them to containers at runtime.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">secrets</span><span class="tag">security</span><span class="tag">base64</span><span class="tag">config</span><span class="tag">env</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-networking.html'">
         <h3>Kubernetes Services and Networking: Deep Dive</h3>
         <div class="note-meta">General (k8s) • May 27, 2025</div>
@@ -174,6 +184,16 @@
         </div>
         <div class="note-tags">
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">configuration</span><span class="tag">configmap</span><span class="tag">secret</span><span class="tag">serviceaccount</span><span class="tag">rbac</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="configmap,yaml,volumes,kubectl" onclick="window.location.href='notes/k8s-configmap-inline-vs-file-based.html'">
+        <h3>ConfigMap: Inline vs File-Based Configuration  </h3>
+        <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Understanding the difference between defining Kubernetes ConfigMaps inline vs from external files is important for managing application configurati...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">configmap</span><span class="tag">yaml</span><span class="tag">volumes</span><span class="tag">kubectl</span>
         </div>
     </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-state persistence.html'">
@@ -234,6 +254,16 @@
         </div>
         <div class="note-tags">
             
+        </div>
+    </div>
+    <div class="note-card" data-tags="volumes,configmap,secret,mount,pods" onclick="window.location.href='notes/k8s-volumes.html'">
+        <h3>Kubernetes Volumes: Mounting ConfigMaps and Secrets  </h3>
+        <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Volumes in Kubernetes are used to mount external data (config files, secrets, storage) into pods.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">volumes</span><span class="tag">configmap</span><span class="tag">secret</span><span class="tag">mount</span><span class="tag">pods</span>
         </div>
     </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-pod design label selectors.html'">
@@ -404,6 +434,16 @@
         </div>
         <div class="note-tags">
             <span class="tag">glossary</span><span class="tag">infrastructure</span><span class="tag">networking</span><span class="tag">servers</span><span class="tag">cloud</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="helm,configmap,templating,secrets,values" onclick="window.location.href='notes/helm-helm-config.html'">
+        <h3>Helm: ConfigMaps and Secrets in Charts  </h3>
+        <div class="note-meta">Kubernetes (helm) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Helm templates allow you to inject config and secrets using values files and inline templates.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">helm</span><span class="tag">configmap</span><span class="tag">templating</span><span class="tag">secrets</span><span class="tag">values</span>
         </div>
     </div>
     <div class="note-card" data-tags="marketing,sales,digital-marketing,customer-acquisition,branding" onclick="window.location.href='notes/vocabulary-marketing_sales_vocab.html'">
