@@ -155,6 +155,11 @@ kubectl describe pvc my-pvc</code></pre>
 <li><strong>Symptom:</strong> Data is lost on pod restart</li>
 <li><strong>Cause:</strong> <code>emptyDir</code> volume was used instead of PVC</li>
 <li><strong>Solution:</strong> Ensure <code>persistentVolumeClaim</code> is specified in volume definition</li>
+<p>| Type           | Use Case                                        | Persistent?      |
+| -------------- | ----------------------------------------------- | ---------------- |
+| <code>emptyDir</code>     | Temporary scratch space per pod                 | ❌ No             |
+| <code>hostPath</code>     | Mount a directory from the node's filesystem    | ✅\* (node-bound) |
+| <code>PVC</code> (via PV) | Durable storage across pod reschedules/restarts | ✅ Yes            |</p>
 <h3>References / Further Reading</h3>
 <li>https://kubernetes.io/docs/concepts/storage/persistent-volumes/</li>
 <li>https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/</li>

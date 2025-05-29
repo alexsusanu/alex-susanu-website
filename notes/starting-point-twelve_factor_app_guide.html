@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12-Factor App Methodology Compliance - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>12-Factor App Methodology Compliance</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Architecture (starting-point) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">cloud-native</span><span class="tag">microservices</span><span class="tag">deployment</span><span class="tag">scalability</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>12-Factor App Methodology Compliance</h2>
+<h3>Introduction to 12-Factor Methodology</h3>
+The Twelve-Factor App methodology is a set of best practices for building software-as-a-service applications that are portable, scalable, and maintainable. Created by developers at Heroku, these principles help ensure applications can be deployed across various cloud platforms and scale effectively in modern cloud environments.
+<h4>Core Philosophy</h4>
+<ul><li><strong>Declarative formats</strong> for setup automation</li>
+<li><strong>Clean contracts</strong> with the underlying operating system</li>
+<li><strong>Suitable for deployment</strong> on modern cloud platforms</li>
+<li><strong>Minimize divergence</strong> between development and production</li>
+<li><strong>Scale up</strong> without significant changes to tooling, architecture, or development practices</li>
+<h3>The 12 Factors Explained</h3>
+<h4>Factor 1: Codebase</h4>
+<li><strong>One codebase tracked in revision control, many deploys</strong></li>
+<li>Use version control systems like Git</li>
+<li>Single codebase serves multiple environments (dev, staging, production)</li>
+  - Different versions may be deployed to different environments
+  - Same codebase across all deploys
+<h4>Factor 2: Dependencies</h4>
+<li><strong>Explicitly declare and isolate dependencies</strong></li>
+<li>Never rely on implicit existence of system-wide packages</li>
+<li>Use dependency declaration manifests (package.json, requirements.txt, Gemfile)</li>
+  - Isolate dependencies using virtual environments or containers
+  - Ensure no dependencies "leak in" from the surrounding system
+<h4>Factor 3: Config</h4>
+<li><strong>Store config in environment variables</strong></li>
+<li>Configuration varies between deploys, code does not</li>
+<li>Never store config as constants in code</li>
+  - Use environment variables for database URLs, credentials, per-deploy values
+  - Config should be easily changed without code changes
+<h4>Factor 4: Backing Services</h4>
+<li><strong>Treat backing services as attached resources</strong></li>
+<li>Database, message queues, SMTP services, caching systems are backing services</li>
+<li>No distinction between local and third-party services</li>
+  - Access via URL and credentials stored in config
+  - Resources can be attached/detached without code changes
+<h4>Factor 5: Build, Release, Run</h4>
+<li><strong>Strictly separate build and run stages</strong></li>
+<li>Transform code repo into executable bundle (build)</li>
+<li>Combine build with config to create release</li>
+<li>Execute release in execution environment (run)</li>
+  - Releases should be immutable and have unique IDs
+  - Every release should be stored for rollback capability
+<h4>Factor 6: Processes</h4>
+<li><strong>Execute app as one or more stateless processes</strong></li>
+<li>Processes are stateless and share-nothing</li>
+<li>Persistent data stored in stateful backing service (database)</li>
+  - Memory/filesystem only used as brief, single-transaction cache
+  - Never assume cached data will be available for future requests
+<h3>Advanced Factors</h3>
+<h4>Factor 7: Port Binding</h4>
+<li><strong>Export services via port binding</strong></li>
+<li>App is completely self-contained</li>
+<li>Web app exports HTTP as service by binding to port</li>
+  - No injection into runtime webserver
+  - One app can become backing service for another
+<h4>Factor 8: Concurrency</h4>
+<li><strong>Scale out via the process model</strong></li>
+<li>Processes are first-class citizens</li>
+<li>Scale by running more processes, not making processes larger</li>
+  - Different process types for different workloads (web, worker, scheduler)
+  - Processes should never daemonize or write PID files
+<h4>Factor 9: Disposability</h4>
+<li><strong>Maximize robustness with fast startup and graceful shutdown</strong></li>
+<li>Processes can be started/stopped at moment's notice</li>
+<li>Fast startup time enables rapid scaling and deployment</li>
+  - Graceful shutdown on SIGTERM signal
+  - Robust against sudden process death
+<h4>Factor 10: Dev/Prod Parity</h4>
+<li><strong>Keep development, staging, and production as similar as possible</strong></li>
+<li>Minimize gaps in time, personnel, and tools</li>
+<li>Use same backing services across environments</li>
+  - Developers deploy their own code
+  - Hours between code written and deployed
+  - Same tools and services in all environments
+<h4>Factor 11: Logs</h4>
+<li><strong>Treat logs as event streams</strong></li>
+<li>App never concerns itself with routing/storage of output stream</li>
+<li>Write all logs to stdout as stream of events</li>
+  - Execution environment handles log routing and storage
+  - Use structured logging formats (JSON) when possible
+<h4>Factor 12: Admin Processes</h4>
+<li><strong>Run admin/management tasks as one-off processes</strong></li>
+<li>Database migrations, console sessions, one-time scripts</li>
+<li>Run in identical environment as regular processes</li>
+  - Use same codebase and config
+  - Admin code ships with application code
+<h3>Implementation Examples</h3>
+<h4>Environment Configuration</h4>
+<pre><code><h2>Environment variables for configuration</h2>
+export DATABASE_URL="postgres://user:pass@host:5432/dbname"
+export REDIS_URL="redis://localhost:6379"
+export SECRET_KEY="your-secret-key"
+export DEBUG=false</code></pre>
+<h4>Process Management</h4>
+<pre><code><h2>Procfile for process types</h2>
+web: gunicorn app:application --port $PORT
+worker: celery worker -A app.celery
+scheduler: celery beat -A app.celery</code></pre>
+<h4>Docker Implementation</h4>
+<pre><code>FROM node:16-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]</code></pre>
+<h4>Kubernetes Deployment</h4>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: url</code></pre>
+<h3>Key Concepts Summary</h3>
+<li><strong>Codebase</strong> - Single source of truth in version control</li>
+<li><strong>Dependencies</strong> - Explicit declaration and isolation</li>
+<li><strong>Config</strong> - Environment-based configuration management</li>
+<li><strong>Backing Services</strong> - Treat external resources as attached services</li>
+<li><strong>Stateless Processes</strong> - No shared state between process instances</li>
+<li><strong>Port Binding</strong> - Self-contained service export</li>
+<li><strong>Horizontal Scaling</strong> - Scale by adding more processes</li>
+<li><strong>Disposability</strong> - Fast startup and graceful shutdown</li>
+<li><strong>Environment Parity</strong> - Consistent across all stages</li>
+<li><strong>Log Streaming</strong> - Treat logs as continuous event streams</li>
+<h3>Best Practices / Tips</h3>
+1. <strong>Use Container Orchestration</strong> - Kubernetes, Docker Swarm, or similar platforms naturally support 12-factor principles
+2. <strong>Implement Health Checks</strong> - Enable orchestrators to manage process lifecycle effectively
+3. <strong>Use Feature Flags</strong> - Instead of branching, use configuration to enable/disable features
+4. <strong>Automate Everything</strong> - Build, test, and deployment pipelines should be fully automated
+5. <strong>Monitor Process Metrics</strong> - Track startup times, memory usage, and request handling
+6. <strong>Implement Circuit Breakers</strong> - Gracefully handle backing service failures
+7. <strong>Use Structured Logging</strong> - JSON logs are easier to parse and analyze
+8. <strong>Version Your APIs</strong> - Maintain backward compatibility during deployments
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Configuration Management</h4>
+<li><strong>Symptom:</strong> Hard-coded configuration values causing deployment issues</li>
+<li><strong>Cause:</strong> Config stored in code instead of environment</li>
+<li><strong>Solution:</strong> Extract all environment-specific values to environment variables and use config management tools</li>
+<h4>Problem 2: State Management</h4>
+<li><strong>Symptom:</strong> Application fails when scaled horizontally or processes restart</li>
+<li><strong>Cause:</strong> Application storing state in memory or local filesystem</li>
+<li><strong>Solution:</strong> Move all persistent state to backing services (databases, caches)</li>
+<h4>Problem 3: Dependency Issues</h4>
+<li><strong>Symptom:</strong> "Works on my machine" but fails in production</li>
+<li><strong>Cause:</strong> Implicit dependencies or version mismatches</li>
+<li><strong>Solution:</strong> Use explicit dependency files, lock versions, and containerization</li>
+<h4>Problem 4: Log Management</h4>
+<li><strong>Symptom:</strong> Logs scattered across files, difficult to aggregate and analyze</li>
+<li><strong>Cause:</strong> Application managing log files instead of streaming to stdout</li>
+<li><strong>Solution:</strong> Configure application to log to stdout and use log aggregation tools</li>
+<h4>Problem 5: Service Discovery</h4>
+<li><strong>Symptom:</strong> Hard-coded service URLs causing connection failures</li>
+<li><strong>Cause:</strong> Not treating backing services as attached resources</li>
+<li><strong>Solution:</strong> Use service discovery mechanisms and environment-based service configuration</li>
+<h3>References / Further Reading</h3>
+<li>Official 12-Factor App documentation: https://12factor.net/</li>
+<li>Cloud Native Computing Foundation guidelines</li>
+<li>Heroku's original blog posts on 12-factor methodology</li>
+<li>"Building Microservices" by Sam Newman</li>
+<li>Docker and Kubernetes best practices documentation</li>
+<li>Martin Fowler's articles on continuous delivery and microservices</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
