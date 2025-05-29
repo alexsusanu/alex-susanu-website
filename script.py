@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Convert markdown notes to separate HTML pages with navigation
+Convert markdown notes to separate HTML pages with navigation - FIXED VERSION
 Usage: python convert_notes.py
 """
 
@@ -125,22 +125,15 @@ def generate_note_page_html(note_data):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{note_data['title']} - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
     <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        body {{
-            font-family: 'Georgia', serif;
-            line-height: 1.6;
-            color: #333;
+        /* Note-specific styles that extend the main CSS */
+        .note-page {{
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }}
         
-        .container {{
+        .note-container {{
             max-width: 800px;
             margin: 0 auto;
             background: white;
@@ -148,7 +141,7 @@ def generate_note_page_html(note_data):
             box-shadow: 0 0 30px rgba(0,0,0,0.1);
         }}
         
-        .header {{
+        .note-header {{
             background: linear-gradient(135deg, #4a90e2, #357abd);
             color: white;
             padding: 30px;
@@ -175,7 +168,7 @@ def generate_note_page_html(note_data):
             background: #357abd;
         }}
         
-        .content {{
+        .note-content-wrapper {{
             padding: 40px 30px;
         }}
         
@@ -187,78 +180,7 @@ def generate_note_page_html(note_data):
             border-bottom: 1px solid #e8f0ff;
         }}
         
-        .note-tags {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 30px;
-        }}
-        
-        .tag {{
-            background: #e8f0ff;
-            color: #4a90e2;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.9em;
-            font-weight: bold;
-        }}
-        
-        .note-content h2 {{
-            color: #4a90e2;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #e8f0ff;
-            padding-bottom: 8px;
-        }}
-        
-        .note-content h3 {{
-            color: #4a90e2;
-            margin-top: 25px;
-            margin-bottom: 12px;
-        }}
-        
-        .note-content h4 {{
-            color: #333;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }}
-        
-        .note-content p {{
-            margin-bottom: 15px;
-            text-align: justify;
-        }}
-        
-        .note-content ul {{
-            margin: 15px 0;
-            padding-left: 25px;
-        }}
-        
-        .note-content li {{
-            margin-bottom: 8px;
-        }}
-        
-        .note-content pre {{
-            background: #f8f9ff;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 20px 0;
-            border-left: 4px solid #4a90e2;
-        }}
-        
-        .note-content code {{
-            background: #f8f9ff;
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }}
-        
-        .note-content pre code {{
-            background: none;
-            padding: 0;
-        }}
-        
-        .footer {{
+        .note-footer {{
             background: #f8f9ff;
             padding: 20px 30px;
             text-align: center;
@@ -267,9 +189,9 @@ def generate_note_page_html(note_data):
         }}
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
             <h1>{note_data['title']}</h1>
         </div>
         
@@ -277,7 +199,7 @@ def generate_note_page_html(note_data):
             <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
         </div>
         
-        <div class="content">
+        <div class="note-content-wrapper">
             <div class="note-meta">
                 {note_data['category']} • Updated {note_data['modified']}
             </div>
@@ -291,7 +213,7 @@ def generate_note_page_html(note_data):
             </div>
         </div>
         
-        <div class="footer">
+        <div class="note-footer">
             <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
         </div>
     </div>
@@ -303,8 +225,7 @@ def generate_note_card_html(note_data):
     tags_data = ','.join(note_data['tags']).lower()
     tags_html = ''.join([f'<span class="tag">{tag}</span>' for tag in note_data['tags']])
     
-    return f'''
-    <div class="note-card" data-tags="{tags_data}" onclick="window.location.href='notes/{note_data['filename']}.html'">
+    return f'''    <div class="note-card" data-tags="{tags_data}" onclick="window.location.href='notes/{note_data['filename']}.html'">
         <h3>{note_data['title']}</h3>
         <div class="note-meta">{note_data['category']} • {note_data['modified']}</div>
         <div class="note-preview">
@@ -315,34 +236,42 @@ def generate_note_card_html(note_data):
         </div>
     </div>'''
 
-# Add this function to your existing Python script
-
-def update_index_html_clean(notes_html):
-    """Update the clean index.html with new note cards"""
+def update_index_html_fixed(notes_html):
+    """FIXED version - Update the index.html with new note cards"""
     with open('index.html', 'r', encoding='utf-8') as f:
         html_content = f.read()
     
-    # Find the notes container - much simpler now!
+    # Find the EXACT notes container boundaries - look for the EXACT pattern
     start_marker = '<div class="notes-grid" id="notesContainer">'
-    end_marker = '</div>'
+    end_marker = '                </div>'  # This is the specific indented closing div
     
     start_index = html_content.find(start_marker)
     if start_index == -1:
         print("Error: Could not find notes-grid container in index.html")
         return False
     
-    # Find the closing div for notesContainer
-    search_start = start_index + len(start_marker)
-    end_index = html_content.find(end_marker, search_start)
+    # Start searching for the end marker AFTER the start marker
+    search_from = start_index + len(start_marker)
+    
+    # Find the specific closing div that matches the indentation pattern
+    # Look for the pattern that comes right after the notes container
+    closing_pattern = '\n                </div>\n            </div>\n        </div>'
+    end_index = html_content.find(closing_pattern, search_from)
+    
+    if end_index == -1:
+        # Fallback: look for just the first closing div with proper indentation
+        end_index = html_content.find('\n                </div>', search_from)
+        if end_index != -1:
+            end_index += 1  # Include the newline
     
     if end_index == -1:
         print("Error: Could not find end of notes container")
         return False
     
-    # Replace the content between the markers
+    # Replace ONLY the content between the markers
     new_content = (
-        html_content[:start_index + len(start_marker)] +
-        '\n' + notes_html + '\n                ' +
+        html_content[:search_from] +
+        '\n\n' + notes_html + '\n                ' +
         html_content[end_index:]
     )
     
@@ -403,10 +332,10 @@ def main():
         print(f"  → Created {output_file}")
     
     # Generate HTML for note cards on main page
-    notes_cards_html = ''.join([generate_note_card_html(note) for note in all_notes])
+    notes_cards_html = '\n'.join([generate_note_card_html(note) for note in all_notes])
     
-    # Update index.html
-    if update_index_html_clean(notes_cards_html):
+    # Update index.html with the FIXED function
+    if update_index_html_fixed(notes_cards_html):
         print(f"✅ Successfully created {len(all_notes)} separate note pages!")
         print(f"✅ Updated index.html with note cards")
         print("📝 Original index.html backed up as index.html.backup")
