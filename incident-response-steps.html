@@ -1273,6 +1273,19 @@ Documentation requirement: Maintain timeline of escalation targets and response 
                     Incidents fail when communication breaks down, not just when technology breaks.
                 </div>
                 <div class="severity-item sev3" style="grid-column: 1 / -1;">
+                    <strong>WHO LEADS</strong><br><br>
+                    • <strong>Support Engineer Leads When:</strong> <br>
+                        <br> Runbook exists and is working <br>
+                        <br> Issue is within your scope (config changes, user management, cache clearing) <br>
+                        <br> You're making measurable progress <br>
+                        <br> No complex debugging required<br><br>
+                    • <strong>Senior Engineer Takes Over When::</strong> <br>
+                        <br> No runbook exists for this issue <br>
+                        <br> Runbook procedures fail <br>
+                        <br> Requires code changes, database admin, infrastructure changes <br>
+                        <br> Complex root cause analysis needed <br><br>
+                </div>
+                <div class="severity-item sev3" style="grid-column: 1 / -1;">
                     <strong>APPLICATION SUPPORT ROLE DEFINITION</strong><br><br>
                     • <strong>Reactive Role</strong> - Responds to issues, monitors systems, troubleshoots problems<br><br>
                     • <strong>Limited Production Access</strong> - Can modify configs, feature flags, user accounts, but can't deploy code<br><br>
@@ -1287,6 +1300,7 @@ Documentation requirement: Maintain timeline of escalation targets and response 
        
         <div class="severity-scale">
             <div class="severity-title">Response Scale by Severity</div>
+            ⚠️ Severity levels are defined based on impact not complexity ⚠️ <br> <br>
             <div class="severity-levels">
                 <div class="severity-item sev1">
                     <strong>SEV 1</strong><br>
