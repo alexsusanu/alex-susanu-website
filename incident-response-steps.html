@@ -218,6 +218,17 @@
 <body>
     <div class="container">
         <h1>Incident Response</h1>
+
+        <div style="background: #ff4757; border: 2px solid #ff3742; border-radius: 8px; padding: 15px; margin: 30px 0; text-align: center; box-shadow: 0 3px 10px rgba(255, 71, 87, 0.2);">
+            <div style="font-size: 1.1em; font-weight: bold; color: white; margin-bottom: 10px;">
+                ⚠️ PRODUCTION SAFETY PROTOCOL ⚠️
+            </div>
+            <div style="color: white; font-size: 0.95em; line-height: 1.4;">
+                <strong>NO UNTESTED CHANGES TO PRODUCTION</strong><br>
+                Validate all fixes in lower environments first.<br>
+                Emergency production changes require <strong>manager approval.</strong>
+            </div>
+        </div>
         
         <div class="timeline">
             <div class="phase">
@@ -226,9 +237,9 @@
                 <div class="phase-title">STOP THE BLEEDING</div>
                 <div class="phase-time">First 30 minutes</div>
                 <div class="key-actions">
-                    • Own it<br>
-                    • Get right people<br>
-                    • Set up war room
+                    • Acknowledge incident<br>
+                    • Engage appropriate resources<br>
+                    • Establish war room
                 </div>
             </div>
             
@@ -239,8 +250,8 @@
                 <div class="phase-time">Next 30 minutes</div>
                 <div class="key-actions">
                     • Contain damage<br>
-                    • Find root cause<br>
-                    • Communicate
+                    • Identify root cause<br>
+                    • Maintain communications
                 </div>
             </div>
             
@@ -250,8 +261,8 @@
                 <div class="phase-title">FIX PROPERLY</div>
                 <div class="phase-time">Next 30+ minutes</div>
                 <div class="key-actions">
-                    • Permanent solution<br>
-                    • Gradual restore<br>
+                    • Implement permanent solution<br>
+                    • Execute gradual restoration<br>
                     • Verify recovery
                 </div>
             </div>
@@ -261,9 +272,9 @@
                 <div class="phase-title">LEARN & PREVENT</div>
                 <div class="phase-time">1-2 days later</div>
                 <div class="key-actions">
-                    • Post-mortem<br>
-                    • Improve systems<br>
-                    • Share lessons
+                    • Conduct post-mortem<br>
+                    • Implement improvements<br>
+                    • Share lessons learned
                 </div>
             </div>
         </div>
@@ -275,53 +286,53 @@
                 <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 30px;">IMMEDIATE RESPONSE (0-30 min)</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">1. Acknowledge & Get Help FAST</div>
-                    <div class="example">Scenario: SEV1 Payment API outage - You're new (2 weeks on job)
-→ PagerDuty: Click "Acknowledge" (you know this much)
-→ Slack: Immediately post "#incidents HELP - Payment SEV1, I'm new, need backup"
-→ Escalate NOW: Don't try to investigate alone - hit "Escalate" in PagerDuty
-→ Find your buddy: Slack DM the senior engineer assigned as your mentor</div>
-                    <div class="why">Why: Being new during SEV1 = ask for help immediately. Don't hero it and make it worse</div>
+                    <div class="step-header">1. Acknowledge & Escalate</div>
+                    <div class="example">Scenario: SEV1 Payment API outage
+→ PagerDuty: Click "Acknowledge" immediately
+→ Slack: Post "#incidents SEV1 Payment system - need assistance"
+→ Escalate: Use PagerDuty escalation policies to engage senior staff
+→ Contact: Reach out to designated technical lead or on-call engineer</div>
+                    <div class="why">Rationale: Early acknowledgment prevents alert escalation and ensures rapid team mobilization</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">2. Get Context While Senior Takes Lead</div>
-                    <div class="example">Scenario: Senior engineer responds and takes technical lead
-→ You: "Where do I find the payment dashboard?" 
-→ Senior: "Datadog bookmark folder 'Critical Dashboards'"
-→ You observe: New Relic APM shows payment service 100% error rate
-→ Ask: "Should I check the runbook?" Senior: "Yes, Confluence, search 'payment outage'"</div>
-                    <div class="why">Why: Learn the tools/locations while someone experienced handles the critical path</div>
+                    <div class="step-header">2. Gather Initial Context</div>
+                    <div class="example">Scenario: Senior engineer responds and assumes technical leadership
+→ Access monitoring dashboards through standard bookmark locations
+→ Check New Relic APM for payment service error rates
+→ Consult payment outage runbook in Confluence
+→ Document initial findings and error patterns</div>
+                    <div class="why">Rationale: Systematic information gathering provides foundation for effective response</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">3. IC Assigns You Supporting Role</div>
-                    <div class="example">Scenario: Engineering Manager becomes IC, gives you safe tasks
-→ IC: "You monitor the dashboards and report any changes"
-→ IC: "Senior engineer will execute runbook, you take notes"
-→ Your job: Watch Datadog payment dashboard, call out if numbers change
-→ Take detailed notes: What buttons senior engineer clicks, what works/doesn't</div>
-                    <div class="why">Why: IC gives new person low-risk but valuable tasks. You learn without breaking things</div>
+                    <div class="step-header">3. Support Incident Commander</div>
+                    <div class="example">Scenario: Engineering Manager assumes Incident Commander role
+→ Monitor designated dashboards for changes and anomalies
+→ Document all troubleshooting steps and outcomes
+→ Track dashboard metrics and report significant changes
+→ Maintain detailed incident timeline</div>
+                    <div class="why">Rationale: Supporting roles enable technical leads to focus on critical resolution activities</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">4. Learn the Team & Tools in Real-Time</div>
-                    <div class="example">Scenario: Observe who gets called and why
-→ Watch: IC pages "Payments Team - SEV1" policy
-→ Ask senior: "Who's Sarah and why did we page her?" "She knows Stripe integration"
-→ Learn: Customer Support Manager gets notified for SEV1 user impact
-→ Observe: How StatusPage.io gets updated, who has access</div>
-                    <div class="why">Why: Real incident shows you the team structure and tool usage under pressure</div>
+                    <div class="step-header">4. Establish Communication Channels</div>
+                    <div class="example">Scenario: Multi-team coordination required
+→ IC creates dedicated incident channel (#sev1-payments-timestamp)
+→ Add relevant team members and stakeholders
+→ Pin important links and status updates to channel
+→ Set up bridge call if required for complex coordination</div>
+                    <div class="why">Rationale: Dedicated channels prevent communication fragmentation during critical incidents</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">5. Support War Room Setup</div>
-                    <div class="example">Scenario: Help with coordination while learning
-→ IC creates #sev1-payments-20250528, adds you as observer
-→ Your task: Pin important links/info to channel as IC directs
-→ Learn: How bridge calls work, who talks vs who listens
-→ Note: StatusPage.io auto-updates, Jira ticket auto-created</div>
-                    <div class="why">Why: Supporting tasks let you see the full incident process without critical responsibility</div>
+                    <div class="step-header">5. Initial War Room Setup</div>
+                    <div class="example">Scenario: Coordinate incident management infrastructure
+→ Update StatusPage.io with initial acknowledgment
+→ Create JIRA incident ticket with initial details
+→ Notify Customer Support team of user-facing impact
+→ Activate appropriate notification policies</div>
+                    <div class="why">Rationale: Proper infrastructure setup enables effective incident management and stakeholder communication</div>
                 </div>
             </div>
         </div>
@@ -332,53 +343,53 @@
                 <h2 style="color: #feca57; text-align: center; margin-bottom: 30px;">SHORT-TERM STABILIZATION (30-60 min)</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">6. OBSERVE Runbook Execution</div>
-                    <div class="example">Scenario: Senior engineer executes, you watch and learn
-→ Senior: "New person, watch me do this. Go to Confluence payment runbook"
-→ You navigate: /wiki/runbooks/payment-system-outage (bookmark this!)
-→ Senior executes: Switch to PayPal processor, you watch the admin dashboard
-→ You ask: "Why PayPal and not the other one?" Learn: "PayPal handles our volume"</div>
-                    <div class="why">Why: Don't touch production during SEV1 as new person. Learn the process safely</div>
+                    <div class="step-header">6. Execute Runbook Procedures</div>
+                    <div class="example">Scenario: Systematic troubleshooting approach
+→ Navigate to appropriate runbook in Confluence documentation system
+→ Execute procedures in sequence as documented
+→ Document each step's outcome and any deviations from expected results
+→ Switch to backup payment processor per established procedures</div>
+                    <div class="why">Rationale: Standardized procedures ensure consistent response and minimize human error</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">7. Help with Investigation (Safe Tasks)</div>
-                    <div class="example">Scenario: Senior gives you investigation tasks that can't break things
-→ Senior: "Check New Relic logs for 'payment error' in last 30 minutes"
-→ You find: "Connection timeout to stripe.com" - report this finding
-→ Senior: "Good, now check Stripe status page" - you find they have an outage
-→ You document: Timeline of when their outage started vs our alerts</div>
-                    <div class="why">Why: Investigation tasks are safe for new people. You contribute without risk</div>
+                    <div class="step-header">7. Conduct Root Cause Investigation</div>
+                    <div class="example">Scenario: Systematic investigation of underlying causes
+→ Analyze New Relic logs for specific error patterns in 30-minute window
+→ Identify "Connection timeout to stripe.com" as recurring error
+→ Verify external service status via Stripe status page
+→ Correlate timeline of external service issues with internal alerts</div>
+                    <div class="why">Rationale: Understanding root causes enables targeted fixes and prevents recurring issues</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">8. Monitor & Learn Dashboard Locations</div>
-                    <div class="example">Scenario: Learn where everything is while monitoring emergency fixes
-→ Senior shows you: "Datadog payments dashboard is in 'Critical' folder"
-→ You monitor: PayPal processor success rate (now 60% of normal volume)
-→ Learn: PagerDuty has "Suppress alerts" feature for known issues
-→ Document: Where to find payment dashboards, what metrics matter</div>
-                    <div class="why">Why: Real incident teaches you tool locations faster than any training</div>
+                    <div class="step-header">8. Monitor Stabilization Metrics</div>
+                    <div class="example">Scenario: Track recovery progress through key performance indicators
+→ Monitor Datadog payment dashboard for system health metrics
+→ Track PayPal processor success rate (target: restoration to baseline levels)
+→ Configure PagerDuty alert suppression for known issues
+→ Document location of critical monitoring dashboards for future reference</div>
+                    <div class="why">Rationale: Systematic monitoring ensures stabilization efforts are effective and sustainable</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">9. Support Communication</div>
-                    <div class="example">Scenario: Help with updates while learning communication flow
-→ Senior asks: "Update the incident channel with PayPal status"
-→ You post: "PayPal processor active, 60% payment volume restored"
-→ Learn: IC handles executive communication, technical team handles facts
-→ Observe: How StatusPage.io updates are written for customers</div>
-                    <div class="why">Why: Communication tasks are safe and show you incident management process</div>
+                    <div class="step-header">9. Maintain Stakeholder Communication</div>
+                    <div class="example">Scenario: Regular updates to all stakeholders
+→ Update incident channel with current status: "PayPal processor active, payment volume restored"
+→ Coordinate with IC for executive and customer communication
+→ Update StatusPage.io with customer-facing status information
+→ Provide technical updates to development and operations teams</div>
+                    <div class="why">Rationale: Consistent communication prevents confusion and enables informed decision-making</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">10. Document Everything You Learn</div>
-                    <div class="example">Scenario: Turn this incident into learning opportunity
-→ Your notes: "Payment runbook at /wiki/runbooks/payment-system-outage"
-→ Your notes: "Datadog payment dashboard in Critical folder"
-→ Your notes: "Always check external service status pages first"
-→ Ask senior: "What should I have done differently?" Get feedback</div>
-                    <div class="why">Why: New person should treat every incident as intensive learning experience</div>
+                    <div class="step-header">10. Document Response Actions</div>
+                    <div class="example">Scenario: Comprehensive incident documentation
+→ Record all troubleshooting steps and their outcomes
+→ Document dashboard locations and monitoring procedures
+→ Note lessons learned and process improvements identified
+→ Prepare handover documentation for follow-up activities</div>
+                    <div class="why">Rationale: Thorough documentation enables effective post-incident analysis and knowledge transfer</div>
                 </div>
             </div>
         </div>
@@ -389,43 +400,43 @@
                 <h2 style="color: #48dbfb; text-align: center; margin-bottom: 30px;">LONG-TERM RESOLUTION (60+ min)</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">11. Implement Proper Fix</div>
-                    <div class="example">Scenario: Root cause identified as inefficient database query
-→ Rewrite query to use proper indexes
-→ Add query timeout (5 seconds) to prevent hanging
-→ Implement caching layer for frequently accessed data
-→ Test in staging environment first</div>
-                    <div class="why">Why: Permanent solutions prevent recurrence. Staging testing reduces deployment risk</div>
+                    <div class="step-header">11. Implement Permanent Fix</div>
+                    <div class="example">Scenario: Address root cause with sustainable solution
+→ Rewrite database query to utilize proper indexes
+→ Implement query timeout (5 seconds) to prevent system hanging
+→ Deploy caching layer for frequently accessed data
+→ Validate solution in staging environment before production deployment</div>
+                    <div class="why">Rationale: Permanent solutions prevent incident recurrence and improve system resilience</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">12. Gradual Restoration</div>
-                    <div class="example">Scenario: Canary deployment approach
-→ 10% of traffic to fixed system (monitor for 15 minutes)
-→ If stable: 25% → 50% → 75% → 100%
-→ Watch: checkout success rate, database CPU, error logs
-→ Rollback plan ready if issues detected</div>
-                    <div class="why">Why: Gradual rollout catches edge cases before they affect all users</div>
+                    <div class="step-header">12. Execute Gradual Restoration</div>
+                    <div class="example">Scenario: Risk-managed rollout approach
+→ Deploy to 10% of traffic, monitor for 15 minutes
+→ Progressive rollout: 25% → 50% → 75% → 100%
+→ Monitor checkout success rate, database CPU, and error logs
+→ Maintain rollback capability throughout restoration process</div>
+                    <div class="why">Rationale: Gradual deployment identifies edge cases before full system impact</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">13. Verify Full Recovery</div>
-                    <div class="example">Scenario: Multi-point verification
-→ Technical metrics: 99.5% checkout success rate (baseline)
-→ User impact: Customer support ticket volume back to normal
-→ Business metrics: Revenue per hour restored
-→ Social listening: No complaints on Twitter/Reddit</div>
-                    <div class="why">Why: Technical metrics can be misleading. User experience is the real test</div>
+                    <div class="step-header">13. Verify Complete Recovery</div>
+                    <div class="example">Scenario: Multi-dimensional verification approach
+→ Technical metrics: Confirm 99.5% checkout success rate restoration
+→ User impact assessment: Customer support ticket volume normalization
+→ Business metrics: Revenue per hour restored to baseline
+→ External validation: Social media and community feedback monitoring</div>
+                    <div class="why">Rationale: Comprehensive verification ensures both technical and user experience recovery</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">14. Official Stand Down</div>
-                    <div class="example">Scenario: Clear handoff and closure
-→ IC announces: "Incident officially resolved"
-→ Database team monitors for next 24 hours
-→ On-call rotation resumes normal schedule  
-→ Follow-up tasks tracked in JIRA with owners and deadlines</div>
-                    <div class="why">Why: Prevents confusion about ongoing responsibilities. Ensures follow-up doesn't get forgotten</div>
+                    <div class="step-header">14. Formal Incident Closure</div>
+                    <div class="example">Scenario: Structured handoff and resolution documentation
+→ IC announces official incident resolution to all stakeholders
+→ Establish 24-hour monitoring coverage for stability verification
+→ Resume standard on-call rotation and alerting policies
+→ Create and assign follow-up tasks with clear ownership and deadlines</div>
+                    <div class="why">Rationale: Clear closure prevents confusion and ensures follow-up accountability</div>
                 </div>
             </div>
         </div>
@@ -436,44 +447,44 @@
                 <h2 style="color: #1dd1a1; text-align: center; margin-bottom: 30px;">FOLLOW-UP (24-48 hours)</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">15. Blameless Post-Mortem</div>
-                    <div class="example">Scenario: Learning-focused retrospective within 48 hours
-→ Attendees: All incident responders + key stakeholders
-→ Timeline reconstruction: What happened when
-→ 5 Whys analysis: Why did the inefficient query get deployed?
-→ Contributing factors: Missing load testing, no query review process
-→ Action items: Specific, measurable, with owners and deadlines</div>
-                    <div class="why">Why: Blame discourages honesty. Focus on system improvements prevents recurrence</div>
+                    <div class="step-header">15. Conduct Post-Incident Review</div>
+                    <div class="example">Scenario: Structured learning-focused analysis within 48 hours
+→ Convene all incident responders and key stakeholders
+→ Reconstruct detailed timeline of events and responses
+→ Perform root cause analysis using 5 Whys methodology
+→ Identify contributing factors and systemic issues
+→ Define specific, measurable action items with owners and deadlines</div>
+                    <div class="why">Rationale: Systematic analysis focuses on process improvement rather than individual accountability</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">16. Actually Do Improvements</div>
+                    <div class="step-header">16. Implement System Improvements</div>
                     <div class="example">Scenario: Execute post-mortem action items
-→ Add database query performance monitoring (alerts on >2s queries)
-→ Implement mandatory query review for database changes
-→ Increase connection pool size from 50 to 100
-→ Add load testing to CI/CD pipeline for all database changes</div>
-                    <div class="why">Why: Most incidents repeat if underlying conditions aren't addressed</div>
+→ Deploy database query performance monitoring with alerts for queries exceeding 2 seconds
+→ Establish mandatory query review process for database changes
+→ Increase connection pool size from 50 to 100 connections
+→ Integrate load testing into CI/CD pipeline for database changes</div>
+                    <div class="why">Rationale: Proactive system improvements address underlying conditions that enabled the incident</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">17. Update Runbooks</div>
-                    <div class="example">Scenario: Improve incident response documentation
-→ Add "Checkout Down" runbook with specific troubleshooting steps
-→ Update database troubleshooting: "Check slow query log first"
+                    <div class="step-header">17. Update Operational Documentation</div>
+                    <div class="example">Scenario: Enhance incident response capabilities
+→ Create specific "Checkout System Outage" runbook with detailed troubleshooting steps
+→ Update database troubleshooting procedures to prioritize slow query log analysis
 → Document new monitoring thresholds and escalation triggers
-→ Include architecture diagrams showing dependencies</div>
-                    <div class="why">Why: Next responder shouldn't rediscover troubleshooting steps during crisis</div>
+→ Include architectural diagrams showing system dependencies</div>
+                    <div class="why">Rationale: Improved documentation accelerates future incident response and reduces resolution time</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">18. Share Lessons Learned</div>
-                    <div class="example">Scenario: Engineering-wide knowledge sharing
-→ Email summary: "Key lesson: Load test all database schema changes"
-→ Include: What failed, why it failed, how we fixed it, how to prevent
-→ Engineering all-hands presentation on incident response best practices
-→ Update onboarding materials with new procedures</div>
-                    <div class="why">Why: Prevents other teams from making similar mistakes. Builds organizational resilience</div>
+                    <div class="step-header">18. Share Knowledge Organization-Wide</div>
+                    <div class="example">Scenario: Broadcast lessons learned across engineering organization
+→ Distribute incident summary highlighting key learning: "Load test all database schema changes"
+→ Include failure analysis, resolution approach, and prevention measures
+→ Present incident response best practices at engineering all-hands meeting
+→ Update onboarding materials with new procedures and lessons learned</div>
+                    <div class="why">Rationale: Knowledge sharing prevents similar incidents across teams and builds organizational resilience</div>
                 </div>
             </div>
         </div>
@@ -485,39 +496,39 @@
                 <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 30px;">FIRST 30 DAYS - Foundation Building</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 1-2: Tool Discovery & Access</div>
-                    <div class="example">• Get access to all monitoring tools (Datadog, New Relic, PagerDuty)
-• Bookmark critical dashboards in "30-Day Learning" folder
-• Set up Slack notifications for #incidents channel
-• Complete security training for production access</div>
-                    <div class="why">Goal: Know where everything is located when crisis hits</div>
+                    <div class="step-header">Week 1-2: System Access and Tool Familiarization</div>
+                    <div class="example">• Obtain access to all monitoring tools (Datadog, New Relic, PagerDuty)
+• Organize critical dashboards in accessible bookmark structure
+• Configure Slack notifications for #incidents channel
+• Complete required security training for production system access</div>
+                    <div class="why">Objective: Establish foundational access and navigation capabilities for emergency response</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 2-3: Shadow & Document</div>
-                    <div class="example">• Shadow every incident (even if 3AM) - take detailed notes
-• Document: Who gets called for what type of issue
-• Create personal cheat sheet: "Payment issue = page Sarah, DB issue = page Mike"
-• Practice using runbooks on staging environment</div>
-                    <div class="why">Goal: Understand team dynamics and escalation patterns</div>
+                    <div class="step-header">Week 2-3: Incident Response Observation</div>
+                    <div class="example">• Observe all incident responses regardless of timing
+• Document escalation patterns and team member responsibilities
+• Create reference guide mapping issue types to appropriate contacts
+• Practice executing runbooks in staging environment</div>
+                    <div class="why">Objective: Understand team dynamics and standard operating procedures through direct observation</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 3-4: SEV3 Practice</div>
-                    <div class="example">• Take ownership of SEV3 incidents with senior engineer backup
-• Practice: "I acknowledge, investigate for 15 minutes, then escalate if stuck"
-• Learn: How to write good incident updates in Slack
-• Study: Past incident post-mortems for common failure patterns</div>
-                    <div class="why">Goal: Build confidence with low-risk incidents</div>
+                    <div class="step-header">Week 3-4: SEV3 Incident Handling</div>
+                    <div class="example">• Assume primary responsibility for SEV3 incidents with senior engineer oversight
+• Follow standard escalation protocol: investigate for 15 minutes, then escalate if unresolved
+• Develop proficiency in incident communication and status updates
+• Study historical incident post-mortems to identify common failure patterns</div>
+                    <div class="why">Objective: Build practical incident response experience with low-risk scenarios</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">End of Month Assessment</div>
-                    <div class="example">• Can you find payment dashboard in under 30 seconds?
-• Do you know when to escalate vs investigate further?
-• Can you execute basic runbook steps without help?
-• Ready for SEV3 on-call shifts with senior backup</div>
-                    <div class="why">Goal: Self-sufficiency for minor incidents</div>
+                    <div class="step-header">End of Month Competency Assessment</div>
+                    <div class="example">• Demonstrate ability to locate payment dashboard within 30 seconds
+• Show clear understanding of escalation criteria and procedures
+• Execute basic runbook procedures without supervision
+• Qualify for SEV3 on-call duties with senior engineer backup support</div>
+                    <div class="why">Objective: Verify readiness for independent handling of minor incidents</div>
                 </div>
             </div>
         </div>
@@ -525,42 +536,42 @@
         <div id="60days-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #feca57; text-align: center; margin-bottom: 30px;">30-60 DAYS - Building Competence</h2>
+                <h2 style="color: #feca57; text-align: center; margin-bottom: 30px;">30-60 DAYS - Competence Development</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 5-6: SEV3 Leadership</div>
-                    <div class="example">• Lead SEV3 incidents from start to finish independently
-• Practice post-incident communication: "What happened, what we did, follow-up"
-• Learn advanced log searching in Splunk/New Relic
-• Start contributing to runbook improvements based on your experience</div>
-                    <div class="why">Goal: Independent handling of minor incidents</div>
+                    <div class="step-header">Week 5-6: SEV3 Incident Leadership</div>
+                    <div class="example">• Lead SEV3 incidents from initial response through resolution independently
+• Develop proficiency in post-incident communication and stakeholder updates
+• Master advanced log analysis techniques in Splunk/New Relic
+• Contribute to runbook improvements based on practical experience</div>
+                    <div class="why">Objective: Achieve independent capability for minor incident management</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 6-7: SEV2 Shadowing</div>
-                    <div class="example">• Shadow SEV2 incidents, take on safe investigation tasks
-• Practice: "Check external service status pages while senior handles runbook"
-• Learn: Database query basics for payment/user lookup during incidents
-• Understand: When to suggest rollbacks vs fixes forward</div>
-                    <div class="why">Goal: Useful contributor to medium severity incidents</div>
+                    <div class="step-header">Week 6-7: SEV2 Incident Support</div>
+                    <div class="example">• Participate in SEV2 incidents as supporting technical responder
+• Execute safe investigation tasks while senior engineers handle critical path work
+• Develop database query skills for payment and user data lookup during incidents
+• Learn decision criteria for rollback versus forward fix approaches</div>
+                    <div class="why">Objective: Become valuable contributor to medium-severity incident response</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 7-8: System Architecture Deep Dive</div>
-                    <div class="example">• Study system architecture diagrams in Confluence
-• Understand: Payment flow from frontend → API → database → Stripe
-• Learn: Common failure points and their symptoms
-• Practice: Explaining technical issues to non-technical stakeholders</div>
-                    <div class="why">Goal: Understand system dependencies for better troubleshooting</div>
+                    <div class="step-header">Week 7-8: System Architecture Understanding</div>
+                    <div class="example">• Study comprehensive system architecture documentation in Confluence
+• Master payment processing flow from frontend through API to database and external services
+• Identify common failure points and their characteristic symptoms
+→ Develop skills in explaining technical issues to non-technical stakeholders</div>
+                    <div class="why">Objective: Build system knowledge required for effective troubleshooting and communication</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">60-Day Assessment</div>
-                    <div class="example">• Can you lead SEV3 incidents confidently?
-• Do you understand payment/user/order system architecture?
-• Can you assist meaningfully in SEV2 incidents?
-• Ready to be backup on-call for evenings/weekends</div>
-                    <div class="why">Goal: Trusted team member for most incident types</div>
+                    <div class="step-header">60-Day Competency Assessment</div>
+                    <div class="example">• Demonstrate confident leadership of SEV3 incidents
+• Show comprehensive understanding of payment, user, and order system architecture
+• Provide meaningful assistance during SEV2 incident response
+• Qualify for backup on-call coverage during evening and weekend shifts</div>
+                    <div class="why">Objective: Establish trusted team member status for most incident categories</div>
                 </div>
             </div>
         </div>
@@ -568,42 +579,42 @@
         <div id="90days-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #1dd1a1; text-align: center; margin-bottom: 30px;">60-90 DAYS - Full Capability</h2>
+                <h2 style="color: #1dd1a1; text-align: center; margin-bottom: 30px;">60-90 DAYS - Full Operational Capability</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 9-10: SEV2 Leadership</div>
-                    <div class="example">• Lead SEV2 incidents with senior engineer as backup (not lead)
-• Practice: Coordinating multiple people during multi-system failures
-• Learn: When to make vs escalate business impact decisions
-• Master: All common runbooks without constantly referring to documentation</div>
-                    <div class="why">Goal: Independent handling of significant incidents</div>
+                    <div class="step-header">Week 9-10: SEV2 Incident Leadership</div>
+                    <div class="example">• Lead SEV2 incidents with senior engineer available as backup resource
+• Coordinate multi-person response teams during complex multi-system failures
+• Make informed decisions about business impact escalation criteria
+• Execute all common runbooks without constant reference to documentation</div>
+                    <div class="why">Objective: Achieve independent management capability for significant incidents</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 10-11: SEV1 Contributor</div>
-                    <div class="example">• Contribute as technical responder in SEV1 incidents
-• Practice: Rapid parallel investigation while senior handles critical path
-• Learn: How to communicate technical findings to Incident Commander clearly
-• Understand: Business impact calculation and revenue implications</div>
-                    <div class="why">Goal: Valuable contributor to critical incidents</div>
+                    <div class="step-header">Week 10-11: SEV1 Technical Response</div>
+                    <div class="example">• Serve as technical responder in SEV1 incident teams
+• Execute parallel investigation activities while senior staff handles critical resolution path
+• Communicate technical findings clearly to Incident Commander
+• Understand business impact calculation and revenue implications for decision-making</div>
+                    <div class="why">Objective: Contribute effectively to critical incident response teams</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Week 11-12: Advanced Troubleshooting</div>
-                    <div class="example">• Troubleshoot issues without relying on runbooks
-• Practice: Creating new runbook steps for novel issues
-• Learn: Performance analysis, database optimization basics
-• Master: Cross-team coordination (DevOps, Product, Customer Support)</div>
-                    <div class="why">Goal: Handle new types of incidents independently</div>
+                    <div class="step-header">Week 11-12: Advanced Troubleshooting Skills</div>
+                    <div class="example">• Troubleshoot novel issues without relying solely on existing runbooks
+• Create new runbook procedures for previously undocumented scenarios
+• Apply performance analysis and database optimization techniques
+• Coordinate effectively across teams (DevOps, Product, Customer Support)</div>
+                    <div class="why">Objective: Handle new incident types independently and contribute to organizational knowledge</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">90-Day Assessment & Full On-Call</div>
-                    <div class="example">• Can you handle SEV2 incidents independently?
-• Are you a useful contributor to SEV1 incidents?
-• Do you troubleshoot systematically without step-by-step guidance?
-• Ready for full on-call rotation including primary responder shifts</div>
-                    <div class="why">Goal: Full team member ready for independent on-call duty</div>
+                    <div class="step-header">90-Day Final Assessment</div>
+                    <div class="example">• Demonstrate independent SEV2 incident management capability
+• Provide valuable technical contribution to SEV1 incident response
+• Apply systematic troubleshooting methodology without step-by-step guidance
+• Qualify for full on-call rotation including primary responder responsibilities</div>
+                    <div class="why">Objective: Achieve full team member status ready for independent on-call responsibilities</div>
                 </div>
             </div>
         </div>
@@ -612,50 +623,50 @@
         <div id="gowrong-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 30px;">WHEN THINGS GO WRONG</h2>
+                <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 30px;">DEVIATION MANAGEMENT</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Runbook Doesn't Work</div>
-                    <div class="example">Scenario: You follow payment outage runbook, but backup processor also fails
+                    <div class="step-header">Runbook Procedure Failure</div>
+                    <div class="example">Scenario: Standard payment outage runbook fails when backup processor is also unavailable
 
-STOP: Don't keep trying broken steps
-Slack incident channel: "Runbook step 2 failed - PayPal also down"
-Escalate IMMEDIATELY: "Need senior engineer - runbook not working"
-Document: Which steps failed and exact error messages</div>
-                    <div class="why">Don't waste time on broken procedures. Escalate fast with specific failure details</div>
+STOP: Discontinue unsuccessful procedures immediately
+Communication: Alert incident channel with specific failure details
+Escalation: Engage senior engineer immediately with precise error information
+Documentation: Record which procedures failed and exact error messages received</div>
+                    <div class="why">Protocol: Escalate quickly with specific failure details rather than continuing ineffective procedures</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Your Emergency Fix Makes It Worse</div>
-                    <div class="example">Scenario: You enable maintenance mode but it breaks the whole site
+                    <div class="step-header">Emergency Fix Causes Additional Issues</div>
+                    <div class="example">Scenario: Maintenance mode activation causes complete site unavailability
 
-REVERT IMMEDIATELY: Undo your last change first
-Slack: "Maintenance mode broke site - reverted - need help"
-Don't hide it: Tell IC exactly what you did and when
-Learn: Always test emergency procedures on staging first</div>
-                    <div class="why">Own mistakes fast. Hiding problems during SEV1 makes everything worse</div>
+REVERT: Immediately undo the last change before additional troubleshooting
+Communication: Inform IC of actions taken and current system state
+Transparency: Provide complete details of intervention and its impact
+Learning: Document incident for future emergency procedure validation</div>
+                    <div class="why">Protocol: Immediate reversion and transparent communication prevent compounding issues</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Multiple Systems Failing (Cascade Failure)</div>
-                    <div class="example">Scenario: Payment down, then database alerts, then login system fails
+                    <div class="step-header">Cascade Failure Management</div>
+                    <div class="example">Scenario: Payment system failure triggers database alerts and login system failures
 
-Don't chase every alert: Focus on PRIMARY business impact
-Tell IC: "Multiple systems failing - need to prioritize"
-IC decides: "Fix payments first, ignore login for now"
-Suppress non-critical alerts: Reduce noise, focus on core systems</div>
-                    <div class="why">During cascades, you can't fix everything. IC must prioritize business impact</div>
+Focus: Concentrate on primary business impact rather than all alerts
+Communication: Request IC prioritization guidance for multiple system failures
+Execution: Implement IC decision to prioritize payment system over login functionality
+Alert Management: Suppress non-critical alerts to reduce noise and improve focus</div>
+                    <div class="why">Protocol: During cascades, IC must prioritize based on business impact rather than technical complexity</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Can't Reach Key People</div>
-                    <div class="example">Scenario: Payment expert not responding, database expert on vacation
+                    <div class="step-header">Key Personnel Unavailability</div>
+                    <div class="example">Scenario: Primary payment system expert unresponsive during critical incident
 
-PagerDuty: Escalate to next person in policy (don't wait)
-Check team docs: "Who's backup for Sarah?"
-Slack: Post in team channels "#payments-team URGENT need help"
-Last resort: Wake up engineering director for emergency contact info</div>
-                    <div class="why">Have backup plans for backup plans. Someone always knows someone who can help</div>
+Escalation: Proceed to next person in PagerDuty escalation policy immediately
+Documentation: Consult team documentation for backup contact information
+Broadcast: Post urgent requests in relevant team Slack channels
+Executive Escalation: Contact engineering director for emergency contact information if required</div>
+                    <div class="why">Protocol: Multiple escalation paths prevent single points of failure in human resources</div>
                 </div>
             </div>
         </div>
@@ -663,54 +674,54 @@ Last resort: Wake up engineering director for emergency contact info</div>
         <div id="pressure-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #feca57; text-align: center; margin-bottom: 30px;">PRESSURE SITUATIONS</h2>
+                <h2 style="color: #feca57; text-align: center; margin-bottom: 30px;">HIGH-PRESSURE SCENARIOS</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">CEO Demanding Constant Updates</div>
+                    <div class="step-header">Executive Pressure Management</div>
                     <div class="example">
-                        <div class="scenario">Scenario: CEO joins incident channel asking for updates every 2 minutes</div>
-                        <div class="action-step">• IC handles this: "CEO, updates every 15 minutes in email thread"</div>
-                        <div class="action-step">• If you're IC: Set boundaries: "Technical team needs focus time"</div>
-                        <div class="action-step">• Designate communicator: Someone shields technical team from executive pressure</div>
-                        <div class="action-step">• Stick to schedule: "Next update at 3:45 PM as promised"</div>
+                        <div class="scenario">Scenario: Executive leadership requesting frequent updates during incident response</div>
+                        <div class="action-step">• IC establishes communication schedule: "Updates every 15 minutes via email thread"</div>
+                        <div class="action-step">• Set boundaries: "Technical team requires focused work periods for effective resolution"</div>
+                        <div class="action-step">• Designate communicator: Assign specific team member to handle executive communication</div>
+                        <div class="action-step">• Maintain schedule: "Next update at 3:45 PM as committed"</div>
                     </div>
-                    <div class="why">Executive pressure kills technical focus. Set boundaries and stick to communication schedule</div>
+                    <div class="why">Protocol: Structured communication prevents executive pressure from disrupting technical focus</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Social Media / Customer Meltdown</div>
+                    <div class="step-header">External Customer Pressure</div>
                     <div class="example">
-                        <div class="scenario">Scenario: Twitter exploding with complaints, customers calling support non-stop</div>
-                        <div class="action-step">• Your job: Focus on technical fix, ignore social media noise</div>
-                        <div class="action-step">• Customer support: Handles external communication with your updates</div>
-                        <div class="action-step">• StatusPage.io: Keep external updates honest but not too technical</div>
-                        <div class="action-step">• Don't read Twitter: It will stress you out and slow down fix</div>
+                        <div class="scenario">Scenario: Social media complaints and customer support volume surge during outage</div>
+                        <div class="action-step">• Technical focus: Concentrate on resolution rather than external communication monitoring</div>
+                        <div class="action-step">• Support coordination: Customer support team handles external communication using technical updates</div>
+                        <div class="action-step">• Status page updates: Maintain honest, non-technical customer communication</div>
+                        <div class="action-step">• Avoid distraction: Do not monitor social media during active incident response</div>
                     </div>
-                    <div class="why">Customer anger is motivating but distracting. Let support handle external communication</div>
+                    <div class="why">Protocol: External pressure management through delegation enables technical team focus</div>
                 </div>
                 
                 <div class="detail-step">
                     <div class="step-header">Revenue Impact Pressure</div>
                     <div class="example">
-                        <div class="scenario">Scenario: "$100k/hour lost" dashboard ticking up in real-time</div>
-                        <div class="action-step">• Remember: Pressure to go fast often causes more mistakes</div>
-                        <div class="action-step">• IC reminds team: "Fix it right, not fast"</div>
-                        <div class="action-step">• Take calculated risks: Don't skip testing just because of pressure</div>
-                        <div class="action-step">• Communicate progress: "60% restored" reduces pressure on team</div>
+                        <div class="scenario">Scenario: Real-time revenue loss metrics displayed during incident</div>
+                        <div class="action-step">• Maintain discipline: Pressure to accelerate often causes additional errors</div>
+                        <div class="action-step">• IC reinforcement: "Execute properly rather than quickly"</div>
+                        <div class="action-step">• Risk assessment: Avoid shortcuts that compromise testing and validation</div>
+                        <div class="action-step">• Progress communication: Report restoration percentages to reduce team pressure</div>
                     </div>
-                    <div class="why">Revenue pressure makes people take shortcuts. Discipline prevents bigger disasters</div>
+                    <div class="why">Protocol: Systematic approach prevents revenue pressure from causing larger disasters</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">How to Stay Calm Under Pressure</div>
+                    <div class="step-header">Stress Management Techniques</div>
                     <div class="example">
-                        <div class="scenario">Techniques for high-stress incidents:</div>
-                        <div class="action-step">• Breathe deliberately: 4 seconds in, 4 seconds out</div>
-                        <div class="action-step">• Focus on next step only: Don't think about the whole problem</div>
-                        <div class="action-step">• Use your training: Follow procedures, don't improvise under stress</div>
-                        <div class="action-step">• Communicate frequently: Talking reduces anxiety for everyone</div>
+                        <div class="scenario">Techniques for maintaining effectiveness during high-stress incidents:</div>
+                        <div class="action-step">• Breathing control: Implement deliberate 4-second inhale, 4-second exhale pattern</div>
+                        <div class="action-step">• Focus management: Concentrate on immediate next step rather than entire problem scope</div>
+                        <div class="action-step">• Procedure adherence: Follow established procedures rather than improvising under pressure</div>
+                        <div class="action-step">• Communication frequency: Regular updates reduce anxiety for entire team</div>
                     </div>
-                    <div class="why">Calm teams make better decisions. Stress makes people skip steps and make mistakes</div>
+                    <div class="why">Protocol: Systematic stress management improves decision-making quality during critical incidents</div>
                 </div>
             </div>
         </div>
@@ -718,66 +729,66 @@ Last resort: Wake up engineering director for emergency contact info</div>
         <div id="messiness-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #1dd1a1; text-align: center; margin-bottom: 30px;">REAL WORLD CHAOS</h2>
+                <h2 style="color: #1dd1a1; text-align: center; margin-bottom: 30px;">OPERATIONAL REALITY</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Documentation is Wrong/Outdated</div>
+                    <div class="step-header">Documentation Accuracy Issues</div>
                     <div class="example">
-                        <div class="scenario">Scenario: Runbook says "click button X" but button doesn't exist</div>
-                        <div class="action-step">• Don't waste time: Try for 2 minutes max, then escalate</div>
-                        <div class="action-step">• Slack: "Step 3 in runbook is wrong - button missing - need help"</div>
-                        <div class="action-step">• Senior engineer: "Oh yeah, we moved that to the new admin panel"</div>
-                        <div class="action-step">• Fix it later: Update runbook after incident is resolved</div>
+                        <div class="scenario">Scenario: Runbook references non-existent system components</div>
+                        <div class="action-step">• Time limit: Attempt procedure for maximum 2 minutes before escalation</div>
+                        <div class="action-step">• Communication: "Runbook step 3 references missing component - require assistance"</div>
+                        <div class="action-step">• Resolution: Senior engineer provides updated procedure location</div>
+                        <div class="action-step">• Follow-up: Update documentation after incident resolution</div>
                     </div>
-                    <div class="why">Bad docs are common. Don't assume you're doing it wrong - escalate quickly</div>
+                    <div class="why">Protocol: Rapid escalation prevents time waste on outdated procedures</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Monitoring Tools Are Down</div>
+                    <div class="step-header">Monitoring System Failures</div>
                     <div class="example">
-                        <div class="scenario">Scenario: Datadog is down during payment outage - no dashboards</div>
-                        <div class="action-step">• Backup plan: Use New Relic, Grafana, or raw server logs</div>
-                        <div class="action-step">• Manual checks: SSH to servers, check application logs directly</div>
-                        <div class="action-step">• Customer reports: Sometimes users tell you what's broken</div>
-                        <div class="action-step">• External monitoring: Use Pingdom, UptimeRobot if available</div>
+                        <div class="scenario">Scenario: Primary monitoring platform unavailable during incident</div>
+                        <div class="action-step">• Backup systems: Utilize alternative monitoring platforms (New Relic, Grafana)</div>
+                        <div class="action-step">• Direct verification: SSH to servers for direct log analysis</div>
+                        <div class="action-step">• User feedback: Incorporate customer reports as data source</div>
+                        <div class="action-step">• External monitoring: Leverage third-party uptime monitoring services</div>
                     </div>
-                    <div class="why">When tools fail, go to basics. Multiple monitoring sources prevent blindness</div>
+                    <div class="why">Protocol: Multiple monitoring sources prevent operational blindness during tool failures</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Key Expert on Vacation/Unreachable</div>
+                    <div class="step-header">Subject Matter Expert Unavailability</div>
                     <div class="example">
-                        <div class="scenario">Scenario: Payment system architect is on vacation in remote area</div>
-                        <div class="action-step">• Check team knowledge base: "Payment system overview" docs</div>
-                        <div class="action-step">• Find apprentice: Who was learning from the expert?</div>
-                        <div class="action-step">• Vendor support: Call Stripe directly if it's their issue</div>
-                        <div class="action-step">• Historical incidents: Look at past payment outages and solutions</div>
+                        <div class="scenario">Scenario: Critical system expert unreachable during incident</div>
+                        <div class="action-step">• Documentation review: Consult system overview and design documents</div>
+                        <div class="action-step">• Knowledge transfer: Identify team members with relevant system experience</div>
+                        <div class="action-step">• Vendor engagement: Contact external service providers directly</div>
+                        <div class="action-step">• Historical analysis: Review similar past incidents and resolution approaches</div>
                     </div>
-                    <div class="why">Institutional knowledge shouldn't depend on one person. Multiple information sources help</div>
+                    <div class="why">Protocol: Diversified knowledge sources prevent single-person dependencies</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Everything's on Fire (Multiple SEV1s)</div>
+                    <div class="step-header">Multiple Concurrent Critical Incidents</div>
                     <div class="example">
-                        <div class="scenario">Scenario: Payment down, database corrupted, AWS region outage</div>
-                        <div class="action-step">• IC triages: "What kills the business fastest?"</div>
-                        <div class="action-step">• Split teams: Payment team, database team, infrastructure team</div>
-                        <div class="action-step">• Sequential fixes: Don't try to fix everything at once</div>
-                        <div class="action-step">• Accept some damage: Focus on the biggest business impact first</div>
+                        <div class="scenario">Scenario: Payment system, database corruption, and infrastructure outage simultaneous</div>
+                        <div class="action-step">• IC triage: "Prioritize by business impact severity"</div>
+                        <div class="action-step">• Team allocation: Payment team, database team, infrastructure team parallel work</div>
+                        <div class="action-step">• Sequential approach: Focus on highest business impact first</div>
+                        <div class="action-step">• Accept constraints: Some systems may remain degraded during primary incident resolution</div>
                     </div>
-                    <div class="why">Perfect storms happen. Triage ruthlessly and accept you can't save everything</div>
+                    <div class="why">Protocol: Ruthless prioritization required when resources cannot address all issues simultaneously</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">When You Don't Know What You Don't Know</div>
+                    <div class="step-header">Unknown System Behavior</div>
                     <div class="example">
-                        <div class="scenario">Scenario: System behaving weird but you can't figure out why</div>
-                        <div class="action-step">• Describe symptoms exactly: "Payment API returns 200 but no database writes"</div>
-                        <div class="action-step">• Get help fast: Don't spend 30+ minutes confused alone</div>
-                        <div class="action-step">• Share screen: Sometimes another pair of eyes sees the issue</div>
-                        <div class="action-step">• Revert recent changes: Go back to known good state first</div>
+                        <div class="scenario">Scenario: System exhibiting unexpected behavior without clear cause</div>
+                        <div class="action-step">• Precise symptom description: "Payment API returns 200 status but no database writes occur"</div>
+                        <div class="action-step">• Rapid escalation: Request assistance after 30 minutes of investigation</div>
+                        <div class="action-step">• Collaborative troubleshooting: Share screen for additional perspective</div>
+                        <div class="action-step">• Reversion strategy: Return to last known good state as safety measure</div>
                     </div>
-                    <div class="why">Unknown unknowns are the hardest. Get help and revert to safety quickly</div>
+                    <div class="why">Protocol: Systematic approach to unknown issues prevents extended troubleshooting delays</div>
                 </div>
             </div>
         </div>
@@ -786,66 +797,65 @@ Last resort: Wake up engineering director for emergency contact info</div>
         <div id="technical-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 30px;">TECHNICAL GOTCHAS</h2>
+                <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 30px;">TECHNICAL COMPLICATIONS</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Rollback Also Fails</div>
-                    <div class="example">Scenario: Payment outage, you try to rollback deployment but rollback breaks database
+                    <div class="step-header">Rollback Procedure Failure</div>
+                    <div class="example">Scenario: Deployment rollback causes additional database errors
 
-STOP rolling back: Don't make it worse
-Alert IC immediately: "Rollback failed - database errors now"
-Emergency mode: Find the last known working deployment (2-3 versions back)
-Manual intervention: May need database team to restore from backup
-Document exactly: What happened during rollback attempt</div>
-                    <div class="why">Rollbacks aren't magic - they can fail too. Sometimes you have to go further back</div>
+STOP: Discontinue rollback procedure immediately
+Alert IC: "Rollback failed - database errors introduced"
+Emergency procedure: Identify last known stable deployment (multiple versions back)
+Database team engagement: May require backup restoration procedures
+Documentation: Record exact rollback attempt and failure mode</div>
+                    <div class="why">Protocol: Rollback failures require deeper historical restoration and specialized expertise</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">"Known Good State" Was Never Actually Good</div>
-                    <div class="example">Scenario: You rollback to "working" version but customers report it was already broken
+                    <div class="step-header">Historical State Reliability Issues</div>
+                    <div class="example">Scenario: Rollback reveals that previous "working" version had undetected issues
 
-Realize the truth: Current issue exposed existing hidden problem
-Don't keep rolling back: You'll just find more broken versions
-Focus forward: Fix the underlying issue instead of seeking perfect past
-Communicate honestly: "Rollback revealed pre-existing issue, fixing root cause"
-Get help: This is beyond simple restoration, need architectural fix</div>
-                    <div class="why">Sometimes "working" just meant "nobody noticed it was broken yet"</div>
+Reality assessment: Current incident exposed pre-existing hidden problems
+Strategy shift: Focus on forward fix rather than continued rollback attempts
+Communication: "Rollback revealed pre-existing issue, implementing root cause fix"
+Technical escalation: Architectural-level expertise required for comprehensive solution</div>
+                    <div class="why">Protocol: Sometimes "working" state was only perceived functionality, requiring fundamental fixes</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Logs Are Misleading or Corrupted</div>
-                    <div class="example">Scenario: Logs show "success" but payments are actually failing
+                    <div class="step-header">Log System Reliability Issues</div>
+                    <div class="example">Scenario: Application logs show success status while payments actually fail
 
-Don't trust logs blindly: Verify with actual user behavior data
-Cross-reference sources: Database records vs application logs vs user reports
-Check log pipeline: Is logging system itself broken?
-Manual verification: Test the actual user journey yourself
-Document discrepancy: "Logs unreliable during incident - used customer reports"</div>
-                    <div class="why">Logging systems fail too. Real user impact trumps what logs say</div>
+Verification approach: Cross-reference logs with actual user behavior data
+Multi-source validation: Database records, application logs, user reports
+Infrastructure check: Verify logging pipeline integrity
+Manual testing: Execute actual user journey for direct validation
+Documentation: "Logging system unreliable during incident - used customer feedback for verification"</div>
+                    <div class="why">Protocol: Real user impact verification trumps potentially corrupted log data</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Backup System Is Worse Than Broken Primary</div>
-                    <div class="example">Scenario: Switch to backup payment processor but it has 50% failure rate
+                    <div class="step-header">Backup System Degradation</div>
+                    <div class="example">Scenario: Backup payment processor has 50% failure rate compared to 0% primary system availability
 
-Weigh the options: 0% success vs 50% success - 50% is still better
-Communicate trade-offs: "Backup has issues but better than nothing"
-Parallel work: Keep trying to fix primary while backup limps along
-Set expectations: Tell stakeholders backup is temporary bandaid
-Monitor closely: Backup might completely fail under load</div>
-                    <div class="why">Sometimes all your options are bad. Pick the least bad and keep working</div>
+Trade-off analysis: 0% success versus 50% success - 50% provides business value
+Stakeholder communication: "Backup system has limitations but provides partial functionality"
+Parallel work: Continue primary system restoration while backup operates
+Expectation management: Communicate temporary nature of backup solution
+Monitoring: Backup system may fail completely under full load</div>
+                    <div class="why">Protocol: Sometimes all options are suboptimal - select least problematic while continuing primary fix</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Dependencies You Didn't Know About</div>
-                    <div class="example">Scenario: Fix payments but now user accounts are locked - turns out they're connected
+                    <div class="step-header">Undocumented System Dependencies</div>
+                    <div class="example">Scenario: Payment system fix causes user account lockout due to unknown integration
 
-Map the blast radius: What else broke when you "fixed" the main issue?
-Emergency discovery: "What systems depend on payment service?"
-Prioritize fixes: Can users live with locked accounts short-term?
-Get architecture help: Someone needs to understand these connections
-Document discoveries: Update system diagrams with newly discovered dependencies</div>
-                    <div class="why">Complex systems have hidden connections. Your fix might break something else</div>
+Impact assessment: Identify all systems affected by primary fix
+Emergency discovery: "Which systems have dependencies on payment service?"
+Prioritization: Determine if account lockouts acceptable short-term versus payment restoration
+Architecture consultation: Engage personnel with system integration knowledge
+Documentation update: Record newly discovered dependencies for future reference</div>
+                    <div class="why">Protocol: Complex systems have hidden interdependencies that may cause secondary issues</div>
                 </div>
             </div>
         </div>
@@ -856,63 +866,63 @@ Document discoveries: Update system diagrams with newly discovered dependencies<
                 <h2 style="color: #feca57; text-align: center; margin-bottom: 30px;">HUMAN FACTORS</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Incident Commander Is Panicking</div>
-                    <div class="example">Scenario: IC is new to role, clearly stressed, making contradictory decisions
+                    <div class="step-header">Incident Commander Stress Response</div>
+                    <div class="example">Scenario: IC demonstrating high stress levels and inconsistent decision-making
 
-Stay calm yourself: Don't let their panic infect you
-Gently guide: "IC, should we focus on payments first or database?"
-Suggest structure: "Let's follow the runbook order"
-Escalate if needed: If IC is making dangerous decisions, get their manager
-Be the steady voice: Provide clear technical updates to anchor the team</div>
-                    <div class="why">Panic is contagious but so is calm. Be the steady presence the team needs</div>
+Maintain composure: Prevent stress contagion through calm professional demeanor
+Provide structure: "IC, should we prioritize payment system or database restoration?"
+Suggest procedure: "Recommend following established runbook sequence"
+Escalate if necessary: Contact IC's manager if decisions become counterproductive
+Stability role: Provide consistent technical updates to anchor team focus</div>
+                    <div class="why">Protocol: Calm leadership prevents team-wide panic and maintains operational effectiveness</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Expert Gives You Wrong Information</div>
-                    <div class="example">Scenario: Payment expert says "just restart the service" but that breaks it worse
+                    <div class="step-header">Expert Advice Validation</div>
+                    <div class="example">Scenario: Subject matter expert provides advice that appears to worsen system state
 
-Trust but verify: "Let me check this in staging first"
-Question politely: "Are you sure? I'm seeing different behavior"
-Get second opinion: Ask another engineer to confirm the approach
-Document what happened: "Followed expert advice but it failed"
-Don't assume malice: Expert might be thinking of different system</div>
-                    <div class="why">Even experts make mistakes under pressure. Verify before acting on advice</div>
+Verification protocol: "Recommend testing this approach in staging environment first"
+Respectful questioning: "Can you confirm this approach given current system behavior?"
+Second opinion: Request confirmation from additional qualified team member
+Documentation: "Followed expert recommendation but outcome differed from expectation"
+Assumption of good intent: Expert may be referencing different system configuration</div>
+                    <div class="why">Protocol: Verification prevents implementation of advice based on outdated or incorrect assumptions</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Team Fighting During Incident</div>
-                    <div class="example">Scenario: Database team blaming application team while systems are down
+                    <div class="step-header">Inter-Team Conflict During Incidents</div>
+                    <div class="example">Scenario: Database and application teams engaging in blame assignment during active incident
 
-Don't engage in blame: "Let's fix first, discuss cause later"
-Focus on facts: "Database CPU is at 95%, payment API timing out"
-IC should mediate: "Everyone focus on their piece, blame game after resolution"
-Separate if needed: Put teams in different channels/calls
-Document neutrally: Focus on timeline and technical facts, not blame</div>
-                    <div class="why">Blame games waste time during incidents. Focus on resolution, accountability later</div>
+Neutral stance: "Focus on resolution now, analysis after restoration"
+Fact-based communication: "Database CPU at 95%, payment API experiencing timeouts"
+IC mediation: "Teams focus on respective responsibilities, post-incident analysis for accountability"
+Separation if required: Use different communication channels for conflicting teams
+Neutral documentation: Record timeline and technical facts without blame attribution</div>
+                    <div class="why">Protocol: Blame assignment during incidents delays resolution and should be deferred to post-mortem</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">System Held Together with Duct Tape</div>
-                    <div class="example">Scenario: You discover payment system is a mess of hacks and workarounds
+                    <div class="step-header">Legacy System Complexity</div>
+                    <div class="example">Scenario: Payment system composed of multiple undocumented workarounds and temporary fixes
 
-Don't try to fix everything: Focus on immediate business impact only
-Work with the mess: Use existing hacks to restore service
-Document the horror: "System needs major refactoring after incident"
-Warn stakeholders: "This fix is temporary, system needs rebuilding"
-Plan for future: Start conversation about technical debt after incident</div>
-                    <div class="why">During incidents, work with what you have. Major refactoring comes later</div>
+Pragmatic approach: Focus on immediate business impact rather than comprehensive refactoring
+Work within constraints: Utilize existing workarounds to restore service
+Document findings: "System requires major refactoring after incident resolution"
+Stakeholder warning: "Current fix is temporary, system needs architectural improvement"
+Future planning: Initiate technical debt discussion after incident closure</div>
+                    <div class="why">Protocol: During incidents, work with existing system state rather than attempting comprehensive fixes</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Conflicting Information from Multiple Sources</div>
-                    <div class="example">Scenario: Monitoring says OK, users say broken, database team says overloaded
+                    <div class="step-header">Conflicting Information Sources</div>
+                    <div class="example">Scenario: Monitoring shows normal operation, users report failures, database team reports overload
 
-Prioritize user reports: Real customer impact trumps monitoring
-Cross-check data sources: Find the source of truth
-Time-sync information: "Monitoring might be 5 minutes delayed"
-Make decisions with incomplete data: Can't wait for perfect information
-Communicate uncertainty: "Based on user reports, appears to be..."</div>
-                    <div class="why">During incidents, information is often contradictory. Use best available data</div>
+Prioritization: Real customer impact takes precedence over monitoring data
+Cross-validation: Identify authoritative source of truth for system state
+Time synchronization: Account for potential monitoring lag (e.g., 5-minute delays)
+Decision-making: Proceed with best available information rather than waiting for perfect data
+Communication: "Based on user reports, system appears to be experiencing issues"</div>
+                    <div class="why">Protocol: Perfect information rarely available during incidents - use best available data for decisions</div>
                 </div>
             </div>
         </div>
@@ -923,63 +933,63 @@ Communicate uncertainty: "Based on user reports, appears to be..."</div>
                 <h2 style="color: #1dd1a1; text-align: center; margin-bottom: 30px;">RESOURCE CONSTRAINTS</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">No Permissions to Fix What's Broken</div>
-                    <div class="example">Scenario: Need to restart database service but you don't have production access
+                    <div class="step-header">Access Permission Limitations</div>
+                    <div class="example">Scenario: Database service restart required but current user lacks production access
 
-Don't waste time trying: You'll just get access denied errors
-Escalate permission request: "Need DB restart permissions for SEV1"
-Find someone who does: "Who has DB admin access right now?"
-Temporary workaround: Can you fix it differently with your permissions?
-Document the blocker: "5 minutes lost waiting for permissions"</div>
-                    <div class="why">Permission systems don't pause for incidents. Find alternatives or escalate fast</div>
+Recognition: Acknowledge permission limitations immediately
+Escalation: "Request database restart permissions for SEV1 incident"
+Personnel alternative: "Identify team member with current database admin access"
+Workaround exploration: Investigate alternative solutions within current permission scope
+Documentation: "5-minute delay due to permission constraints"</div>
+                    <div class="why">Protocol: Permission systems remain active during incidents - rapid escalation or alternative approaches required</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Vendor Support Takes Hours to Respond</div>
-                    <div class="example">Scenario: Stripe is down, their support ticket says "4 hour response time"
+                    <div class="step-header">Vendor Support Response Time</div>
+                    <div class="example">Scenario: Critical external service failure with vendor reporting 4-hour response SLA
 
-Don't wait for vendor: Find workarounds immediately
-Check vendor status: Their public status page might have updates
-Use alternatives: Switch to different payment processor if possible
-Social media pressure: Sometimes @vendor on Twitter gets faster response
-Escalate to sales: Business account managers respond faster than support</div>
-                    <div class="why">Vendor SLAs don't match your business needs. Have backup plans</div>
+Immediate workaround: Identify alternatives rather than waiting for vendor response
+Status verification: Check vendor public status page for incident acknowledgment
+Alternative processors: Switch to different service providers if available
+Relationship leverage: Contact business account managers for expedited support
+Social media escalation: Public vendor contact sometimes accelerates response</div>
+                    <div class="why">Protocol: Vendor SLAs typically don't align with business requirements - backup plans essential</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Expert Is Asleep in Different Timezone</div>
-                    <div class="example">Scenario: Payment architect is in Australia, it's 3AM there
+                    <div class="step-header">Timezone Coverage Gaps</div>
+                    <div class="example">Scenario: Critical system expert located in different timezone during local incident
 
-Calculate if it's worth it: How critical is this specific knowledge?
-Find their documentation: Check their recent notes, design docs
-Look for apprentice: Who has been learning from them?
-Try to solve without them: Use available resources first
-Wake them if critical: But have specific questions ready, not "system broken"</div>
-                    <div class="why">Global teams mean someone's always asleep. Don't depend on one person</div>
+Impact assessment: Determine necessity of specific expertise for resolution
+Documentation review: Consult expert's recent design documents and notes
+Knowledge transfer: Identify team members with relevant system familiarity
+Independent resolution: Attempt resolution using available resources
+Targeted escalation: If contact necessary, prepare specific questions rather than general requests</div>
+                    <div class="why">Protocol: Global operations require redundant expertise to prevent single-person dependencies</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Fix Requires Another Team That's Not Available</div>
-                    <div class="example">Scenario: Need network team to update firewall rules but they're all offline
+                    <div class="step-header">Cross-Team Dependency Bottlenecks</div>
+                    <div class="example">Scenario: Network team firewall changes required but team unavailable
 
-Find interim solution: Can you route around the network issue?
-Emergency escalation: Wake up network on-call if truly critical
-Business decision: Accept partial functionality vs waiting for proper fix
-Document dependency: "Resolution blocked by network team availability"
-Plan better coverage: Discuss 24/7 coverage for critical teams post-incident</div>
-                    <div class="why">Cross-team dependencies create bottlenecks. Have workarounds or escalation paths</div>
+Interim solution: Identify routing alternatives to bypass network restrictions
+Emergency escalation: Contact network on-call for critical business impact
+Business decision: Accept partial functionality versus waiting for proper resolution
+Dependency documentation: "Resolution blocked by network team availability"
+Coverage planning: Discuss 24/7 coverage requirements for critical dependencies post-incident</div>
+                    <div class="why">Protocol: Cross-team dependencies create bottlenecks requiring workarounds and escalation procedures</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Cloud Provider Has Regional Outage</div>
-                    <div class="example">Scenario: AWS us-east-1 is down and that's where your payment system lives
+                    <div class="step-header">Cloud Provider Regional Outages</div>
+                    <div class="example">Scenario: AWS regional outage affecting payment system infrastructure
 
-Check AWS status: Confirm it's really AWS, not just you
-Failover if possible: Do you have multi-region setup?
-Communicate externally: "Experiencing issues due to AWS outage"
-Find workarounds: Can you process payments manually temporarily?
-Learn for next time: This exposes single points of failure</div>
-                    <div class="why">Cloud providers have outages too. Your incident response needs to handle dependencies failing</div>
+Verification: Confirm AWS status rather than assuming internal issue
+Failover assessment: Evaluate multi-region capabilities for service restoration
+External communication: "Service disruption due to AWS regional outage"
+Temporary workarounds: Investigate manual processing options for critical transactions
+Architecture review: Identify single points of failure exposed by provider outage</div>
+                    <div class="why">Protocol: Cloud provider outages require incident response plans that account for infrastructure dependencies</div>
                 </div>
             </div>
         </div>
@@ -988,66 +998,66 @@ Learn for next time: This exposes single points of failure</div>
         <div id="appsupport-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 30px;">YOUR ACTUAL SCOPE AS APP SUPPORT</h2>
+                <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 30px;">APPLICATION SUPPORT SCOPE</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">What You CAN'T Do (And That's Normal)</div>
-                    <div class="example">Reality check - as app support you typically DON'T have:
+                    <div class="step-header">Standard Access Limitations</div>
+                    <div class="example">Typical application support access restrictions:
 
-No code deployments: Can't push fixes or rollback releases
-No database admin: Can't restart DB, change schemas, fix locks
-No infrastructure: Can't restart servers, change load balancer config
-No production secrets: Can't rotate API keys or change external configs
-Limited admin panels: Maybe read-only access to most systems</div>
-                    <div class="why">This isn't a limitation - it's proper separation of duties and security</div>
+Code deployment: No access to deployment pipelines or release management
+Database administration: No server restart, schema modification, or lock resolution capabilities
+Infrastructure management: No server restart, load balancer configuration, or networking changes
+Production secrets: No access to API key rotation or external service configuration
+Administrative panels: Limited to read-only access for most system components</div>
+                    <div class="why">Context: Access restrictions represent proper security boundaries rather than operational limitations</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">What You CAN Do (More Than You Think)</div>
-                    <div class="example">Your actual powers during incidents:
+                    <div class="step-header">Available Capabilities</div>
+                    <div class="example">Application support incident response capabilities:
 
-Application config: Change timeouts, retry counts, feature flags
-User management: Disable problematic accounts, reset user states
-Cache management: Clear application caches, refresh data
-API testing: Use Postman/tools to verify external services
-Data lookups: Query read-only databases to understand user impact</div>
-                    <div class="why">Application-level changes can often stop the bleeding without deployments</div>
+Application configuration: Modify timeout values, retry parameters, feature flags
+User account management: Disable problematic accounts, reset user session states
+Cache management: Clear application-level caches, refresh cached data
+API testing: Utilize testing tools to verify external service connectivity
+Database queries: Execute read-only queries to assess user impact and system state</div>
+                    <div class="why">Context: Application-level interventions can often provide immediate relief without requiring deployments</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">When You Hit Permission Walls</div>
-                    <div class="example">Scenario: You know the fix but can't execute it
+                    <div class="step-header">Permission Boundary Management</div>
+                    <div class="example">Scenario: Solution identified but execution requires elevated privileges
 
-Don't waste time trying: "Permission denied" means move to next option
-Document the needed fix: "Need DB restart by admin to clear locks"
-Find someone who can: "Paging DBA on-call for database restart"
-Propose alternatives: "Can we disable the feature instead of fixing DB?"
-Time-box escalation: If no response in 10 minutes, try different approach</div>
-                    <div class="why">Permission boundaries are real. Work within them or escalate efficiently</div>
+Immediate recognition: Acknowledge permission constraints without attempting unauthorized access
+Documentation: "Database restart required by administrator to clear connection locks"
+Personnel escalation: "Engaging DBA on-call for database service restart"
+Alternative exploration: "Evaluating feature disable option instead of database fix"
+Escalation time-boxing: If no response within 10 minutes, pursue alternative approaches</div>
+                    <div class="why">Context: Permission boundaries are operational reality - work within them or escalate efficiently</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Making the Most of Limited Access</div>
-                    <div class="example">Creative use of your actual permissions:
+                    <div class="step-header">Maximizing Limited Access</div>
+                    <div class="example">Effective utilization of available permissions:
 
-Read-only database: Query to understand which users affected
-Application admin: Disable broken features via admin panel
-Log analysis: SSH to app servers and analyze application logs
-Configuration files: Change settings that don't require restart
-Monitoring tools: Create alerts and dashboards for the incident</div>
-                    <div class="why">Limited access doesn't mean powerless. Use what you have creatively</div>
+Read-only database access: Query to determine affected user populations and impact scope
+Application administration: Disable malfunctioning features through admin interface
+Log analysis: SSH to application servers for detailed error and performance analysis
+Configuration management: Modify application settings that don't require service restart
+Monitoring configuration: Create incident-specific alerts and dashboard views</div>
+                    <div class="why">Context: Limited access doesn't mean limited contribution - leverage available tools creatively</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Your Value During Major Incidents</div>
-                    <div class="example">How app support engineers contribute to SEV1:
+                    <div class="step-header">Value Contribution During Major Incidents</div>
+                    <div class="example">Application support engineer contributions to SEV1 incidents:
 
-Application expertise: You know the user flows and business logic best
-Investigation skills: You're good at log analysis and user impact assessment
-Communication bridge: Translate technical issues for customer support
-Coordination: Track what's been tried while engineers focus on fixes
-Documentation: Keep detailed timeline while others focus on resolution</div>
-                    <div class="why">You don't need admin access to be valuable. Your knowledge and skills matter most</div>
+Application expertise: Deep understanding of user workflows and business logic
+Investigation capabilities: Proficiency in log analysis and user impact assessment
+Communication facilitation: Translate technical issues for customer support teams
+Coordination support: Track attempted solutions while engineers focus on implementation
+Documentation maintenance: Maintain detailed incident timeline during active response</div>
+                    <div class="why">Context: Valuable contribution doesn't require administrative access - knowledge and analytical skills are primary assets</div>
                 </div>
             </div>
         </div>
@@ -1055,66 +1065,66 @@ Documentation: Keep detailed timeline while others focus on resolution</div>
         <div id="workarounds-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #feca57; text-align: center; margin-bottom: 30px;">CREATIVE WORKAROUNDS WITHIN YOUR SCOPE</h2>
+                <h2 style="color: #feca57; text-align: center; margin-bottom: 30px;">WORKAROUND STRATEGIES</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Application-Level Configuration Changes</div>
-                    <div class="example">Scenario: Payment timeouts causing failures, no deployment access
+                    <div class="step-header">Application Configuration Modifications</div>
+                    <div class="example">Scenario: Payment processing timeouts causing system failures
 
-Increase timeout values: Change payment API timeout from 30s to 60s in config
-Reduce retry attempts: Change from 5 retries to 2 to reduce load
-Disable non-essential features: Turn off recommendation engine during payment
-Change batch sizes: Process payments in smaller groups to reduce DB load
-Enable debug logging: Increase log level to capture more detail</div>
-                    <div class="why">Configuration changes don't require deployments but can stop bleeding</div>
+Timeout adjustment: Increase payment API timeout from 30 seconds to 60 seconds
+Retry optimization: Reduce retry attempts from 5 to 2 to decrease system load
+Feature disabling: Temporarily disable recommendation engine during payment processing
+Batch size reduction: Process payments in smaller groups to reduce database load
+Logging enhancement: Enable debug logging to capture additional diagnostic information</div>
+                    <div class="why">Approach: Configuration modifications provide immediate relief without requiring code deployment</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Feature Toggles and Circuit Breakers</div>
-                    <div class="example">Scenario: New feature causing system overload
+                    <div class="step-header">Feature Management and Circuit Breakers</div>
+                    <div class="example">Scenario: New feature causing system resource exhaustion
 
-Feature flag disable: Turn off the problematic feature via admin panel
-Circuit breaker enable: Activate circuit breaker for external API calls
-Partial rollout: Reduce feature from 100% users to 10% via toggles
-Maintenance mode: Enable "under maintenance" page for affected sections
-Rate limiting: Enable rate limiting for specific user actions</div>
-                    <div class="why">Modern apps have built-in controls you can use without code changes</div>
+Feature flag disabling: Deactivate problematic feature through administrative interface
+Circuit breaker activation: Enable circuit breaker for external API calls experiencing failures
+Partial rollout adjustment: Reduce feature exposure from 100% to 10% of users
+Maintenance mode: Enable maintenance page for affected system sections
+Rate limiting: Activate rate limiting for specific high-impact user actions</div>
+                    <div class="why">Approach: Modern applications include built-in controls for immediate problem mitigation</div>
                 </div>
                 
                 <div class="detail-step">
                     <div class="step-header">User and Data Management</div>
-                    <div class="example">Scenario: Specific users or data causing system problems
+                    <div class="example">Scenario: Specific users or data causing system performance issues
 
-Disable problem accounts: Temporarily disable accounts causing high load
-Reset user sessions: Force logout for all users to clear corrupted sessions
-Clear user caches: Remove cached data for problematic users
-Block IP addresses: Use application firewall to block problematic traffic
-Data cleanup: Remove or archive old data that's causing queries to slow</div>
-                    <div class="why">Sometimes the problem is specific users or data, not the whole system</div>
+Account management: Temporarily disable accounts generating excessive system load
+Session management: Force logout for all users to clear corrupted session data
+Cache management: Remove cached data for users experiencing issues
+Traffic management: Use application firewall to block problematic IP addresses
+Data maintenance: Archive or remove historical data causing query performance issues</div>
+                    <div class="why">Approach: Sometimes problems are user-specific rather than system-wide, allowing targeted solutions</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">External Service Management</div>
-                    <div class="example">Scenario: Third-party service integration is failing
+                    <div class="step-header">External Service Integration Management</div>
+                    <div class="example">Scenario: Third-party service integration failures affecting system operation
 
-Switch API endpoints: Change from primary to backup API URL
-Disable external calls: Turn off non-critical third-party integrations
-Change API keys: Rotate to backup API keys if primary is rate-limited
-Mock responses: Enable mock mode for external services during their outage
-Queue external calls: Change from real-time to queued processing</div>
-                    <div class="why">You often control how your app talks to external services</div>
+Endpoint switching: Change from primary to backup API endpoint URLs
+Integration disabling: Temporarily disable non-critical third-party service calls
+API key rotation: Switch to backup API keys if primary credentials are rate-limited
+Mock mode activation: Enable mock responses for external services during outages
+Processing mode change: Switch from real-time to queued processing for external calls</div>
+                    <div class="why">Approach: Application support typically controls external service integration configuration</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Communication and User Experience Fixes</div>
-                    <div class="example">Scenario: Can't fix the root cause but can improve user experience
+                    <div class="step-header">User Experience Optimization</div>
+                    <div class="example">Scenario: Unable to resolve root cause but can improve user experience
 
-Update error messages: Change generic errors to specific helpful messages
-Enable maintenance banners: Warn users about known issues
-Redirect traffic: Send users to working pages instead of broken ones
-Enable offline mode: Switch app to cached/offline functionality
-Create status updates: Post detailed updates on status page for transparency</div>
-                    <div class="why">Sometimes you can't fix it but you can make the experience less frustrating</div>
+Error message enhancement: Replace generic errors with specific, actionable user guidance
+Maintenance banner activation: Proactively warn users about known system issues
+Traffic redirection: Route users to functional pages instead of broken system components
+Offline mode activation: Switch application to cached or offline functionality
+Status communication: Provide detailed transparency through status page updates</div>
+                    <div class="why">Approach: User experience improvements can significantly reduce frustration even when technical issues persist</div>
                 </div>
             </div>
         </div>
@@ -1122,77 +1132,77 @@ Create status updates: Post detailed updates on status page for transparency</di
         <div id="escalation-details" class="details">
             <div class="details-content">
                 <button class="close-btn" onclick="closeDetails()">&times;</button>
-                <h2 style="color: #1dd1a1; text-align: center; margin-bottom: 30px;">WHEN TO ESCALATE (AND TO WHOM)</h2>
+                <h2 style="color: #1dd1a1; text-align: center; margin-bottom: 30px;">ESCALATION PROCEDURES</h2>
                 
                 <div class="detail-step">
-                    <div class="step-header">Database Issues (Escalate to DBA Team)</div>
-                    <div class="example">Signs you need database admin help:
+                    <div class="step-header">Database Issues (DBA Team Escalation)</div>
+                    <div class="example">Indicators requiring database administrator intervention:
 
-Query performance: Slow queries affecting entire application
-Connection limits: "Too many connections" errors
-Lock issues: Queries timing out due to table locks
-Disk space: Database running out of storage space
-Replication lag: Read replicas falling behind master
+Query performance: Slow queries affecting entire application performance
+Connection management: "Too many connections" errors preventing new sessions
+Lock resolution: Queries timing out due to table locks requiring manual intervention
+Storage management: Database approaching storage capacity limits
+Replication issues: Read replicas falling behind master database
 
-Escalate to: Database team, provide specific error messages and affected tables</div>
-                    <div class="why">Database problems require admin access you don't have</div>
+Escalation target: Database administration team with specific error messages and affected table names</div>
+                    <div class="why">Rationale: Database problems typically require administrative privileges unavailable to application support</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Infrastructure Problems (Escalate to DevOps/SRE)</div>
-                    <div class="example">Signs you need infrastructure help:
+                    <div class="step-header">Infrastructure Problems (DevOps/SRE Escalation)</div>
+                    <div class="example">Indicators requiring infrastructure team intervention:
 
-Server resources: High CPU/memory across multiple servers
-Network issues: Connectivity problems between services
-Load balancer: Traffic routing problems
-Auto-scaling: Servers not scaling up during traffic spikes
-DNS issues: Domain name resolution problems
+Resource exhaustion: High CPU/memory utilization across multiple servers
+Network connectivity: Communication failures between system components
+Load balancer issues: Traffic routing problems affecting user access
+Auto-scaling failures: Server scaling not responding to traffic increases
+DNS resolution: Domain name resolution problems affecting service access
 
-Escalate to: DevOps/SRE team, provide affected servers and resource metrics</div>
-                    <div class="why">Infrastructure changes require system admin privileges</div>
+Escalation target: DevOps/SRE team with affected server identifiers and resource utilization metrics</div>
+                    <div class="why">Rationale: Infrastructure modifications require system administration privileges and specialized expertise</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">Code/Deployment Issues (Escalate to Development Team)</div>
-                    <div class="example">Signs you need code changes:
+                    <div class="step-header">Code/Deployment Issues (Development Team Escalation)</div>
+                    <div class="example">Indicators requiring development team intervention:
 
-Application bugs: Logic errors that require code fixes
-Deployment rollback: Need to revert to previous version
-Configuration deployment: Changes that require release pipeline
-Memory leaks: Application-level memory issues
-Performance optimization: Code that needs refactoring
+Application logic errors: Business logic failures requiring code modifications
+Deployment management: Need to revert to previous software version
+Configuration deployment: Settings changes requiring release pipeline execution
+Memory management: Application-level memory leak issues
+Performance optimization: Code requiring refactoring for performance improvement
 
-Escalate to: Development team, provide exact error reproduction steps</div>
-                    <div class="why">Code problems need people with deployment access and code knowledge</div>
+Escalation target: Development team with exact error reproduction steps and environmental details</div>
+                    <div class="why">Rationale: Code-level problems require development expertise and deployment access</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">External Service Issues (Escalate to Vendor/Partnerships)</div>
-                    <div class="example">Signs you need vendor escalation:
+                    <div class="step-header">External Service Issues (Vendor/Partnership Escalation)</div>
+                    <div class="example">Indicators requiring vendor escalation:
 
-API rate limits: External service blocking your calls
-Service outages: Third-party provider having issues
-Contract issues: Need emergency support beyond normal SLA
-Integration problems: Complex API integration failing
-Performance issues: External service response times degraded
+API limitations: External service rate limiting or blocking requests
+Service availability: Third-party provider experiencing outages or degradation
+Contract escalation: Need emergency support beyond standard service level agreements
+Integration complexity: Complex API integration failures requiring vendor expertise
+Performance degradation: External service response times significantly increased
 
-Escalate to: Account manager or technical contact at vendor</div>
-                    <div class="why">External problems require relationship and contract leverage</div>
+Escalation target: Vendor account manager or designated technical contact</div>
+                    <div class="why">Rationale: External service problems require vendor relationship leverage and specialized support</div>
                 </div>
                 
                 <div class="detail-step">
-                    <div class="step-header">How to Escalate Effectively</div>
-                    <div class="example">Best practices for escalation:
+                    <div class="step-header">Effective Escalation Protocol</div>
+                    <div class="example">Best practices for escalation communication:
 
-Be specific: "Database locks on payment_transactions table" not "database slow"
-Provide context: Business impact, affected users, revenue loss
-Include evidence: Error messages, screenshots, log snippets
-Suggest urgency: "SEV1 - $50k/hour revenue impact"
-Offer to help: "I can provide more logs or test fixes"
-Set timeline: "Need response in 15 minutes for SEV1"
+Specific problem description: "Database locks on payment_transactions table" rather than "database performance issues"
+Context provision: Business impact, affected user count, revenue implications
+Evidence inclusion: Error messages, screenshots, relevant log excerpts
+Urgency indication: "SEV1 - $50,000/hour revenue impact"
+Assistance offer: "Available to provide additional logs or test proposed solutions"
+Response timeline: "Require response within 15 minutes for SEV1 incident"
 
-Document everything: Keep timeline of who you escalated to and when</div>
-                    <div class="why">Good escalation gets faster response and better outcomes</div>
+Documentation requirement: Maintain timeline of escalation targets and response times</div>
+                    <div class="why">Rationale: Structured escalation communication accelerates response and improves resolution outcomes</div>
                 </div>
             </div>
         </div>
@@ -1231,125 +1241,125 @@ Document everything: Keep timeline of who you escalated to and when</div>
                 <div class="severity-item sev1">
                     <strong>SEV 1</strong><br>
                     Revenue impact<br>
-                    Wake everyone up
+                    All hands response
                 </div>
                 <div class="severity-item sev2">
                     <strong>SEV 2</strong><br>
-                    Feature broken<br>
-                    Get core team
+                    Feature degradation<br>
+                    Core team engagement
                 </div>
                 <div class="severity-item sev3">
                     <strong>SEV 3</strong><br>
-                    Minor issue<br>
-                    Handle during work hours
+                    Minor issues<br>
+                    Business hours response
                 </div>
             </div>
         </div>
         
         <div class="severity-scale" style="margin-top: 40px;">
-            <div class="severity-title">30-60-90 Day Learning Plan for New App Support Engineers</div>
+            <div class="severity-title">Progressive Learning Framework for Application Support Engineers</div>
             <div class="severity-levels">
                 <div class="severity-item sev1" onclick="openDetails('30days')" style="cursor: pointer;">
                     <strong>FIRST 30 DAYS</strong><br>
-                    • Shadow senior engineers during incidents<br>
-                    • Learn tool locations (Datadog, New Relic, Confluence)<br>
-                    • Memorize escalation policies and key contacts<br>
-                    • Practice with SEV3 incidents only
+                    • Shadow experienced engineers during incident response<br>
+                    • Master tool navigation (Datadog, New Relic, Confluence)<br>
+                    • Memorize escalation procedures and key personnel contacts<br>
+                    • Handle SEV3 incidents under supervision
                 </div>
                 <div class="severity-item sev2" onclick="openDetails('60days')" style="cursor: pointer;">
                     <strong>30-60 DAYS</strong><br>
-                    • Take lead on SEV3 incidents<br>
-                    • Shadow SEV2 incidents, assist with safe tasks<br>
-                    • Know all runbooks and can execute basic procedures<br>
-                    • Understand system architecture and dependencies
+                    • Lead SEV3 incident response independently<br>
+                    • Support SEV2 incidents with defined responsibilities<br>
+                    • Execute all standard runbooks without supervision<br>
+                    • Understand complete system architecture and dependencies
                 </div>
                 <div class="severity-item sev3" onclick="openDetails('90days')" style="cursor: pointer;">
                     <strong>60-90 DAYS</strong><br>
-                    • Lead SEV2 incidents with senior backup<br>
-                    • Contribute to SEV1 as technical responder<br>
-                    • Can troubleshoot without runbooks<br>
-                    • Ready for full on-call rotation
+                    • Lead SEV2 incidents with senior engineer backup<br>
+                    • Contribute technically to SEV1 incident response<br>
+                    • Troubleshoot novel issues without runbook dependency<br>
+                    • Qualified for full on-call rotation responsibilities
                 </div>
             </div>
         </div>
         
         <div class="severity-scale" style="margin-top: 40px;">
-            <div class="severity-title">"What If" Edge Case Scenarios</div>
+            <div class="severity-title">Edge Case Scenario Management</div>
             <div class="severity-levels">
                 <div class="severity-item sev1" onclick="openDetails('gowrong')" style="cursor: pointer;">
-                    <strong>WHEN THINGS GO WRONG</strong><br>
-                    • Runbooks don't work<br>
-                    • Emergency fixes make it worse<br>
-                    • Multiple systems failing<br>
-                    • Can't reach the experts
+                    <strong>DEVIATION MANAGEMENT</strong><br>
+                    • Standard runbook procedures fail<br>
+                    • Emergency fixes cause additional issues<br>
+                    • Multiple concurrent system failures<br>
+                    • Key personnel unavailable
                 </div>
                 <div class="severity-item sev2" onclick="openDetails('pressure')" style="cursor: pointer;">
-                    <strong>PRESSURE SITUATIONS</strong><br>
-                    • CEO demanding updates<br>
-                    • Social media meltdown<br>
-                    • Customer support flooded<br>
-                    • How to stay calm
+                    <strong>HIGH-PRESSURE SCENARIOS</strong><br>
+                    • Executive pressure for frequent updates<br>
+                    • External customer and social media pressure<br>
+                    • Revenue impact stress<br>
+                    • Stress management techniques
                 </div>
                 <div class="severity-item sev3" onclick="openDetails('messiness')" style="cursor: pointer;">
-                    <strong>REAL WORLD CHAOS</strong><br>
-                    • Documentation is wrong<br>
-                    • Tools are down<br>
-                    • Key person on vacation<br>
-                    • Everything's on fire
+                    <strong>OPERATIONAL REALITY</strong><br>
+                    • Documentation accuracy issues<br>
+                    • Monitoring system failures<br>
+                    • Subject matter expert unavailability<br>
+                    • Multiple concurrent critical incidents
                 </div>
             </div>
         </div>
         
         <div class="severity-scale" style="margin-top: 40px;">
-            <div class="severity-title">Advanced "What Could Go Wrong" Scenarios</div>
+            <div class="severity-title">Advanced Complication Scenarios</div>
             <div class="severity-levels">
                 <div class="severity-item sev1" onclick="openDetails('technical')" style="cursor: pointer;">
-                    <strong>TECHNICAL GOTCHAS</strong><br>
-                    • Rollback fails too<br>
-                    • "Good state" was broken<br>
-                    • Logs are misleading<br>
-                    • Backup is worse than primary
+                    <strong>TECHNICAL COMPLICATIONS</strong><br>
+                    • Rollback procedures fail<br>
+                    • Historical "good" states were problematic<br>
+                    • Log systems provide misleading information<br>
+                    • Backup systems worse than primary
                 </div>
                 <div class="severity-item sev2" onclick="openDetails('human')" style="cursor: pointer;">
                     <strong>HUMAN FACTORS</strong><br>
-                    • IC is panicking<br>
-                    • Expert gives wrong info<br>
-                    • Team fighting during incident<br>
-                    • System held together with duct tape
+                    • Incident Commander stress response<br>
+                    • Expert advice validation required<br>
+                    • Inter-team conflict during incidents<br>
+                    • Legacy system complexity
                 </div>
                 <div class="severity-item sev3" onclick="openDetails('resources')" style="cursor: pointer;">
                     <strong>RESOURCE CONSTRAINTS</strong><br>
-                    • No permissions to fix<br>
-                    • Vendor support takes hours<br>
-                    • Expert is asleep overseas<br>
-                    • Dependencies you don't control
+                    • Access permission limitations<br>
+                    • Vendor support response delays<br>
+                    • Timezone coverage gaps<br>
+                    • Cross-team dependency bottlenecks
                 </div>
             </div>
         </div>
         
         <div class="severity-scale" style="margin-top: 40px;">
-            <div class="severity-title">App Support Engineer Reality Check</div>
+            <div class="severity-title">Application Support Engineer Operational Framework</div>
             <div class="severity-levels">
                 <div class="severity-item sev1" onclick="openDetails('appsupport')" style="cursor: pointer;">
-                    <strong>YOUR ACTUAL SCOPE</strong><br>
-                    • No deployment access<br>
-                    • Can't rollback code<br>
-                    • Limited admin permissions<br>
-                    • What you CAN actually do
+                    <strong>SCOPE DEFINITION</strong><br>
+                    • Standard access limitations<br>
+                    • Available capabilities within role<br>
+                    • Permission boundary management<br>
+                    • Value contribution during major incidents
                 </div>
                 <div class="severity-item sev2" onclick="openDetails('workarounds')" style="cursor: pointer;">
-                    <strong>CREATIVE WORKAROUNDS</strong><br>
-                    • Application-level fixes<br>
-                    • Configuration changes<br>
-                    • Feature toggles<br>
-                    • User communication
+                    <strong>WORKAROUND STRATEGIES</strong><br>
+                    • Application configuration modifications<br>
+                    • Feature management and circuit breakers<br>
+                    • User and data management<br>
+                    • External service integration management
                 </div>
                 <div class="severity-item sev3" onclick="openDetails('escalation')" style="cursor: pointer;">
-                    <strong>WHEN TO ESCALATE</strong><br>
-                    • Beyond your permissions<br>
-                    • Need infrastructure changes<br>
-                    • Database issues<br>
-                    • Code deployment needed
+                    <strong>ESCALATION PROCEDURES</strong><br>
+                    • Database issues requiring DBA intervention<br>
+                    • Infrastructure problems needing DevOps support<br>
+                    • Code deployment requiring development team<br>
+                    • External service vendor escalation
                 </div>
             </div>
         </div>
