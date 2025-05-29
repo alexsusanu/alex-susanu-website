@@ -92,6 +92,13 @@ kubectl describe pvc my-pvc
 - **Cause:** `emptyDir` volume was used instead of PVC
 - **Solution:** Ensure `persistentVolumeClaim` is specified in volume definition
 
+| Type           | Use Case                                        | Persistent?      |
+| -------------- | ----------------------------------------------- | ---------------- |
+| `emptyDir`     | Temporary scratch space per pod                 | ❌ No             |
+| `hostPath`     | Mount a directory from the node's filesystem    | ✅\* (node-bound) |
+| `PVC` (via PV) | Durable storage across pod reschedules/restarts | ✅ Yes            |
+
+
 ## References / Further Reading
 - https://kubernetes.io/docs/concepts/storage/persistent-volumes/
 - https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/
