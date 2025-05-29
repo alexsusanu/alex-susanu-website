@@ -1297,6 +1297,152 @@ Documentation requirement: Maintain timeline of escalation targets and response 
                 </div>
             </div>
         </div>
+
+        <!------------------COMPARISON MATRIX BEGIN------------>
+
+        <div class="severity-scale">
+            <div class="severity-title">🧠 SEV1 Incident Response – Comparison Matrix</div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.1);">
+                            <th style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Scenario</th>
+                            <th style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Runbook Available, Simple Fix</th>
+                            <th style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Runbook Missing or Incomplete</th>
+                            <th style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Runbook Exists but High-Risk</th>
+                            <th style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Critical System (Always Escalate)</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color: white;">
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Alert</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Triggered by monitoring (e.g., 500 errors, downtime)</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Triggered</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Triggered</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Triggered (e.g. prod DB down, payments broken)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Who Gets Paged</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 Support only</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 Support only initially</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 Support only initially</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 + Senior + IC simultaneously (via escalation policy)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Response Time Allowed</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">2–5 minutes to ack & respond</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">2–5 minutes to ack, then try to triage</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">2–5 minutes to ack, but cannot proceed without risk approval</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Immediate action required by all</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Support Engineer Action</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Reads runbook, applies fix (restart, clear cache)</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Attempts triage: logs, dashboards, app status</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Aware of runbook, but decides to escalate due to criticality</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">May contribute logs/triage but not main decision-maker</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Escalation Trigger</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">No escalation if resolved in time</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Escalation after timeout or manual trigger</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Manual escalation after quick triage</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">No delay — all hands notified from start</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Senior/IC Role</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Not involved</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Takes over resolution; assigns tasks</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Leads resolution; support assists</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Takes command immediately</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Outcome</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Incident closed quickly (5–10 mins)</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Longer triage (15–60 mins); postmortem needed</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Risk mitigation or rollback done; wider impact</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Full team engaged, postmortem + RCA mandatory</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Comms</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Internal notes</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Public comms/internal war room</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Stakeholder updates needed</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">External comms likely (status page, exec notification)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px; margin: 20px 0;">
+                <div style="color: #feca57; font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">💡 Edge Cases & Nuances</div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Situation</th>
+                            <th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color: white;">
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 doesn't ack the alert (sick, asleep, distracted)</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">PagerDuty escalates <strong>automatically</strong> after N minutes</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 applies fix, but alert re-triggers</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Escalation may still happen — PagerDuty can re-trigger if the alert clears but returns</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 is unsure even with runbook (e.g., error context is confusing)</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Manual escalation to senior — better to be safe than sorry</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Multiple sev1 alerts trigger at once</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);"><strong>Incident Commander assigned</strong> to coordinate multiple teams</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Company policy = auto page IC for any Sev1</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Senior/SRE/IC always gets paged immediately regardless of who ACKs</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px;">
+                <div style="color: #1dd1a1; font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">🚦 Best Practice Summary:</div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Policy Type</th>
+                            <th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">What Happens</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color: white;">
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Standard</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Support triages first, auto-escalate in 5 mins</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Aggressive</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 + Senior paged together for Sev1</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Manual Escalation Encouraged</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Tier-1 encouraged to escalate if unsure — no penalty for escalation</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Critical Path Escalation</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Any incident touching prod DB, login, payments → pages everyone instantly</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!--------------COMPARISON MATRIX END-------------->
+
+
        
         <div class="severity-scale">
             <div class="severity-title">Response Scale by Severity</div>
