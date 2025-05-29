@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT & Software Development Vocabulary Guide - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>IT & Software Development Vocabulary Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                Technology (vocabulary) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">IT</span><span class="tag">software</span><span class="tag">development</span><span class="tag">technology</span><span class="tag">programming</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>IT & Software Development Vocabulary Guide</h2>
+<h3>Software Development Lifecycle (SDLC)</h3>
+Understanding the complete process of software creation and maintenance.
+<h4>Development Methodologies</h4>
+<ul><li><strong>Agile</strong> - Iterative development approach with short cycles</li>
+<li><strong>Scrum</strong> - Agile framework with defined roles and ceremonies</li>
+<li><strong>Kanban</strong> - Visual workflow management method</li>
+<li><strong>Sprint</strong> - Short development cycle (1-4 weeks)</li>
+<li><strong>Stand-up</strong> - Daily team synchronization meeting</li>
+<li><strong>Retrospective</strong> - Meeting to improve team processes</li>
+<li><strong>Waterfall</strong> - Sequential development approach</li>
+<li><strong>DevOps</strong> - Culture combining development and operations</li>
+<li><strong>Continuous Integration (CI)</strong> - Frequently integrating code changes</li>
+<li><strong>Continuous Deployment (CD)</strong> - Automatically deploying code to production</li>
+<li><strong>Lean development</strong> - Eliminating waste in development process</li>
+<li><strong>Extreme Programming (XP)</strong> - Agile methodology emphasizing technical practices</li>
+<li><strong>Feature-driven development</strong> - Organizing around feature sets</li>
+<li><strong>Test-driven development (TDD)</strong> - Writing tests before code</li>
+<li><strong>Behavior-driven development (BDD)</strong> - Focusing on behavior specifications</li>
+<h4>Development Phases</h4>
+<li><strong>Requirements gathering</strong> - Understanding what needs to be built</li>
+<li><strong>Design phase</strong> - Planning system architecture and user interface</li>
+<li><strong>Implementation</strong> - Writing the actual code</li>
+<li><strong>Testing</strong> - Verifying software works as expected</li>
+<li><strong>Deployment</strong> - Releasing software to users</li>
+<li><strong>Maintenance</strong> - Ongoing support and updates</li>
+<li><strong>Code review</strong> - Peer examination of code changes</li>
+<li><strong>Quality assurance (QA)</strong> - Systematic testing of software</li>
+<li><strong>User acceptance testing (UAT)</strong> - Final testing by end users</li>
+<li><strong>Integration testing</strong> - Testing how components work together</li>
+<li><strong>System testing</strong> - Testing complete integrated system</li>
+<li><strong>Regression testing</strong> - Ensuring new changes don't break existing functionality</li>
+<li><strong>Performance testing</strong> - Testing system speed and responsiveness</li>
+<li><strong>Security testing</strong> - Testing for vulnerabilities</li>
+<li><strong>Load testing</strong> - Testing system under expected usage</li>
+<h3>Architecture & System Design</h3>
+Core concepts for understanding how software systems are structured.
+<h4>System Architecture</h4>
+<li><strong>Monolithic architecture</strong> - Single deployable unit containing all functionality</li>
+<li><strong>Microservices</strong> - Breaking application into small, independent services</li>
+<li><strong>Service-oriented architecture (SOA)</strong> - Services communicate through well-defined interfaces</li>
+<li><strong>Serverless</strong> - Running code without managing servers</li>
+<li><strong>Event-driven architecture</strong> - Components communicate through events</li>
+<li><strong>API-first design</strong> - Building APIs before user interfaces</li>
+<li><strong>Three-tier architecture</strong> - Presentation, application, and data layers</li>
+<li><strong>N-tier architecture</strong> - Multiple layers for different functions</li>
+<li><strong>Client-server architecture</strong> - Clients request services from servers</li>
+<li><strong>Peer-to-peer architecture</strong> - Nodes act as both clients and servers</li>
+<li><strong>Distributed architecture</strong> - Components spread across multiple machines</li>
+<li><strong>Centralized architecture</strong> - All processing done in central location</li>
+<li><strong>Layered architecture</strong> - Organized into horizontal layers</li>
+<li><strong>Component-based architecture</strong> - Built from reusable components</li>
+<li><strong>Plugin architecture</strong> - Core system extended through plugins</li>
+<h4>Technical Concepts</h4>
+<li><strong>Scalability</strong> - Ability to handle increased load</li>
+<li><strong>Horizontal scaling</strong> - Adding more servers</li>
+<li><strong>Vertical scaling</strong> - Adding more power to existing servers</li>
+<li><strong>Load balancing</strong> - Distributing traffic across multiple servers</li>
+<li><strong>Caching</strong> - Storing frequently accessed data for faster retrieval</li>
+<li><strong>Database sharding</strong> - Splitting database across multiple machines</li>
+<li><strong>Redundancy</strong> - Having backup systems to prevent failure</li>
+<li><strong>Fault tolerance</strong> - System continues operating despite failures</li>
+<li><strong>High availability</strong> - System remains operational most of the time</li>
+<li><strong>Disaster recovery</strong> - Plan for restoring systems after major failure</li>
+<li><strong>Failover</strong> - Switching to backup system when primary fails</li>
+<li><strong>Circuit breaker</strong> - Preventing cascading failures in distributed systems</li>
+<li><strong>Rate limiting</strong> - Controlling the rate of requests</li>
+<li><strong>Throttling</strong> - Limiting resource usage</li>
+<li><strong>Monitoring</strong> - Continuously observing system performance</li>
+<h3>Cloud Computing & Infrastructure</h3>
+Modern approaches to hosting and managing technology resources.
+<h4>Cloud Service Models</h4>
+<li><strong>SaaS (Software as a Service)</strong> - Complete applications delivered over internet</li>
+<li><strong>PaaS (Platform as a Service)</strong> - Platform for developing and deploying applications</li>
+<li><strong>IaaS (Infrastructure as a Service)</strong> - Virtual computing resources</li>
+<li><strong>FaaS (Function as a Service)</strong> - Running individual functions in cloud</li>
+<li><strong>BaaS (Backend as a Service)</strong> - Backend services for mobile/web apps</li>
+<li><strong>DaaS (Data as a Service)</strong> - Data delivered on-demand over network</li>
+<li><strong>CaaS (Container as a Service)</strong> - Container orchestration platforms</li>
+<li><strong>STaaS (Storage as a Service)</strong> - Cloud-based storage solutions</li>
+<li><strong>DBaaS (Database as a Service)</strong> - Managed database services</li>
+<li><strong>MLaaS (Machine Learning as a Service)</strong> - AI/ML capabilities as service</li>
+<h4>Cloud Concepts</h4>
+<li><strong>Multi-cloud</strong> - Using services from multiple cloud providers</li>
+<li><strong>Hybrid cloud</strong> - Combination of private and public cloud</li>
+<li><strong>Private cloud</strong> - Cloud infrastructure for single organization</li>
+<li><strong>Public cloud</strong> - Cloud services available to general public</li>
+<li><strong>Community cloud</strong> - Shared cloud for specific community</li>
+<li><strong>Cloud migration</strong> - Moving applications and data to cloud</li>
+<li><strong>Auto-scaling</strong> - Automatically adjusting resources based on demand</li>
+<li><strong>Elasticity</strong> - Ability to scale resources up or down quickly</li>
+<li><strong>Container</strong> - Lightweight package containing application and dependencies</li>
+<li><strong>Orchestration</strong> - Automated management of containers</li>
+<li><strong>Virtualization</strong> - Creating virtual versions of physical resources</li>
+<li><strong>Edge computing</strong> - Processing data closer to where it's generated</li>
+<li><strong>CDN (Content Delivery Network)</strong> - Distributed servers for faster content delivery</li>
+<li><strong>API Gateway</strong> - Entry point for managing APIs</li>
+<li><strong>Service mesh</strong> - Infrastructure layer for service-to-service communication</li>
+<h3>Data Management & Analytics</h3>
+Understanding how organizations handle and analyze data.
+<h4>Database Technologies</h4>
+<li><strong>SQL</strong> - Structured Query Language for relational databases</li>
+<li><strong>NoSQL</strong> - Non-relational database types</li>
+<li><strong>Document database</strong> - Storing data as documents (MongoDB, CouchDB)</li>
+<li><strong>Key-value store</strong> - Simple database storing key-value pairs (Redis, DynamoDB)</li>
+<li><strong>Graph database</strong> - Storing data as nodes and relationships (Neo4j)</li>
+<li><strong>Column-family</strong> - Storing data in column families (Cassandra)</li>
+<li><strong>Data warehouse</strong> - Central repository for integrated data</li>
+<li><strong>Data lake</strong> - Storage for raw data in various formats</li>
+<li><strong>Data mart</strong> - Subset of data warehouse for specific business area</li>
+<li><strong>ETL (Extract, Transform, Load)</strong> - Process for moving and cleaning data</li>
+<li><strong>ELT (Extract, Load, Transform)</strong> - Loading raw data then transforming</li>
+<li><strong>Data pipeline</strong> - Series of data processing steps</li>
+<li><strong>Master data management</strong> - Ensuring consistency of key business data</li>
+<li><strong>Data governance</strong> - Management of data availability, usability, integrity</li>
+<li><strong>Data quality</strong> - Ensuring data is accurate, complete, and reliable</li>
+<h4>Data Analytics</h4>
+<li><strong>Big Data</strong> - Extremely large datasets requiring special tools</li>
+<li><strong>Business Intelligence (BI)</strong> - Technologies for analyzing business data</li>
+<li><strong>Machine Learning</strong> - Algorithms that improve automatically through experience</li>
+<li><strong>Artificial Intelligence (AI)</strong> - Computer systems performing human-like tasks</li>
+<li><strong>Data mining</strong> - Discovering patterns in large datasets</li>
+<li><strong>Predictive analytics</strong> - Using data to predict future outcomes</li>
+<li><strong>Descriptive analytics</strong> - Understanding what happened in the past</li>
+<li><strong>Prescriptive analytics</strong> - Recommending actions based on data</li>
+<li><strong>Real-time analytics</strong> - Analyzing data as it's generated</li>
+<li><strong>Batch processing</strong> - Processing data in large chunks</li>
+<li><strong>Stream processing</strong> - Processing data continuously as it flows</li>
+<li><strong>Data visualization</strong> - Presenting data in graphical format</li>
+<li><strong>Dashboard</strong> - Visual display of key metrics and data</li>
+<li><strong>KPI dashboard</strong> - Dashboard focused on key performance indicators</li>
+<li><strong>Reporting</strong> - Regular presentation of data and analysis</li>
+<h3>Security & Compliance</h3>
+Critical concepts for protecting systems and data.
+<h4>Security Fundamentals</h4>
+<li><strong>Authentication</strong> - Verifying identity of users</li>
+<li><strong>Authorization</strong> - Determining what authenticated users can access</li>
+<li><strong>Encryption</strong> - Converting data into coded format</li>
+<li><strong>Firewall</strong> - Network security system controlling traffic</li>
+<li><strong>VPN (Virtual Private Network)</strong> - Secure connection over public network</li>
+<li><strong>Zero-trust security</strong> - Never trust, always verify approach</li>
+<li><strong>Multi-factor authentication (MFA)</strong> - Using multiple verification methods</li>
+<li><strong>Single sign-on (SSO)</strong> - One login for multiple applications</li>
+<li><strong>Identity and access management (IAM)</strong> - Managing user identities and permissions</li>
+<li><strong>Role-based access control (RBAC)</strong> - Permissions based on user roles</li>
+<li><strong>Principle of least privilege</strong> - Giving minimum necessary access</li>
+<li><strong>Security by design</strong> - Building security into systems from start</li>
+<li><strong>Defense in depth</strong> - Multiple layers of security controls</li>
+<li><strong>Network segmentation</strong> - Dividing network into separate segments</li>
+<li><strong>Intrusion detection system (IDS)</strong> - Monitoring for malicious activity</li>
+<h4>Security Practices</h4>
+<li><strong>Penetration testing</strong> - Simulated cyber attacks to find vulnerabilities</li>
+<li><strong>Vulnerability assessment</strong> - Systematic review of security weaknesses</li>
+<li><strong>Security audit</strong> - Comprehensive evaluation of security measures</li>
+<li><strong>Incident response</strong> - Plan for handling security breaches</li>
+<li><strong>Backup and recovery</strong> - Protecting against data loss</li>
+<li><strong>Business continuity</strong> - Maintaining operations during disruptions</li>
+<li><strong>Disaster recovery</strong> - Restoring operations after major incident</li>
+<li><strong>Risk management</strong> - Identifying and mitigating security risks</li>
+<li><strong>Compliance</strong> - Adhering to regulations and standards</li>
+<li><strong>Security awareness training</strong> - Educating users about security</li>
+<li><strong>Patch management</strong> - Keeping software updated with security fixes</li>
+<li><strong>Threat modeling</strong> - Identifying potential security threats</li>
+<li><strong>Security monitoring</strong> - Continuously watching for security issues</li>
+<li><strong>Forensics</strong> - Investigating security incidents</li>
+<li><strong>Data loss prevention (DLP)</strong> - Preventing unauthorized data disclosure</li>
+<h3>Integration & Interoperability</h3>
+Connecting different systems and applications.
+<h4>Integration Concepts</h4>
+<li><strong>API (Application Programming Interface)</strong> - Way for software to communicate</li>
+<li><strong>REST API</strong> - Web-based API following REST principles</li>
+<li><strong>GraphQL</strong> - Query language for APIs</li>
+<li><strong>SOAP</strong> - Protocol for exchanging structured information</li>
+<li><strong>Webhook</strong> - HTTP callback triggered by events</li>
+<li><strong>Message queue</strong> - System for storing messages between applications</li>
+<li><strong>Enterprise service bus (ESB)</strong> - Infrastructure for integrating applications</li>
+<li><strong>Middleware</strong> - Software connecting different applications</li>
+<li><strong>Data integration</strong> - Combining data from different sources</li>
+<li><strong>Application integration</strong> - Connecting different software applications</li>
+<li><strong>B2B integration</strong> - Connecting systems between different companies</li>
+<li><strong>Cloud integration</strong> - Connecting cloud and on-premises systems</li>
+<li><strong>Real-time integration</strong> - Immediate data synchronization</li>
+<li><strong>Batch integration</strong> - Periodic data synchronization</li>
+<li><strong>Point-to-point integration</strong> - Direct connection between two systems</li>
+<h3>Key Concepts Summary</h3>
+<li><strong>Technical debt</strong> - Shortcuts that create future maintenance costs</li>
+<li><strong>MVP (Minimum Viable Product)</strong> - Basic version with core features only</li>
+<li><strong>Legacy system</strong> - Older technology still in use but needing updates</li>
+<li><strong>Migration</strong> - Moving from one system/platform to another</li>
+<li><strong>Integration</strong> - Connecting different systems to work together</li>
+<li><strong>Refactoring</strong> - Improving code structure without changing functionality</li>
+<li><strong>Version control</strong> - Tracking changes to code over time</li>
+<li><strong>Repository</strong> - Central location where code is stored</li>
+<li><strong>Branching</strong> - Creating separate lines of development</li>
+<li><strong>Deployment pipeline</strong> - Automated process for releasing software</li>
+<li><strong>Environment</strong> - Separate instance of application (dev, test, prod)</li>
+<li><strong>Configuration management</strong> - Managing system configurations</li>
+<li><strong>Infrastructure as code</strong> - Managing infrastructure through code</li>
+<li><strong>Observability</strong> - Understanding system behavior through monitoring</li>
+<li><strong>Documentation</strong> - Written information about systems and processes</li>
+<h3>Best Practices / Tips</h3>
+1. <strong>Start with fundamentals</strong> - Understand basic concepts before diving into complex topics
+2. <strong>Hands-on learning</strong> - Practice with actual tools and technologies
+3. <strong>Stay updated</strong> - Technology vocabulary evolves rapidly
+4. <strong>Context matters</strong> - Same terms may have different meanings in different contexts
+5. <strong>Ask questions</strong> - Technical teams usually appreciate curiosity about their work
+6. <strong>Learn acronyms</strong> - IT is full of acronyms, keep a reference list
+7. <strong>Understand relationships</strong> - Many concepts are interconnected
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Acronym Overload</h4>
+<li><strong>Symptom:</strong> Conversations filled with unexplained acronyms</li>
+<li><strong>Cause:</strong> Technical teams often use shorthand without thinking</li>
+<li><strong>Solution:</strong> Keep a running list of acronyms and their meanings, ask for clarification</li>
+<h4>Mixing Up Similar Terms</h4>
+<li><strong>Symptom:</strong> Using terms interchangeably when they have different meanings</li>
+<li><strong>Cause:</strong> Many technical terms sound similar but have distinct meanings</li>
+<li><strong>Solution:</strong> Create comparison charts for similar terms</li>
+<h4>Version Confusion</h4>
+<li><strong>Symptom:</strong> Discussions about different versions of same technology</li>
+<li><strong>Cause:</strong> Technology evolves rapidly with frequent updates</li>
+<li><strong>Solution:</strong> Always clarify which version is being discussed</li>
+<h4>Scope Confusion</h4>
+<li><strong>Symptom:</strong> Not understanding what a technology does or doesn't do</li>
+<li><strong>Cause:</strong> Technologies often have overlapping capabilities</li>
+<li><strong>Solution:</strong> Ask for specific use cases and examples</li>
+<h3>References / Further Reading</h3>
+<li>Stack Overflow - Programming Q&A community</li>
+<li>GitHub - Code repository and collaboration platform</li>
+<li>AWS/Azure/Google Cloud documentation</li>
+<li>Mozilla Developer Network (MDN) - Web development resources</li>
+<li>TechTarget - IT terminology definitions</li>
+<li>IEEE Computer Society - Technical standards and definitions</li>
+<li>NIST - Technology standards and guidelines</li></ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
