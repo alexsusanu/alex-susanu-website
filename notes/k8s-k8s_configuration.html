@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Configuration & Security - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Configuration & Security</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">configuration</span><span class="tag">configmap</span><span class="tag">secret</span><span class="tag">serviceaccount</span><span class="tag">rbac</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Configuration & Security</h2>
+<h3>ConfigMap</h3>
+<strong>What it is:</strong> A Kubernetes object that stores non-confidential configuration data in key-value pairs, allowing you to decouple configuration from application code.
+<strong>Why it matters:</strong> ConfigMaps enable configuration portability across environments, make applications more flexible, and allow configuration changes without rebuilding container images. They're essential for managing environment-specific settings.
+<strong>ConfigMap use cases:</strong>
+<ul><li><strong>Application configuration</strong> - Database URLs, API endpoints, feature flags</li>
+<li><strong>Configuration files</strong> - nginx.conf, application.properties, config.yaml</li>
+<li><strong>Environment variables</strong> - Runtime settings for applications</li>
+<li><strong>Command-line arguments</strong> - Parameters for container commands</li>
+<strong>Ways to consume ConfigMaps:</strong>
+<li><strong>Environment variables</strong> - Inject config as env vars</li>
+<li><strong>Volume mounts</strong> - Mount config as files in containers</li>
+<li><strong>Command arguments</strong> - Use config values in container commands</li>
+<strong>Common commands:</strong>
+<pre><code><h2>ConfigMap creation</h2>
+kubectl create configmap app-config --from-literal=database_url=postgres://localhost:5432/mydb
+kubectl create configmap app-config --from-file=config.properties
+kubectl create configmap app-config --from-file=config-dir/
+kubectl create configmap app-config --from-env-file=.env
+<h2>ConfigMap operations</h2>
+kubectl get configmaps                              # List all ConfigMaps
+kubectl get cm                                     # Short form
+kubectl describe configmap <cm-name>               # Detailed ConfigMap info
+kubectl delete configmap <cm-name>                # Delete ConfigMap
+<h2>View ConfigMap data</h2>
+kubectl get configmap <cm-name> -o yaml           # YAML output
+kubectl get configmap <cm-name> -o json           # JSON output</code></pre>
+<strong>Example ConfigMap YAML:</strong>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+data:
+  # Key-value pairs
+  database_host: "postgres-service"
+  database_port: "5432"
+  log_level: "INFO"
+  enable_debug: "false"
+  
+  # File-like keys
+  application.properties: |
+    server.port=8080
+    spring.datasource.url=jdbc:postgresql://postgres-service:5432/mydb
+    spring.datasource.username=appuser
+    logging.level.com.mycompany=INFO
+    
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+        location / {
+            proxy_pass http://backend-service:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }</code></pre>
+<strong>Using ConfigMap as environment variables:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  containers:
+  - name: app-container
+    image: myapp:v1.0
+    env:
+    # Single environment variable from ConfigMap
+    - name: DATABASE_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database_host
+    # All keys from ConfigMap as environment variables
+    envFrom:
+    - configMapRef:
+        name: app-config</code></pre>
+<strong>Using ConfigMap as volume mount:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/nginx/nginx.conf
+      subPath: nginx.conf
+    - name: app-config-volume
+      mountPath: /etc/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-config
+      items:
+      - key: nginx.conf
+        path: nginx.conf
+  - name: app-config-volume
+    configMap:
+      name: app-config</code></pre>
+<strong>ConfigMap from files example:</strong>
+<pre><code><h2>Create config files</h2>
+echo "database_url=postgres://localhost:5432/mydb" > database.conf
+echo "redis_url=redis://localhost:6379" > cache.conf
+<h2>Create ConfigMap from files</h2>
+kubectl create configmap file-config \
+  --from-file=database.conf \
+  --from-file=cache.conf
+<h2>Create ConfigMap from directory</h2>
+kubectl create configmap dir-config --from-file=config-dir/</code></pre>
+<strong>ConfigMap best practices:</strong>
+<li><strong>Separate by environment</strong> - Different ConfigMaps for dev/staging/prod</li>
+<li><strong>Version your configs</strong> - Use labels or annotations for versioning</li>
+<li><strong>Limit size</strong> - ConfigMaps have 1MB size limit</li>
+<li><strong>Use meaningful names</strong> - Clear naming for keys and ConfigMaps</li>
+<li><strong>Don't store secrets</strong> - Use Secrets for sensitive data</li>
+<h3>Secret</h3>
+<strong>What it is:</strong> A Kubernetes object that stores sensitive information such as passwords, OAuth tokens, SSH keys, and TLS certificates in base64 encoded format.
+<strong>Why it matters:</strong> Secrets provide secure storage and distribution of sensitive data, keeping credentials out of container images and pod specifications. They're essential for security best practices in Kubernetes.
+<strong>Secret types:</strong>
+<li><strong>Opaque</strong> - Arbitrary user-defined data (default)</li>
+<li><strong>kubernetes.io/service-account-token</strong> - Service account tokens</li>
+<li><strong>kubernetes.io/dockercfg</strong> - Docker registry authentication</li>
+<li><strong>kubernetes.io/dockerconfigjson</strong> - Docker registry authentication (new format)</li>
+<li><strong>kubernetes.io/basic-auth</strong> - Basic authentication credentials</li>
+<li><strong>kubernetes.io/ssh-auth</strong> - SSH authentication credentials</li>
+<li><strong>kubernetes.io/tls</strong> - TLS certificates and keys</li>
+<strong>Security features:</strong>
+<li><strong>Base64 encoding</strong> - Not encryption, just encoding</li>
+<li><strong>etcd encryption</strong> - Can be encrypted at rest in etcd</li>
+<li><strong>In-memory storage</strong> - Secrets mounted as tmpfs in containers</li>
+<li><strong>Access control</strong> - RBAC controls who can access secrets</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Secret creation</h2>
+kubectl create secret generic db-secret --from-literal=username=admin --from-literal=password=secretpassword
+kubectl create secret generic db-secret --from-file=username.txt --from-file=password.txt
+kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key
+kubectl create secret docker-registry regcred --docker-server=myregistry.com --docker-username=user --docker-password=pass
+<h2>Secret operations</h2>
+kubectl get secrets                                # List all secrets
+kubectl describe secret <secret-name>             # Detailed secret info (values hidden)
+kubectl delete secret <secret-name>               # Delete secret
+<h2>View secret data (base64 decoded)</h2>
+kubectl get secret <secret-name> -o jsonpath='{.data.username}' | base64 -d
+kubectl get secret <secret-name> -o yaml          # YAML output (base64 encoded)</code></pre>
+<strong>Example Secret YAML:</strong>
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: database-secret
+  namespace: production
+type: Opaque
+data:
+  username: YWRtaW4=              # admin (base64 encoded)
+  password: cGFzc3dvcmQxMjM=      # password123 (base64 encoded)
+  database-url: cG9zdGdyZXM6Ly9hZG1pbjpwYXNzd29yZDEyM0BkYi5leGFtcGxlLmNvbTo1NDMyL215ZGI=</code></pre>
+<strong>Using Secrets as environment variables:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  containers:
+  - name: app-container
+    image: myapp:v1.0
+    env:
+    # Single environment variable from Secret
+    - name: DB_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: database-secret
+          key: username
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: database-secret
+          key: password
+    # All keys from Secret as environment variables
+    envFrom:
+    - secretRef:
+        name: database-secret</code></pre>
+<strong>Using Secrets as volume mounts:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-secrets
+spec:
+  containers:
+  - name: app
+    image: myapp:v1.0
+    volumeMounts:
+    - name: secret-volume
+      mountPath: /etc/secrets
+      readOnly: true
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: database-secret
+      defaultMode: 0400  # Read-only for owner only
+      items:
+      - key: username
+        path: db-username
+      - key: password
+        path: db-password</code></pre>
+<strong>TLS Secret example:</strong>
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: tls-secret
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTi... # base64 encoded certificate
+  tls.key: LS0tLS1CRUdJTi... # base64 encoded private key</code></pre>
+<strong>Docker registry Secret:</strong>
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJteS1yZWdpc3RyeS5jb20iOnsidXNlcm5hbWUiOiJ1c2VyIiwicGFzc3dvcmQiOiJwYXNzIiwiYXV0aCI6ImRYTmxjam</code></pre>
+<strong>Using registry Secret in Pod:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: private-reg-pod
+spec:
+  containers:
+  - name: app
+    image: my-private-registry.com/myapp:v1.0
+  imagePullSecrets:
+  - name: regcred</code></pre>
+<strong>Secret best practices:</strong>
+<li><strong>Principle of least privilege</strong> - Only give access to secrets that are needed</li>
+<li><strong>Use RBAC</strong> - Control who can read/write secrets</li>
+<li><strong>Enable encryption at rest</strong> - Encrypt etcd data</li>
+<li><strong>Rotate secrets regularly</strong> - Update passwords and certificates</li>
+<li><strong>Avoid logging secrets</strong> - Don't log secret values in applications</li>
+<li><strong>Use external secret management</strong> - Consider tools like Vault, AWS Secrets Manager</li>
+<h3>ServiceAccount</h3>
+<strong>What it is:</strong> A Kubernetes resource that provides an identity for processes running in pods, enabling authentication and authorization for API access.
+<strong>Why it matters:</strong> ServiceAccounts enable secure pod-to-API communication, implement least privilege access, and provide audit trails for API operations. They're essential for pods that need to interact with the Kubernetes API.
+<strong>ServiceAccount components:</strong>
+<li><strong>Identity</strong> - Unique identity for pods</li>
+<li><strong>Token</strong> - JWT token for API authentication</li>
+<li><strong>Secrets</strong> - Automatically created secret with token</li>
+<li><strong>RBAC bindings</strong> - Permissions granted through roles</li>
+<strong>Default behavior:</strong>
+<li><strong>Default ServiceAccount</strong> - Every namespace has a default ServiceAccount</li>
+<li><strong>Automatic mounting</strong> - Tokens automatically mounted in pods at <code>/var/run/secrets/kubernetes.io/serviceaccount/</code></li>
+<li><strong>Limited permissions</strong> - Default ServiceAccount has minimal permissions</li>
+<strong>Common commands:</strong>
+<pre><code><h2>ServiceAccount operations</h2>
+kubectl get serviceaccounts                        # List all service accounts
+kubectl get sa                                    # Short form
+kubectl describe serviceaccount <sa-name>         # Detailed SA info
+kubectl delete serviceaccount <sa-name>           # Delete service account
+<h2>ServiceAccount tokens</h2>
+kubectl get secret                                # List secrets (includes SA tokens)
+kubectl describe secret <sa-token-secret>         # View token details</code></pre>
+<strong>Example ServiceAccount:</strong>
+<pre><code>apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-reader
+  namespace: production
+automountServiceAccountToken: true
+imagePullSecrets:
+<li>name: private-registry-secret</li>
+secrets:
+<li>name: pod-reader-token</code></pre></li>
+<strong>Using ServiceAccount in Pod:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: api-client-pod
+spec:
+  serviceAccountName: pod-reader
+  containers:
+  - name: api-client
+    image: kubectl:latest
+    command: ['sh', '-c']
+    args:
+    - |
+      # Token is automatically mounted
+      TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+      NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+      
+      # Use token to authenticate API calls
+      curl -H "Authorization: Bearer $TOKEN" \
+           -H "Accept: application/json" \
+           --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+           https://kubernetes.default.svc/api/v1/namespaces/$NAMESPACE/pods</code></pre>
+<strong>Disable automatic token mounting:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: no-token-pod
+spec:
+  serviceAccountName: pod-reader
+  automountServiceAccountToken: false  # Disable token mounting
+  containers:
+  - name: app
+    image: myapp:v1.0</code></pre>
+<strong>ServiceAccount with ImagePullSecrets:</strong>
+<pre><code>apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: builder-sa
+imagePullSecrets:
+<li>name: docker-hub-secret</li>
+<li>name: private-registry-secret</code></pre></li>
+<h3>RBAC (Role-Based Access Control)</h3>
+<strong>What it is:</strong> Kubernetes authorization mechanism that regulates access to resources based on the roles assigned to users, groups, or service accounts.
+<strong>Why it matters:</strong> RBAC implements security principle of least privilege, provides fine-grained access control, enables compliance with security policies, and allows secure multi-tenancy in Kubernetes clusters.
+<strong>RBAC components:</strong>
+<li><strong>Role/ClusterRole</strong> - Defines permissions (what can be done)</li>
+<li><strong>RoleBinding/ClusterRoleBinding</strong> - Grants permissions to subjects (who can do it)</li>
+<li><strong>Subjects</strong> - Users, groups, or service accounts that receive permissions</li>
+<strong>Scope differences:</strong>
+<li><strong>Role/RoleBinding</strong> - Namespace-scoped permissions</li>
+<li><strong>ClusterRole/ClusterRoleBinding</strong> - Cluster-wide permissions</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Role operations</h2>
+kubectl get roles                                  # List roles in current namespace
+kubectl get roles --all-namespaces               # List roles in all namespaces
+kubectl describe role <role-name>                 # Detailed role info
+kubectl delete role <role-name>                   # Delete role
+<h2>ClusterRole operations</h2>
+kubectl get clusterroles                          # List all cluster roles
+kubectl describe clusterrole <clusterrole-name>   # Detailed cluster role info
+<h2>RoleBinding operations</h2>
+kubectl get rolebindings                          # List role bindings
+kubectl describe rolebinding <binding-name>       # Detailed binding info
+<h2>ClusterRoleBinding operations</h2>
+kubectl get clusterrolebindings                   # List cluster role bindings
+kubectl describe clusterrolebinding <binding-name> # Detailed cluster binding info
+<h2>Check permissions</h2>
+kubectl auth can-i get pods                       # Check if you can get pods
+kubectl auth can-i get pods --as=system:serviceaccount:default:pod-reader  # Check as specific SA
+kubectl auth can-i '<em>' '</em>'                        # Check if you have all permissions</code></pre>
+<strong>Example Role (namespace-scoped):</strong>
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: production
+  name: pod-reader
+rules:
+<li>apiGroups: [""]           # Core API group</li>
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+<li>apiGroups: [""]</li>
+  resources: ["pods/log"]
+  verbs: ["get"]
+<li>apiGroups: ["apps"]       # Apps API group</li>
+  resources: ["deployments"]
+  verbs: ["get", "list"]</code></pre>
+<strong>Example ClusterRole (cluster-wide):</strong>
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-reader
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["nodes"]
+  verbs: ["get", "watch", "list"]
+<li>apiGroups: ["metrics.k8s.io"]</li>
+  resources: ["nodes", "pods"]
+  verbs: ["get", "list"]</code></pre>
+<strong>Example RoleBinding:</strong>
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: production
+subjects:
+<li>kind: User</li>
+  name: jane.doe
+  apiGroup: rbac.authorization.k8s.io
+<li>kind: ServiceAccount</li>
+  name: pod-reader
+  namespace: production
+<li>kind: Group</li>
+  name: developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io</code></pre>
+<strong>Example ClusterRoleBinding:</strong>
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-binding
+subjects:
+<li>kind: User</li>
+  name: admin@company.com
+  apiGroup: rbac.authorization.k8s.io
+<li>kind: ServiceAccount</li>
+  name: cluster-admin-sa
+  namespace: kube-system  
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io</code></pre>
+<strong>Common RBAC patterns:</strong>
+<strong>Read-only access to specific resources:</strong>
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: viewer
+rules:
+<li>apiGroups: ["", "apps", "extensions"]</li>
+  resources: ["*"]
+  verbs: ["get", "list", "watch"]</code></pre>
+<strong>Developer access (no secrets):</strong>
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+rules:
+<li>apiGroups: ["", "apps", "extensions"]</li>
+  resources: ["*"]
+  verbs: ["*"]
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  verbs: ["get", "list"]  # Read-only access to secrets</code></pre>
+<strong>CI/CD ServiceAccount:</strong>
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ci-cd-role
+rules:
+<li>apiGroups: ["", "apps", "extensions"]</li>
+  resources: ["deployments", "services", "configmaps"]
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  verbs: ["get", "list", "create", "update"]</code></pre>
+<strong>RBAC best practices:</strong>
+<li><strong>Principle of least privilege</strong> - Grant minimum necessary permissions</li>
+<li><strong>Use Groups</strong> - Assign roles to groups rather than individual users</li>
+<li><strong>Regular audits</strong> - Review and clean up unused permissions</li>
+<li><strong>Separate environments</strong> - Different RBAC rules for dev/staging/prod</li>
+<li><strong>Document permissions</strong> - Clear documentation of who has what access</li>
+<li><strong>Monitor access</strong> - Use audit logs to track API access</li>
+<strong>Built-in ClusterRoles:</strong>
+<li><strong>cluster-admin</strong> - Full access to everything</li>
+<li><strong>admin</strong> - Full access within namespace</li>
+<li><strong>edit</strong> - Read/write access within namespace</li>
+<li><strong>view</strong> - Read-only access within namespace</li>
+<li><strong>system:node</strong> - Access for kubelets</li>
+<li><strong>system:discovery</strong> - Access for discovery information</li></ul>
+<strong>When you'll use them:</strong> ConfigMaps and Secrets are used in almost every Kubernetes application for configuration management. ServiceAccounts and RBAC are essential for any production environment requiring proper security and access control.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

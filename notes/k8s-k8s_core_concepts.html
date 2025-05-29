@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Core Concepts - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Core Concepts</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">containers</span><span class="tag">orchestration</span><span class="tag">core-concepts</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Core Concepts</h2>
+<h3>Pod</h3>
+<strong>What it is:</strong> The smallest deployable unit in Kubernetes, containing one or more containers that share storage and network resources.
+<strong>Why it matters:</strong> Pods are the fundamental building block of Kubernetes. Every other Kubernetes object either creates, manages, or interacts with pods. Understanding pods is essential because everything else builds on this concept.
+<strong>Key characteristics:</strong>
+<ul><li><strong>Shared network</strong> - All containers in a pod share the same IP address and port space</li>
+<li><strong>Shared storage</strong> - Volumes can be mounted and shared between containers in the pod</li>
+<li><strong>Ephemeral</strong> - Pods are temporary; they can be created, destroyed, and recreated</li>
+<li><strong>Atomic unit</strong> - All containers in a pod are scheduled together on the same node</li>
+<li><strong>Single responsibility</strong> - Best practice is one main application container per pod</li>
+<strong>Pod lifecycle:</strong>
+<li><strong>Pending</strong> - Pod accepted but containers not yet created</li>
+<li><strong>Running</strong> - Pod bound to node and at least one container is running</li>
+<li><strong>Succeeded</strong> - All containers terminated successfully</li>
+<li><strong>Failed</strong> - All containers terminated, at least one failed</li>
+<li><strong>Unknown</strong> - Pod state cannot be determined</li>
+<strong>Multi-container patterns:</strong>
+<li><strong>Sidecar</strong> - Helper container (logging, monitoring)</li>
+<li><strong>Ambassador</strong> - Proxy container for external communications</li>
+<li><strong>Adapter</strong> - Transform container output for consumption</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Basic pod operations</h2>
+kubectl get pods                              # List all pods
+kubectl get pods -o wide                      # List pods with additional info
+kubectl describe pod <pod-name>               # Detailed pod information
+kubectl logs <pod-name>                       # View pod logs
+kubectl logs <pod-name> -c <container-name>   # Logs from specific container
+kubectl delete pod <pod-name>                 # Delete a pod
+<h2>Interactive operations</h2>
+kubectl exec -it <pod-name> -- /bin/bash      # Shell into pod
+kubectl exec -it <pod-name> -c <container> -- /bin/bash  # Shell into specific container
+kubectl port-forward <pod-name> 8080:80       # Forward local port to pod
+<h2>Debugging</h2>
+kubectl get pod <pod-name> -o yaml            # Get pod YAML definition
+kubectl edit pod <pod-name>                   # Edit pod (limited changes allowed)</code></pre>
+<strong>Example Pod YAML:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+  labels:
+    app: web
+spec:
+  containers:
+  - name: web-container
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+      requests:
+        memory: "64Mi"
+        cpu: "250m"</code></pre>
+<strong>When you'll use it:</strong> Every Kubernetes deployment involves pods. You'll work with them daily for deployment, debugging, and maintenance.
+<h3>Container</h3>
+<strong>What it is:</strong> A lightweight, standalone package that includes everything needed to run an application: code, runtime, system tools, libraries, and settings, running within a pod.
+<strong>Why it matters:</strong> Containers provide consistent environments across different stages of development and deployment. In Kubernetes, containers are the actual workload that runs your applications.
+<strong>Container states in Kubernetes:</strong>
+<li><strong>Waiting</strong> - Container is not running (pulling image, waiting for dependencies)</li>
+<li><strong>Running</strong> - Container is executing without issues</li>
+<li><strong>Terminated</strong> - Container finished execution or was killed</li>
+<strong>Container specifications:</strong>
+<li><strong>Image</strong> - Docker image to run</li>
+<li><strong>Command</strong> - Override default command in image</li>
+<li><strong>Args</strong> - Arguments to pass to command</li>
+<li><strong>Environment variables</strong> - Configuration for the container</li>
+<li><strong>Resource limits</strong> - CPU and memory constraints</li>
+<li><strong>Volume mounts</strong> - Storage attachments</li>
+<strong>Resource management:</strong>
+<li><strong>Requests</strong> - Minimum resources guaranteed to container</li>
+<li><strong>Limits</strong> - Maximum resources container can use</li>
+<li><strong>QoS classes</strong> - Guaranteed, Burstable, BestEffort based on resource specs</li>
+<strong>Health checks:</strong>
+<li><strong>Liveness probe</strong> - Checks if container is alive (restarts if failed)</li>
+<li><strong>Readiness probe</strong> - Checks if container is ready to serve traffic</li>
+<li><strong>Startup probe</strong> - Checks container startup (for slow-starting containers)</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Container-specific operations</h2>
+kubectl logs <pod-name> -c <container-name>   # Logs from specific container
+kubectl exec -it <pod-name> -c <container-name> -- /bin/bash  # Shell into container
+kubectl describe pod <pod-name>               # Shows container status and events
+<h2>Resource usage</h2>
+kubectl top pod <pod-name> --containers       # Resource usage by container</code></pre>
+<strong>Example container spec with probes:</strong>
+<pre><code>containers:
+<li>name: app-container</li>
+  image: myapp:v1.0
+  ports:
+  - containerPort: 8080
+  env:
+  - name: DATABASE_URL
+    value: "postgres://db:5432/myapp"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 5</code></pre>
+<strong>When you'll use it:</strong> Every pod contains containers. You'll configure container specs, troubleshoot container issues, and monitor container performance.
+<h3>Node</h3>
+<strong>What it is:</strong> A worker machine (physical or virtual) that runs pods and is managed by the Kubernetes control plane.
+<strong>Why it matters:</strong> Nodes provide the compute resources where your applications actually run. Understanding nodes helps with capacity planning, troubleshooting, and understanding cluster architecture.
+<strong>Node components:</strong>
+<li><strong>kubelet</strong> - Agent that communicates with control plane and manages pods</li>
+<li><strong>kube-proxy</strong> - Network proxy handling service routing</li>
+<li><strong>Container runtime</strong> - Docker, containerd, or CRI-O that actually runs containers</li>
+<li><strong>Operating system</strong> - Linux (typically) or Windows</li>
+<strong>Node types:</strong>
+<li><strong>Master nodes</strong> - Run control plane components (API server, scheduler, etc.)</li>
+<li><strong>Worker nodes</strong> - Run application workloads (pods)</li>
+<li><strong>Hybrid nodes</strong> - Can run both control plane and workloads (single-node clusters)</li>
+<strong>Node status conditions:</strong>
+<li><strong>Ready</strong> - Node is healthy and ready to accept pods</li>
+<li><strong>OutOfDisk</strong> - Node is out of disk space</li>
+<li><strong>MemoryPressure</strong> - Node is experiencing memory pressure</li>
+<li><strong>PIDPressure</strong> - Node is experiencing process ID pressure</li>
+<li><strong>DiskPressure</strong> - Node is experiencing disk pressure</li>
+<li><strong>NetworkUnavailable</strong> - Node network is not configured correctly</li>
+<strong>Node resources:</strong>
+<li><strong>Allocatable resources</strong> - Resources available for pods (capacity minus system reserved)</li>
+<li><strong>Capacity</strong> - Total resources on the node</li>
+<li><strong>Reserved resources</strong> - Resources reserved for system components</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Node operations</h2>
+kubectl get nodes                             # List all nodes
+kubectl get nodes -o wide                     # List nodes with additional info
+kubectl describe node <node-name>            # Detailed node information
+kubectl top node                             # Resource usage by node
+kubectl top node <node-name>                 # Specific node resource usage
+<h2>Node management</h2>
+kubectl cordon <node-name>                   # Mark node unschedulable
+kubectl uncordon <node-name>                 # Mark node schedulable
+kubectl drain <node-name>                   # Safely evict pods from node
+kubectl taint node <node-name> key=value:effect  # Add taint to node
+<h2>Troubleshooting</h2>
+kubectl get pods --field-selector spec.nodeName=<node-name>  # Pods on specific node</code></pre>
+<strong>Node information includes:</strong>
+<li><strong>System info</strong> - OS, kernel version, container runtime</li>
+<li><strong>Conditions</strong> - Current node health status</li>
+<li><strong>Addresses</strong> - Internal IP, external IP, hostname</li>
+<li><strong>Capacity and allocatable</strong> - CPU, memory, storage, pods</li>
+<li><strong>Images</strong> - Container images cached on node</li>
+<strong>When you'll use it:</strong> Node management for cluster administration, troubleshooting pod scheduling issues, capacity planning, and cluster maintenance.
+<h3>Cluster</h3>
+<strong>What it is:</strong> A set of nodes (machines) that run containerized applications managed by Kubernetes, consisting of a control plane and worker nodes.
+<strong>Why it matters:</strong> The cluster is your entire Kubernetes environment. Understanding cluster architecture helps with deployment planning, security, networking, and troubleshooting distributed applications.
+<strong>Cluster components:</strong>
+<strong>Control Plane (Master components):</strong>
+<li><strong>API Server</strong> - Frontend for Kubernetes control plane, handles REST operations</li>
+<li><strong>etcd</strong> - Distributed key-value store for all cluster data</li>
+<li><strong>Scheduler</strong> - Assigns pods to nodes based on resource requirements</li>
+<li><strong>Controller Manager</strong> - Runs controller processes (deployment, service controllers)</li>
+<li><strong>Cloud Controller Manager</strong> - Integrates with cloud provider APIs</li>
+<strong>Node components (on each worker):</strong>
+<li><strong>kubelet</strong> - Agent that manages pods and communicates with control plane</li>
+<li><strong>kube-proxy</strong> - Network proxy for Kubernetes services</li>
+<li><strong>Container runtime</strong> - Runs containers (Docker, containerd, CRI-O)</li>
+<strong>Cluster networking:</strong>
+<li><strong>Pod network</strong> - Internal network for pod-to-pod communication</li>
+<li><strong>Service network</strong> - Virtual network for service discovery</li>
+<li><strong>Node network</strong> - Physical network connecting cluster nodes</li>
+<li><strong>CNI (Container Network Interface)</strong> - Plugin for pod networking</li>
+<strong>Cluster types:</strong>
+<li><strong>Single-node</strong> - Development/testing (minikube, kind)</li>
+<li><strong>Multi-node</strong> - Production clusters with separate control plane and workers</li>
+<li><strong>Managed</strong> - Cloud provider managed (EKS, GKE, AKS)</li>
+<li><strong>Self-managed</strong> - You manage all components</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Cluster information</h2>
+kubectl cluster-info                          # Basic cluster info
+kubectl cluster-info dump                     # Detailed cluster state
+kubectl get componentstatuses                 # Control plane component health
+kubectl version                              # Client and server versions
+<h2>Cluster-wide resources</h2>
+kubectl get all --all-namespaces             # All resources across namespaces
+kubectl get events --all-namespaces          # All events in cluster
+kubectl top nodes                            # Resource usage across nodes
+<h2>Cluster administration</h2>
+kubectl config current-context               # Current cluster context
+kubectl config get-contexts                  # Available contexts
+kubectl config use-context <context-name>    # Switch cluster context</code></pre>
+<strong>Cluster networking concepts:</strong>
+<li><strong>Cluster CIDR</strong> - IP range for pods (e.g., 10.244.0.0/16)</li>
+<li><strong>Service CIDR</strong> - IP range for services (e.g., 10.96.0.0/12)</li>
+<li><strong>Pod CIDR</strong> - Per-node IP ranges for pods</li>
+<li><strong>DNS</strong> - Internal DNS for service discovery (CoreDNS)</li>
+<strong>High availability considerations:</strong>
+<li><strong>Multiple master nodes</strong> - Redundant control plane</li>
+<li><strong>Load balancer</strong> - Distribute API server traffic</li>
+<li><strong>Backup strategy</strong> - Regular etcd backups</li>
+<li><strong>Network redundancy</strong> - Multiple network paths</li>
+<li><strong>Geographic distribution</strong> - Nodes across availability zones</li></ul>
+<strong>When you'll use it:</strong> Cluster management is ongoing - monitoring health, scaling, upgrades, security, backup/recovery, and troubleshooting cluster-wide issues.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

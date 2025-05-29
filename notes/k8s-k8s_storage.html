@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Storage - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Storage</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">storage</span><span class="tag">volumes</span><span class="tag">persistentvolume</span><span class="tag">pvc</span><span class="tag">storageclass</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Storage</h2>
+<h3>Volume</h3>
+<strong>What it is:</strong> A directory accessible to containers in a pod, providing storage that can persist beyond individual container lifecycles and be shared between containers.
+<strong>Why it matters:</strong> Containers are stateless and ephemeral by default. Volumes provide data persistence, enable data sharing between containers in a pod, and allow applications to maintain state across container restarts.
+<strong>Volume vs Container filesystem:</strong>
+<ul><li><strong>Container filesystem</strong> - Ephemeral, lost when container dies</li>
+<li><strong>Volume</strong> - Can persist beyond container lifecycle</li>
+<li><strong>Shared access</strong> - Multiple containers in pod can access same volume</li>
+<li><strong>External storage</strong> - Can connect to external storage systems</li>
+<strong>Volume types:</strong>
+<li><strong>emptyDir</strong> - Temporary storage, lifecycle tied to pod</li>
+<li><strong>hostPath</strong> - Mount directory from host node</li>
+<li><strong>configMap/secret</strong> - Mount configuration data as files</li>
+<li><strong>persistentVolumeClaim</strong> - Request for persistent storage</li>
+<li><strong>nfs, cephfs, glusterfs</strong> - Network storage systems</li>
+<li><strong>cloud volumes</strong> - AWS EBS, GCP PD, Azure Disk</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Volume inspection</h2>
+kubectl describe pod <pod-name>                     # Show pod's volumes
+kubectl get pv                                     # List persistent volumes
+kubectl get pvc                                    # List persistent volume claims
+<h2>Troubleshooting volumes</h2>
+kubectl exec <pod-name> -- df -h                   # Check mounted filesystems
+kubectl exec <pod-name> -- ls -la /path/to/volume  # List volume contents
+kubectl logs <pod-name> -c <container-name>        # Check for mount errors</code></pre>
+<h4><strong>emptyDir Volumes</strong></h4>
+<strong>What it is:</strong> Temporary storage that exists for the lifetime of a pod, shared between all containers in the pod.
+<strong>Characteristics:</strong>
+<li><strong>Pod lifecycle</strong> - Created when pod starts, deleted when pod terminates</li>
+<li><strong>Shared storage</strong> - All containers in pod can access</li>
+<li><strong>Node storage</strong> - Uses node's local storage (disk or memory)</li>
+<li><strong>No persistence</strong> - Data lost when pod is deleted</li>
+<strong>Use cases:</strong>
+<li><strong>Temporary files</strong> - Scratch space for computations</li>
+<li><strong>Shared data</strong> - Communication between containers in same pod</li>
+<li><strong>Cache</strong> - Temporary caching that doesn't need persistence</li>
+<li><strong>Logs</strong> - Temporary log storage before shipping elsewhere</li>
+<strong>Example:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: web-with-cache
+spec:
+  containers:
+  - name: web-server
+    image: nginx
+    volumeMounts:
+    - name: cache-volume
+      mountPath: /var/cache/nginx
+  - name: cache-warmer
+    image: busybox
+    command: ['sh', '-c', 'while true; do echo "warming cache" > /cache/warm; sleep 3600; done']
+    volumeMounts:
+    - name: cache-volume
+      mountPath: /cache
+  volumes:
+  - name: cache-volume
+    emptyDir: {}</code></pre>
+<strong>emptyDir with memory storage:</strong>
+<pre><code>volumes:
+<li>name: memory-volume</li>
+  emptyDir:
+    medium: Memory      # Use RAM instead of disk
+    sizeLimit: 1Gi     # Limit size to 1GB</code></pre>
+<h4><strong>hostPath Volumes</strong></h4>
+<strong>What it is:</strong> Mount a file or directory from the host node's filesystem into the pod.
+<strong>Use cases:</strong>
+<li><strong>Node monitoring</strong> - Access to /proc, /sys for system monitoring</li>
+<li><strong>Docker socket</strong> - Access Docker daemon from container</li>
+<li><strong>Log collection</strong> - Access host log directories</li>
+<li><strong>Development</strong> - Mount source code during development</li>
+<strong>Security considerations:</strong>
+<li><strong>Host access</strong> - Container can access host filesystem</li>
+<li><strong>Privilege escalation</strong> - Potential security risk</li>
+<li><strong>Node dependency</strong> - Pod tied to specific node</li>
+<li><strong>Not portable</strong> - Doesn't work across different nodes</li>
+<strong>Example:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: host-access-pod
+spec:
+  containers:
+  - name: monitor
+    image: busybox
+    command: ['sh', '-c', 'while true; do df -h /host-root; sleep 30; done']
+    volumeMounts:
+    - name: host-root
+      mountPath: /host-root
+      readOnly: true
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+      type: Directory</code></pre>
+<strong>hostPath types:</strong>
+<li><strong>DirectoryOrCreate</strong> - Create directory if it doesn't exist</li>
+<li><strong>Directory</strong> - Directory must exist</li>
+<li><strong>FileOrCreate</strong> - Create file if it doesn't exist</li>
+<li><strong>File</strong> - File must exist</li>
+<li><strong>Socket</strong> - Unix socket must exist</li>
+<li><strong>CharDevice</strong> - Character device must exist</li>
+<li><strong>BlockDevice</strong> - Block device must exist</li>
+<h4><strong>configMap and secret Volumes</strong></h4>
+<strong>What they are:</strong> Volumes that mount ConfigMaps and Secrets as files in the container filesystem.
+<strong>Use cases:</strong>
+<li><strong>Configuration files</strong> - App configs, nginx.conf, etc.</li>
+<li><strong>Environment-specific settings</strong> - Different configs per environment</li>
+<li><strong>Certificates</strong> - SSL certificates and keys</li>
+<li><strong>API keys</strong> - Sensitive configuration data</li>
+<strong>ConfigMap volume example:</strong>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  database.conf: |
+    host=localhost
+    port=5432
+    database=myapp
+  cache.conf: |
+    redis_host=redis-service
+    redis_port=6379
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-config
+spec:
+  containers:
+  - name: app
+    image: myapp
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-config</code></pre>
+<strong>Secret volume example:</strong>
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+type: Opaque
+data:
+  username: YWRtaW4=  # base64 encoded
+  password: MWYyZDFlMmU2N2Rm  # base64 encoded
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-secrets
+spec:
+  containers:
+  - name: app
+    image: myapp
+    volumeMounts:
+    - name: secret-volume
+      mountPath: /etc/secrets
+      readOnly: true
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: app-secrets
+      defaultMode: 0400  # Read-only for owner only</code></pre>
+<h3>PersistentVolume (PV)</h3>
+<strong>What it is:</strong> A piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes.
+<strong>Why it matters:</strong> PersistentVolumes provide durable storage that exists independently of pods. They enable stateful applications, data persistence across pod restarts, and centralized storage management in Kubernetes clusters.
+<strong>PV characteristics:</strong>
+<li><strong>Cluster resource</strong> - Independent of any individual pod</li>
+<li><strong>Lifecycle independent</strong> - Exists beyond pod lifecycle</li>
+<li><strong>Admin provisioned</strong> - Usually created by cluster administrators</li>
+<li><strong>Capacity and access modes</strong> - Define storage size and access patterns</li>
+<li><strong>Reclaim policies</strong> - What happens when PV is released</li>
+<strong>Access modes:</strong>
+<li><strong>ReadWriteOnce (RWO)</strong> - Volume can be mounted read-write by single node</li>
+<li><strong>ReadOnlyMany (ROX)</strong> - Volume can be mounted read-only by many nodes</li>
+<li><strong>ReadWriteMany (RWX)</strong> - Volume can be mounted read-write by many nodes</li>
+<li><strong>ReadWriteOncePod (RWOP)</strong> - Volume can be mounted read-write by single pod</li>
+<strong>Reclaim policies:</strong>
+<li><strong>Retain</strong> - Manual reclamation of the resource</li>
+<li><strong>Recycle</strong> - Basic scrub (rm -rf /thevolume/*)  - deprecated</li>
+<li><strong>Delete</strong> - Delete the volume from infrastructure</li>
+<strong>Common commands:</strong>
+<pre><code><h2>PersistentVolume operations</h2>
+kubectl get pv                                     # List all persistent volumes
+kubectl describe pv <pv-name>                      # Detailed PV information
+kubectl delete pv <pv-name>                        # Delete persistent volume
+<h2>PV status and troubleshooting</h2>
+kubectl get pv -o wide                             # PV with additional info
+kubectl get events --field-selector involvedObject.kind=PersistentVolume</code></pre>
+<strong>PV lifecycle states:</strong>
+<li><strong>Available</strong> - Free resource not yet bound to claim</li>
+<li><strong>Bound</strong> - Volume is bound to a claim</li>
+<li><strong>Released</strong> - Claim has been deleted but resource not reclaimed</li>
+<li><strong>Failed</strong> - Volume has failed its automatic reclamation</li>
+<strong>Example PersistentVolume (NFS):</strong>
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+  labels:
+    type: nfs
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: slow
+  nfs:
+    server: 192.168.1.100
+    path: /exported/path</code></pre>
+<strong>Example PersistentVolume (AWS EBS):</strong>
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ebs-pv
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: gp2
+  awsElasticBlockStore:
+    volumeID: vol-12345678
+    fsType: ext4</code></pre>
+<strong>Local PersistentVolume:</strong>
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage
+  local:
+    path: /mnt/disks/ssd1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-node-1</code></pre>
+<h3>PersistentVolumeClaim (PVC)</h3>
+<strong>What it is:</strong> A request for storage by a user, similar to how pods consume node resources, PVCs consume PV resources.
+<strong>Why it matters:</strong> PVCs provide an abstraction layer between applications and storage. Applications request storage through PVCs without needing to know the underlying storage implementation details.
+<strong>PVC workflow:</strong>
+1. <strong>User creates PVC</strong> - Specifies storage requirements
+2. <strong>Kubernetes finds matching PV</strong> - Based on size, access mode, storage class
+3. <strong>Binding occurs</strong> - PVC is bound to suitable PV
+4. <strong>Pod uses PVC</strong> - Mounts the bound storage
+5. <strong>Release</strong> - When PVC is deleted, PV follows reclaim policy
+<strong>PVC specifications:</strong>
+<li><strong>Storage size</strong> - Amount of storage requested</li>
+<li><strong>Access modes</strong> - How the storage will be accessed</li>
+<li><strong>Storage class</strong> - Type of storage required</li>
+<li><strong>Label selectors</strong> - Additional criteria for matching PVs</li>
+<strong>Common commands:</strong>
+<pre><code><h2>PVC operations</h2>
+kubectl get pvc                                    # List all PVCs
+kubectl describe pvc <pvc-name>                    # Detailed PVC information
+kubectl delete pvc <pvc-name>                     # Delete PVC
+<h2>PVC troubleshooting</h2>
+kubectl get pvc -o wide                           # PVC with additional info
+kubectl get events --field-selector involvedObject.kind=PersistentVolumeClaim</code></pre>
+<strong>PVC states:</strong>
+<li><strong>Pending</strong> - PVC is waiting to be bound to a PV</li>
+<li><strong>Bound</strong> - PVC is bound to a PV</li>
+<li><strong>Lost</strong> - PV backing the PVC is lost</li>
+<strong>Example PVC:</strong>
+<pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+  selector:
+    matchLabels:
+      environment: production</code></pre>
+<strong>Using PVC in Pod:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: database-pod
+spec:
+  containers:
+  - name: database
+    image: postgres:13
+    env:
+    - name: POSTGRES_DB
+      value: myapp
+    - name: POSTGRES_USER
+      value: admin
+    - name: POSTGRES_PASSWORD
+      value: secretpassword
+    volumeMounts:
+    - name: database-storage
+      mountPath: /var/lib/postgresql/data
+  volumes:
+  - name: database-storage
+    persistentVolumeClaim:
+      claimName: database-pvc</code></pre>
+<strong>PVC in StatefulSet:</strong>
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: database
+spec:
+  serviceName: database
+  replicas: 3
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:13
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: fast-ssd</code></pre>
+<h3>StorageClass</h3>
+<strong>What it is:</strong> A way to describe different "classes" of storage available in a cluster, enabling dynamic provisioning of PersistentVolumes.
+<strong>Why it matters:</strong> StorageClasses eliminate the need for administrators to pre-provision PersistentVolumes. They enable on-demand storage provisioning with different performance characteristics, backup policies, and other parameters.
+<strong>Key features:</strong>
+<li><strong>Dynamic provisioning</strong> - Automatically create PVs when PVCs are created</li>
+<li><strong>Storage types</strong> - Define different tiers (fast SSD, slow HDD, etc.)</li>
+<li><strong>Parameters</strong> - Configure storage-specific settings</li>
+<li><strong>Provisioners</strong> - Backend storage systems that create volumes</li>
+<li><strong>Reclaim policies</strong> - Default behavior when PVCs are deleted</li>
+<strong>Common provisioners:</strong>
+<li><strong>kubernetes.io/aws-ebs</strong> - Amazon Elastic Block Store</li>
+<li><strong>kubernetes.io/gce-pd</strong> - Google Compute Engine Persistent Disk</li>
+<li><strong>kubernetes.io/azure-disk</strong> - Azure Managed Disk</li>
+<li><strong>kubernetes.io/cinder</strong> - OpenStack Cinder</li>
+<li><strong>kubernetes.io/vsphere-volume</strong> - vSphere</li>
+<li><strong>kubernetes.io/no-provisioner</strong> - Local volumes</li>
+<strong>Common commands:</strong>
+<pre><code><h2>StorageClass operations</h2>
+kubectl get storageclass                           # List all storage classes
+kubectl get sc                                    # Short form
+kubectl describe storageclass <sc-name>           # Detailed SC information
+kubectl delete storageclass <sc-name>             # Delete storage class
+<h2>Set default storage class</h2>
+kubectl patch storageclass <sc-name> -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'</code></pre>
+<strong>Example StorageClass (AWS EBS):</strong>
+<pre><code>apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-ssd
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp3
+  fsType: ext4
+  encrypted: "true"
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer</code></pre>
+<strong>Example StorageClass (GCP Persistent Disk):</strong>
+<pre><code>apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: regional-ssd
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  replication-type: regional-pd
+  zones: us-central1-a,us-central1-b
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer</code></pre>
+<strong>Example StorageClass (Local storage):</strong>
+<pre><code>apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete</code></pre>
+<strong>StorageClass parameters by provider:</strong>
+<strong>AWS EBS parameters:</strong>
+<li><strong>type</strong> - gp2, gp3, io1, io2, sc1, st1</li>
+<li><strong>fsType</strong> - ext4, xfs</li>
+<li><strong>encrypted</strong> - true/false</li>
+<li><strong>kmsKeyId</strong> - KMS key for encryption</li>
+<strong>GCP PD parameters:</strong>
+<li><strong>type</strong> - pd-standard, pd-ssd, pd-balanced</li>
+<li><strong>replication-type</strong> - none, regional-pd</li>
+<li><strong>zones</strong> - Comma-separated zone list</li>
+<strong>Azure Disk parameters:</strong>
+<li><strong>skuName</strong> - Standard_LRS, Premium_LRS, StandardSSD_LRS</li>
+<li><strong>location</strong> - Azure region</li>
+<li><strong>storageAccount</strong> - Storage account name</li>
+<strong>Volume binding modes:</strong>
+<li><strong>Immediate</strong> - PV created immediately when PVC is created</li>
+<li><strong>WaitForFirstConsumer</strong> - Wait until pod using PVC is scheduled</li></ul>
+<strong>Dynamic provisioning workflow:</strong>
+1. <strong>PVC created</strong> - User creates PVC with storageClassName
+2. <strong>StorageClass matched</strong> - Kubernetes finds matching StorageClass
+3. <strong>Provisioner called</strong> - Storage provisioner creates actual volume
+4. <strong>PV created</strong> - Kubernetes creates PV representing the volume
+5. <strong>Binding</strong> - PVC is bound to the newly created PV
+6. <strong>Pod mount</strong> - Pod can now use the storage
+<strong>When you'll use it:</strong> Any time you need persistent storage in Kubernetes - databases, file storage, application data, logs, or any stateful workload requiring data persistence.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

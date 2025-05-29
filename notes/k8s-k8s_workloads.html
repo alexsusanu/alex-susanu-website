@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Workloads - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Workloads</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">deployment</span><span class="tag">replicaset</span><span class="tag">daemonset</span><span class="tag">job</span><span class="tag">cronjob</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Workloads</h2>
+<h3>Deployment</h3>
+<strong>What it is:</strong> A Kubernetes resource that manages a set of identical pods, providing declarative updates and rollback capabilities for stateless applications.
+<strong>Why it matters:</strong> Deployments are the primary way to run applications in Kubernetes. They provide high availability, scaling, rolling updates, and rollback capabilities, making them essential for production workloads.
+<strong>Key features:</strong>
+<ul><li><strong>Declarative updates</strong> - Describe desired state, Kubernetes makes it happen</li>
+<li><strong>Rolling updates</strong> - Zero-downtime deployments by gradually replacing pods</li>
+<li><strong>Rollback capability</strong> - Easy revert to previous versions</li>
+<li><strong>Scaling</strong> - Horizontal scaling by adjusting replica count</li>
+<li><strong>Self-healing</strong> - Automatically replaces failed pods</li>
+<strong>Deployment vs ReplicaSet:</strong>
+<li><strong>Deployment</strong> - Higher-level abstraction that manages ReplicaSets</li>
+<li><strong>ReplicaSet</strong> - Lower-level resource that maintains pod replicas</li>
+<li><strong>Relationship</strong> - Deployment creates and manages ReplicaSets for you</li>
+<strong>Deployment strategies:</strong>
+<li><strong>RollingUpdate</strong> (default) - Gradually replace old pods with new ones</li>
+<li><strong>Recreate</strong> - Kill all old pods before creating new ones (downtime)</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Creating deployments</h2>
+kubectl create deployment nginx --image=nginx:1.21    # Create simple deployment
+kubectl apply -f deployment.yaml                      # Create from YAML file
+<h2>Managing deployments</h2>
+kubectl get deployments                               # List all deployments
+kubectl describe deployment <name>                    # Detailed deployment info
+kubectl delete deployment <name>                      # Delete deployment
+<h2>Scaling</h2>
+kubectl scale deployment <name> --replicas=5          # Scale to 5 replicas
+kubectl autoscale deployment <name> --min=2 --max=10 --cpu-percent=80  # Auto-scaling
+<h2>Updates and rollouts</h2>
+kubectl set image deployment/<name> container=nginx:1.22  # Update image
+kubectl rollout status deployment/<name>              # Check rollout status
+kubectl rollout history deployment/<name>             # View rollout history
+kubectl rollout undo deployment/<name>                # Rollback to previous version
+kubectl rollout undo deployment/<name> --to-revision=2  # Rollback to specific revision
+<h2>Editing deployments</h2>
+kubectl edit deployment <name>                        # Edit deployment live
+kubectl patch deployment <name> -p '{"spec":{"replicas":3}}'  # Patch specific field</code></pre>
+<strong>Example Deployment YAML:</strong>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+  labels:
+    app: web-app
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1          # Max pods above desired replica count
+      maxUnavailable: 1    # Max pods that can be unavailable during update
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+      - name: web-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5</code></pre>
+<strong>Rolling update process:</strong>
+1. <strong>New ReplicaSet created</strong> - For the new version
+2. <strong>Gradual scaling</strong> - New pods added, old pods removed
+3. <strong>Health checks</strong> - Ensure new pods are ready before removing old ones
+4. <strong>Completion</strong> - All replicas running new version
+<strong>When you'll use it:</strong> Every stateless application in Kubernetes should use Deployments. Web servers, APIs, microservices, and most applications benefit from Deployment features.
+<h3>ReplicaSet</h3>
+<strong>What it is:</strong> A Kubernetes resource that ensures a specified number of pod replicas are running at any given time.
+<strong>Why it matters:</strong> ReplicaSets provide the foundation for high availability and scaling in Kubernetes. While you typically don't create them directly (Deployments do), understanding them helps with troubleshooting and understanding Kubernetes architecture.
+<strong>Key responsibilities:</strong>
+<li><strong>Maintain replica count</strong> - Ensure desired number of pods are running</li>
+<li><strong>Pod creation</strong> - Create new pods when needed</li>
+<li><strong>Pod deletion</strong> - Remove excess pods when scaling down</li>
+<li><strong>Label matching</strong> - Use selectors to identify which pods to manage</li>
+<strong>ReplicaSet vs ReplicationController:</strong>
+<li><strong>ReplicaSet</strong> - Newer, supports set-based label selectors</li>
+<li><strong>ReplicationController</strong> - Older, only equality-based selectors</li>
+<li><strong>Recommendation</strong> - Use Deployments, which create ReplicaSets</li>
+<strong>How ReplicaSets work:</strong>
+1. <strong>Selector matching</strong> - Find pods matching label selector
+2. <strong>Count comparison</strong> - Compare actual vs desired replica count
+3. <strong>Reconciliation</strong> - Create or delete pods to match desired state
+4. <strong>Continuous monitoring</strong> - Constantly watch for changes
+<strong>Common commands:</strong>
+<pre><code><h2>ReplicaSet operations (usually managed by Deployments)</h2>
+kubectl get replicasets                               # List all ReplicaSets
+kubectl get rs                                       # Short form
+kubectl describe replicaset <name>                    # Detailed ReplicaSet info
+kubectl delete replicaset <name>                      # Delete ReplicaSet (and its pods)
+<h2>Scaling ReplicaSet directly (not recommended)</h2>
+kubectl scale replicaset <name> --replicas=5         # Scale ReplicaSet
+<h2>Troubleshooting</h2>
+kubectl get rs -o wide                               # ReplicaSets with additional info
+kubectl get pods --show-labels                       # See pod labels</code></pre>
+<strong>Example ReplicaSet YAML:</strong>
+<pre><code>apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: web-replicaset
+  labels:
+    app: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: web
+        version: v1
+    spec:
+      containers:
+      - name: web-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80</code></pre>
+<strong>Label selector types:</strong>
+<pre><code><h2>Equality-based selector</h2>
+selector:
+  matchLabels:
+    app: web
+    env: prod
+<h2>Set-based selector</h2>
+selector:
+  matchExpressions:
+  - key: app
+    operator: In
+    values: [web, api]
+  - key: env
+    operator: NotIn
+    values: [dev]</code></pre>
+<strong>When you'll use it:</strong> You typically won't create ReplicaSets directly. Deployments manage them for you. Understanding ReplicaSets helps with troubleshooting pod creation issues and understanding Kubernetes internals.
+<h3>DaemonSet</h3>
+<strong>What it is:</strong> A Kubernetes resource that ensures all (or some) nodes run a copy of a specific pod, typically used for node-level services.
+<strong>Why it matters:</strong> DaemonSets are essential for cluster-wide services that need to run on every node, such as logging agents, monitoring collectors, and network plugins. They provide node-level functionality that regular Deployments can't.
+<strong>Common use cases:</strong>
+<li><strong>Logging agents</strong> - Fluentd, Filebeat collecting logs from each node</li>
+<li><strong>Monitoring agents</strong> - Node exporter, Datadog agent monitoring node metrics</li>
+<li><strong>Network plugins</strong> - CNI components, kube-proxy</li>
+<li><strong>Storage daemons</strong> - Ceph, GlusterFS storage components</li>
+<li><strong>Security agents</strong> - Vulnerability scanners, compliance checkers</li>
+<strong>DaemonSet behavior:</strong>
+<li><strong>Node coverage</strong> - Automatically schedules pods on new nodes</li>
+<li><strong>Node removal</strong> - Removes pods when nodes are deleted</li>
+<li><strong>Node selection</strong> - Can target specific nodes using node selectors</li>
+<li><strong>Rolling updates</strong> - Supports updating pods across nodes</li>
+<strong>DaemonSet vs Deployment:</strong>
+<li><strong>DaemonSet</strong> - One pod per node, follows node lifecycle</li>
+<li><strong>Deployment</strong> - Specified replica count, scheduler places pods anywhere</li>
+<strong>Common commands:</strong>
+<pre><code><h2>DaemonSet operations</h2>
+kubectl get daemonsets                               # List all DaemonSets
+kubectl get ds                                      # Short form
+kubectl describe daemonset <name>                    # Detailed DaemonSet info
+kubectl delete daemonset <name>                      # Delete DaemonSet
+<h2>DaemonSet status</h2>
+kubectl get ds -o wide                              # DaemonSets with node info
+kubectl rollout status daemonset/<name>             # Check rollout status
+kubectl rollout history daemonset/<name>            # View rollout history
+<h2>Troubleshooting</h2>
+kubectl get pods -l app=<daemonset-label> -o wide   # See DaemonSet pods on nodes
+kubectl describe node <node-name>                   # Check node for DaemonSet pods</code></pre>
+<strong>Example DaemonSet YAML (Log collector):</strong>
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector
+  labels:
+    app: log-collector
+spec:
+  selector:
+    matchLabels:
+      app: log-collector
+  template:
+    metadata:
+      labels:
+        app: log-collector
+    spec:
+      containers:
+      - name: log-collector
+        image: fluentd:v1.14
+        resources:
+          limits:
+            memory: 200Mi
+            cpu: 100m
+          requests:
+            memory: 100Mi
+            cpu: 50m
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule</code></pre>
+<strong>Node selection:</strong>
+<pre><code><h2>Run on specific nodes only</h2>
+spec:
+  template:
+    spec:
+      nodeSelector:
+        disktype: ssd
+      # or
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values: [amd64]</code></pre>
+<strong>When you'll use it:</strong> DaemonSets are used for cluster infrastructure components. You'll encounter them when setting up logging, monitoring, networking, or any service that needs to run on every node.
+<h3>Job</h3>
+<strong>What it is:</strong> A Kubernetes resource that runs pods to completion, ensuring that a specified number of pods successfully terminate, typically used for batch processing and one-time tasks.
+<strong>Why it matters:</strong> Jobs handle batch workloads, data processing, backups, and other tasks that need to run once or periodically. Unlike Deployments that keep pods running, Jobs ensure tasks complete successfully.
+<strong>Job types:</strong>
+<li><strong>Single job</strong> - Run one pod to completion</li>
+<li><strong>Parallel jobs with fixed completion count</strong> - Run N pods to completion</li>
+<li><strong>Parallel jobs with work queue</strong> - Multiple pods process items from queue</li>
+<strong>Job completion patterns:</strong>
+<li><strong>completions</strong> - Number of successful pod completions needed</li>
+<li><strong>parallelism</strong> - Number of pods running simultaneously</li>
+<li><strong>backoffLimit</strong> - Number of retries before marking job as failed</li>
+<strong>Job behavior:</strong>
+<li><strong>Pod creation</strong> - Creates pods based on template</li>
+<li><strong>Failure handling</strong> - Restarts failed pods (up to backoffLimit)</li>
+<li><strong>Completion tracking</strong> - Tracks successful completions</li>
+<li><strong>Cleanup</strong> - Keeps completed pods for log inspection (by default)</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Job operations</h2>
+kubectl create job hello --image=busybox -- echo "Hello World"  # Create simple job
+kubectl get jobs                                    # List all jobs
+kubectl describe job <name>                         # Detailed job info
+kubectl delete job <name>                           # Delete job
+<h2>Job monitoring</h2>
+kubectl logs job/<name>                             # View job logs
+kubectl get pods --selector=job-name=<name>         # Get job's pods
+kubectl wait --for=condition=complete job/<name>    # Wait for job completion
+<h2>Job cleanup</h2>
+kubectl delete job <name> --cascade=false          # Delete job but keep pods
+ttlSecondsAfterFinished: 100  # Auto-cleanup in job spec</code></pre>
+<strong>Example Job YAML (Simple batch job):</strong>
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-processor
+spec:
+  completions: 1          # Number of successful completions needed
+  parallelism: 1          # Number of pods running in parallel
+  backoffLimit: 3         # Number of retries before giving up
+  ttlSecondsAfterFinished: 3600  # Cleanup job after 1 hour
+  template:
+    spec:
+      restartPolicy: Never  # Jobs must use Never or OnFailure
+      containers:
+      - name: processor
+        image: busybox
+        command: ["sh", "-c"]
+        args:
+        - |
+          echo "Starting data processing..."
+          sleep 30
+          echo "Processing complete"
+          # Simulate work and exit
+          exit 0
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"</code></pre>
+<strong>Parallel job example:</strong>
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: parallel-processor
+spec:
+  completions: 10         # Need 10 successful completions
+  parallelism: 3          # Run 3 pods at a time
+  backoffLimit: 6         # Allow some failures
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: worker
+        image: busybox
+        command: ["sh", "-c", "echo Processing item $RANDOM && sleep 10"]</code></pre>
+<strong>When you'll use it:</strong> Jobs are perfect for batch processing, database migrations, backups, data imports/exports, and any task that needs to run to completion rather than continuously.
+<h3>CronJob</h3>
+<strong>What it is:</strong> A Kubernetes resource that creates Jobs on a recurring schedule, similar to Unix cron, for running periodic tasks.
+<strong>Why it matters:</strong> CronJobs enable scheduled automation in Kubernetes - backups, reports, cleanup tasks, and maintenance operations. They're essential for operational tasks that need to run regularly.
+<strong>CronJob features:</strong>
+<li><strong>Cron syntax</strong> - Standard cron expressions for scheduling</li>
+<li><strong>Job template</strong> - Defines what to run (creates Jobs)</li>
+<li><strong>Concurrency control</strong> - Handle overlapping executions</li>
+<li><strong>History limits</strong> - Control how many completed/failed jobs to keep</li>
+<li><strong>Timezone support</strong> - Schedule in specific timezones</li>
+<strong>Cron expression format:</strong>
+<pre><code><h2>┌───────────── minute (0 - 59)</h2>
+<h2>│ ┌───────────── hour (0 - 23)</h2>
+<h2>│ │ ┌───────────── day of month (1 - 31)</h2>
+<h2>│ │ │ ┌───────────── month (1 - 12)</h2>
+<h2>│ │ │ │ ┌───────────── day of week (0 - 6) (Sunday to Saturday)</h2>
+<h2>│ │ │ │ │</h2>
+<h2><em> </em> <em> </em> *</h2></code></pre>
+<strong>Common cron patterns:</strong>
+<li><code>0 2 <em> </em> *</code> - Daily at 2 AM</li>
+<li><code>0 2 <em> </em> 0</code> - Weekly on Sunday at 2 AM</li>
+<li><code>0 0 1 <em> </em></code> - Monthly on 1st at midnight</li>
+<li><code><em>/15 </em> <em> </em> *</code> - Every 15 minutes</li>
+<li><code>0 9-17 <em> </em> 1-5</code> - Every hour from 9 AM to 5 PM, Monday to Friday</li>
+<strong>Common commands:</strong>
+<pre><code><h2>CronJob operations</h2>
+kubectl create cronjob backup --image=busybox --schedule="0 2 <em> </em> *" -- /bin/sh -c "echo Backup started"
+kubectl get cronjobs                                # List all CronJobs
+kubectl get cj                                     # Short form
+kubectl describe cronjob <name>                    # Detailed CronJob info
+kubectl delete cronjob <name>                      # Delete CronJob
+<h2>CronJob management</h2>
+kubectl get jobs --selector=cronjob=<name>         # Get jobs created by CronJob
+kubectl create job --from=cronjob/<name> manual-run  # Manually trigger CronJob
+kubectl patch cronjob <name> -p '{"spec":{"suspend":true}}'  # Suspend CronJob
+kubectl patch cronjob <name> -p '{"spec":{"suspend":false}}' # Resume CronJob</code></pre>
+<strong>Example CronJob YAML (Database backup):</strong>
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+spec:
+  schedule: "0 2 <em> </em> *"                    # Daily at 2 AM
+  timeZone: "America/New_York"             # Optional: specify timezone
+  concurrencyPolicy: Forbid                # Don't allow overlapping jobs
+  successfulJobsHistoryLimit: 3            # Keep 3 successful jobs
+  failedJobsHistoryLimit: 1                # Keep 1 failed job
+  startingDeadlineSeconds: 3600            # Start within 1 hour of scheduled time
+  jobTemplate:
+    spec:
+      completions: 1
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400       # Cleanup after 24 hours
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: postgres:13
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            command: ["/bin/bash"]
+            args:
+            - -c
+            - |
+              echo "Starting backup at $(date)"
+              pg_dump -h postgres-service -U myuser mydb > /backup/backup-$(date +%Y%m%d-%H%M%S).sql
+              echo "Backup completed at $(date)"
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc</code></pre>
+<strong>Concurrency policies:</strong>
+<li><strong>Allow</strong> (default) - Allow concurrent jobs</li>
+<li><strong>Forbid</strong> - Skip new job if previous still running</li>
+<li><strong>Replace</strong> - Cancel running job and start new one</li></ul>
+<strong>CronJob monitoring:</strong>
+<pre><code><h2>Check CronJob status</h2>
+kubectl get cronjob <name> -o wide
+<h2>View recent jobs created by CronJob</h2>
+kubectl get jobs -l cronjob=<name> --sort-by=.metadata.creationTimestamp
+<h2>Check logs of latest job</h2>
+kubectl logs job/<cronjob-name>-<timestamp></code></pre>
+<strong>When you'll use it:</strong> CronJobs are essential for operational automation - database backups, log rotation, report generation, system maintenance, cleanup tasks, and any scheduled operations in your cluster.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

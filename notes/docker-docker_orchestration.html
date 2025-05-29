@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Orchestration - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Docker Orchestration</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (docker) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">docker</span><span class="tag">compose</span><span class="tag">swarm</span><span class="tag">orchestration</span><span class="tag">multi-container</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Docker Orchestration</h2>
+<h3>Docker Compose</h3>
+<strong>What it is:</strong> A tool for defining and running multi-container Docker applications using a YAML file to configure application services, networks, and volumes.
+<strong>Why it matters:</strong> Docker Compose simplifies multi-container application management, enables reproducible development environments, and provides an easy way to orchestrate complex applications with multiple interconnected services.
+<strong>Key benefits:</strong>
+<ul><li><strong>Single command deployment</strong> - Start entire application stack with <code>docker-compose up</code></li>
+<li><strong>Environment consistency</strong> - Same configuration across dev/staging/prod</li>
+<li><strong>Service dependencies</strong> - Define startup order and dependencies</li>
+<li><strong>Network isolation</strong> - Automatic network creation for service communication</li>
+<li><strong>Volume management</strong> - Persistent data across container restarts</li>
+<strong>Docker Compose vs Docker run:</strong>
+<li><strong>Docker run</strong> - Single container commands, complex for multi-container apps</li>
+<li><strong>Docker Compose</strong> - Multi-container orchestration, infrastructure as code</li>
+<li><strong>Use Compose for</strong> - Development, testing, single-host deployments</li>
+<li><strong>Use Kubernetes for</strong> - Production, multi-host, advanced orchestration</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Basic Compose operations</h2>
+docker-compose up                                  # Start all services
+docker-compose up -d                               # Start in background (detached)
+docker-compose up --build                          # Rebuild images before starting
+docker-compose up service-name                     # Start specific service
+<p>docker-compose down                                # Stop and remove containers
+docker-compose down -v                             # Also remove volumes
+docker-compose down --rmi all                      # Also remove images</p>
+<h2>Service management</h2>
+docker-compose start                               # Start existing containers
+docker-compose stop                                # Stop running containers
+docker-compose restart                             # Restart services
+docker-compose pause                               # Pause services
+docker-compose unpause                             # Unpause services
+<h2>Scaling services</h2>
+docker-compose up --scale web=3                    # Scale web service to 3 instances
+docker-compose scale web=5 worker=2               # Scale multiple services
+<h2>Logs and monitoring</h2>
+docker-compose logs                                # All service logs
+docker-compose logs web                            # Specific service logs
+docker-compose logs -f                             # Follow logs
+docker-compose logs --tail=100                     # Last 100 lines
+<h2>Execute commands</h2>
+docker-compose exec web bash                       # Shell into running service
+docker-compose run web python manage.py migrate   # Run one-off command
+docker-compose run --rm web pytest                # Run and remove container</code></pre>
+<strong>Example docker-compose.yml (Web application):</strong>
+<pre><code>version: '3.8'
+<p>services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://user:pass@db:5432/myapp
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network</p>
+<p>db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    restart: unless-stopped
+    networks:
+      - app-network</p>
+<p>redis:
+    image: redis:6-alpine  
+    restart: unless-stopped
+    networks:
+      - app-network</p>
+<p>nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/static:ro
+      - ./ssl:/etc/ssl/certs:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+    networks:
+      - app-network</p>
+<p>volumes:
+  postgres_data:
+  static_volume:</p>
+<p>networks:
+  app-network:
+    driver: bridge</code></pre></p>
+<strong>Advanced Compose features:</strong>
+<strong>Environment-specific configurations:</strong>
+<pre><code><h2>docker-compose.yml (base)</h2>
+version: '3.8'
+services:
+  web:
+    image: myapp:latest
+    environment:
+      - NODE_ENV=production
+<h2>docker-compose.override.yml (development overrides)</h2>
+version: '3.8'
+services:
+  web:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=development
+      - DEBUG=1</code></pre>
+<strong>Multiple Compose files:</strong>
+<pre><code><h2>Use multiple compose files</h2>
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+<h2>Environment-specific deployment</h2>
+docker-compose --env-file .env.prod up</code></pre>
+<strong>Health checks:</strong>
+<pre><code>services:
+  web:
+    image: nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s</code></pre>
+<strong>Resource limits:</strong>
+<pre><code>services:
+  web:
+    image: myapp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M</code></pre>
+<h3>Docker Swarm</h3>
+<strong>What it is:</strong> Docker's native orchestration tool that turns a group of Docker hosts into a single, virtual Docker host for deploying and managing containerized applications across multiple nodes.
+<strong>Why it matters:</strong> Docker Swarm provides production-ready container orchestration with built-in load balancing, service discovery, rolling updates, and high availability without the complexity of Kubernetes.
+<strong>Swarm vs Kubernetes:</strong>
+<li><strong>Swarm</strong> - Simpler, Docker-native, easier to learn and deploy</li>
+<li><strong>Kubernetes</strong> - More features, larger ecosystem, steeper learning curve</li>
+<li><strong>Swarm</strong> - Good for smaller deployments, Docker-centric environments</li>
+<li><strong>Kubernetes</strong> - Better for large scale, complex orchestration needs</li>
+<strong>Swarm concepts:</strong>
+<li><strong>Node</strong> - Individual Docker host in the swarm</li>
+<li><strong>Manager nodes</strong> - Control the swarm and schedule services</li>
+<li><strong>Worker nodes</strong> - Execute containerized services</li>
+<li><strong>Service</strong> - Definition of containers to run on the swarm</li>
+<li><strong>Task</strong> - Individual container instance of a service</li>
+<li><strong>Stack</strong> - Group of related services deployed together</li>
+<strong>Common commands:</strong>
+<strong>Swarm initialization:</strong>
+<pre><code><h2>Initialize swarm (on manager node)</h2>
+docker swarm init --advertise-addr <manager-ip>
+<h2>Join worker nodes</h2>
+docker swarm join --token <worker-token> <manager-ip>:2377
+<h2>Join additional managers</h2>
+docker swarm join --token <manager-token> <manager-ip>:2377
+<h2>Get join tokens</h2>
+docker swarm join-token worker
+docker swarm join-token manager
+<h2>Leave swarm</h2>
+docker swarm leave
+docker swarm leave --force  # For manager nodes</code></pre>
+<strong>Node management:</strong>
+<pre><code><h2>List nodes</h2>
+docker node ls
+<h2>Inspect node</h2>
+docker node inspect <node-name>
+<h2>Update node availability</h2>
+docker node update --availability drain <node-name>
+docker node update --availability active <node-name>
+<h2>Add labels to nodes</h2>
+docker node update --label-add environment=production <node-name>
+docker node update --label-add storage=ssd <node-name>
+<h2>Remove node from swarm</h2>
+docker node rm <node-name></code></pre>
+<strong>Service management:</strong>
+<pre><code><h2>Create service</h2>
+docker service create --name web --replicas 3 --publish 80:80 nginx
+<h2>List services</h2>
+docker service ls
+<h2>Inspect service</h2>
+docker service inspect web
+docker service inspect --pretty web
+<h2>List service tasks</h2>
+docker service ps web
+<h2>Scale service</h2>
+docker service scale web=5
+docker service update --replicas 10 web
+<h2>Update service</h2>
+docker service update --image nginx:1.21 web
+docker service update --env-add NEW_ENV=value web
+<h2>Remove service</h2>
+docker service rm web</code></pre>
+<strong>Example Docker Stack (docker-compose for Swarm):</strong>
+<pre><code>version: '3.8'
+<p>services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    networks:
+      - webnet
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.environment == production</p>
+<p>api:
+    image: myapi:latest
+    networks:
+      - webnet
+      - backend
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/myapp
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    depends_on:
+      - db</p>
+<p>db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.storage == ssd
+    secrets:
+      - db_password</p>
+<p>volumes:
+  db_data:
+    driver: local</p>
+<p>networks:
+  webnet:
+    driver: overlay
+  backend:
+    driver: overlay
+    internal: true</p>
+<p>secrets:
+  db_password:
+    external: true</code></pre></p>
+<strong>Stack deployment:</strong>
+<pre><code><h2>Deploy stack</h2>
+docker stack deploy -c docker-compose.yml myapp
+<h2>List stacks</h2>
+docker stack ls
+<h2>List stack services</h2>
+docker stack services myapp
+<h2>List stack tasks</h2>
+docker stack ps myapp
+<h2>Remove stack</h2>
+docker stack rm myapp</code></pre>
+<strong>Swarm networking:</strong>
+<pre><code><h2>Create overlay network</h2>
+docker network create --driver overlay --attachable mynetwork
+<h2>List networks</h2>
+docker network ls
+<h2>Connect service to network</h2>
+docker service update --network-add mynetwork web</code></pre>
+<strong>Secrets management:</strong>
+<pre><code><h2>Create secret</h2>
+echo "mysecretpassword" | docker secret create db_password -
+docker secret create ssl_cert ./server.crt
+<h2>List secrets</h2>
+docker secret ls
+<h2>Remove secret</h2>
+docker secret rm db_password</code></pre>
+<strong>Rolling updates:</strong>
+<pre><code><h2>Update service with rolling update</h2>
+docker service update \
+  --image myapp:v2.0 \
+  --update-parallelism 2 \
+  --update-delay 10s \
+  --update-failure-action rollback \
+  myapp
+<h2>Rollback service</h2>
+docker service rollback myapp</code></pre>
+<h3>Multi-Container Applications</h3>
+<strong>What they are:</strong> Applications composed of multiple interconnected containers, each serving a specific purpose (web server, database, cache, etc.), working together as a cohesive system.
+<strong>Why they matter:</strong> Multi-container architecture enables microservices patterns, separation of concerns, independent scaling, and technology diversity within a single application.
+<strong>Common patterns:</strong>
+<li><strong>Web + Database</strong> - Frontend/backend with persistent storage</li>
+<li><strong>Microservices</strong> - Multiple specialized services</li>
+<li><strong>Data pipeline</strong> - ETL processes with multiple stages  </li>
+<li><strong>Monitoring stack</strong> - Application + metrics + logs + dashboards</li>
+<strong>Design principles:</strong>
+<li><strong>Single responsibility</strong> - Each container serves one purpose</li>
+<li><strong>Loose coupling</strong> - Services communicate through APIs</li>
+<li><strong>Stateless services</strong> - Data stored externally or in dedicated containers</li>
+<li><strong>Service discovery</strong> - Services find each other dynamically</li>
+<li><strong>Health checks</strong> - Each service reports its health status</li>
+<h4><strong>Example: Complete Web Application Stack</strong></h4>
+<strong>Application architecture:</strong>
+<li><strong>Frontend</strong> - React application (nginx)</li>
+<li><strong>Backend API</strong> - Node.js application</li>
+<li><strong>Database</strong> - PostgreSQL</li>
+<li><strong>Cache</strong> - Redis</li>
+<li><strong>Background jobs</strong> - Worker processes</li>
+<li><strong>Reverse proxy</strong> - Nginx load balancer</li></ul>
+<strong>docker-compose.yml:</strong>
+<pre><code>version: '3.8'
+<p>services:
+  # Frontend - React app served by nginx
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - frontend-network
+    restart: unless-stopped</p>
+<p># Backend API - Node.js
+  api:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password@db:5432/myapp
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+    depends_on:
+      - db
+      - redis
+    networks:
+      - frontend-network
+      - backend-network
+    secrets:
+      - jwt_secret
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped</p>
+<p># Background worker
+  worker:
+    build: ./backend
+    command: npm run worker
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password@db:5432/myapp
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend-network
+    restart: unless-stopped</p>
+<p># PostgreSQL database
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped</p>
+<p># Redis cache
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped</p>
+<p># Nginx reverse proxy/load balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/ssl/certs:ro
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - frontend-network
+    restart: unless-stopped</p>
+<p># Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - monitoring-network
+      - backend-network
+    restart: unless-stopped</p>
+<p># Monitoring - Grafana
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring-network
+    restart: unless-stopped</p>
+<p>volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:</p>
+<p>networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+    internal: true  # No direct internet access
+  monitoring-network:
+    driver: bridge</p>
+<p>secrets:
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt</code></pre></p>
+<strong>Environment-specific overrides:</strong>
+<strong>docker-compose.override.yml (development):</strong>
+<pre><code>version: '3.8'
+<p>services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/src:/app/src
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000</p>
+<p>api:
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DEBUG=1
+    command: npm run dev</p>
+<p>worker:
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run worker:dev</code></pre></p>
+<strong>docker-compose.prod.yml (production):</strong>
+<pre><code>version: '3.8'
+<p>services:
+  api:
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M</p>
+<p>worker:
+    deploy:
+      replicas: 2</p>
+<p>db:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M</code></pre></p>
+<strong>Deployment commands:</strong>
+<pre><code><h2>Development</h2>
+docker-compose up -d
+<h2>Production  </h2>
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+<h2>Scaling specific services</h2>
+docker-compose up -d --scale api=3 --scale worker=2
+<h2>View service status</h2>
+docker-compose ps
+docker-compose logs -f api
+docker-compose top</code></pre>
+<strong>When you'll use them:</strong> Docker Compose is essential for development environments and single-host deployments. Docker Swarm provides production orchestration for multi-host deployments without Kubernetes complexity. Multi-container patterns are fundamental for modern application architecture.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

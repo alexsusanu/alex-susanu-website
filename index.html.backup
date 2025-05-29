@@ -739,6 +739,56 @@
             
         </div>
     </div>
+    <div class="note-card" data-tags="glossary,methodologies,agile,devops,practices" onclick="window.location.href='notes/glossary-methodologies_glossary.html'">
+        <h3>Methodologies & Practices Glossary</h3>
+        <div class="note-meta">General (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: Set of principles and practices for software development that emphasizes collaboration, flexibility, and rapid iteration.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">methodologies</span><span class="tag">agile</span><span class="tag">devops</span><span class="tag">practices</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,performance,optimization,caching,scalability" onclick="window.location.href='notes/glossary-performance_glossary.html'">
+        <h3>Performance & Optimization Glossary</h3>
+        <div class="note-meta">Programming (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: Temporary storage that saves frequently accessed data for faster retrieval.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">performance</span><span class="tag">optimization</span><span class="tag">caching</span><span class="tag">scalability</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,development,programming,terminology" onclick="window.location.href='notes/glossary-development_terms_glossary.html'">
+        <h3>Development Terms Glossary</h3>
+        <div class="note-meta">Programming (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A set of rules and protocols that allows different software applications to communicate with each other.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">development</span><span class="tag">programming</span><span class="tag">terminology</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,security,cybersecurity,authentication,encryption" onclick="window.location.href='notes/glossary-security_glossary.html'">
+        <h3>Security Glossary</h3>
+        <div class="note-meta">Security (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: Process of verifying the identity of a user, device, or system trying to access a resource.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">security</span><span class="tag">cybersecurity</span><span class="tag">authentication</span><span class="tag">encryption</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,infrastructure,networking,servers,cloud" onclick="window.location.href='notes/glossary-infrastructure_glossary.html'">
+        <h3>Infrastructure & Networking Glossary</h3>
+        <div class="note-meta">DevOps (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A computer or software program that provides services, data, or resources to other computers (clients) over a network.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">infrastructure</span><span class="tag">networking</span><span class="tag">servers</span><span class="tag">cloud</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="docker,containers,devops,security" onclick="window.location.href='notes/starting-point-docker-best-practices.html'">
         <h3>Docker Best Practices</h3>
         <div class="note-meta">DevOps (starting-point) • May 27, 2025</div>

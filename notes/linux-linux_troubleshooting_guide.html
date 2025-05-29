@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Troubleshooting Guide - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Linux Troubleshooting Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                General (linux) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Linux Troubleshooting Guide</h2>
+<strong>Category:</strong> System Administration & Troubleshooting  
+<strong>Tags:</strong> linux, troubleshooting, debugging, system-recovery, performance, diagnostics
+<h3>Essential Troubleshooting Methodology</h3>
+<strong>What this guide covers:</strong> Comprehensive troubleshooting scenarios for common Linux system problems with step-by-step diagnostic procedures, root cause analysis, and resolution strategies.
+<strong>Why systematic troubleshooting matters:</strong> Random fixes waste time and can make problems worse. A methodical approach identifies root causes quickly and prevents recurring issues.
+<strong>General Troubleshooting Process:</strong>
+1. <strong>Define the problem</strong> - What exactly is broken?
+2. <strong>Gather information</strong> - When did it start? What changed?
+3. <strong>Identify possible causes</strong> - What could cause this symptom?
+4. <strong>Test hypotheses</strong> - Systematically eliminate causes
+5. <strong>Implement solution</strong> - Fix the root cause
+6. <strong>Verify fix</strong> - Confirm problem is resolved
+7. <strong>Prevent recurrence</strong> - Monitor and improve
+<h3>System Performance Issues</h3>
+<h4><strong>Scenario 1: "System is extremely slow"</strong></h4>
+<strong>Problem Description:</strong> System responds slowly to commands, applications take forever to load, general sluggish performance.
+<strong>What causes slow performance:</strong> High CPU usage, memory exhaustion, disk I/O bottlenecks, network issues, or system resource contention.
+<strong>Why this happens:</strong> Resource-intensive processes, memory leaks, failing hardware, insufficient system resources, or poorly configured services.
+<strong>Step-by-step diagnosis:</strong>
+<pre><code><h2>Step 1: Quick system health check</h2>
+uptime                                       # Check load averages
+<h2>Normal: load < number of CPU cores</h2>
+<h2>Problem: load consistently > (CPU cores × 2)</h2>
+<h2>Example: 4-core system should have load < 8</h2>
+<p>free -h                                      # Check memory usage
+<h2>Look for: low available memory, high swap usage</h2>
+<h2>Problem indicators: <100MB available, swap usage >50%</h2></p>
+<p>df -h                                        # Check disk space
+<h2>Problem indicators: any filesystem >90% full</h2>
+<h2>Root filesystem >95% can cause severe slowdowns</h2></p>
+<h2>Step 2: Identify resource-intensive processes</h2>
+top -o %CPU                                  # Sort by CPU usage
+<h2>Look for: processes using >50% CPU consistently</h2>
+<h2>Note: PID, user, and command of high-CPU processes</h2>
+<p>ps aux --sort=-%mem | head -10               # Top memory consumers
+<h2>Look for: processes using >20% memory</h2>
+<h2>Check for: obvious memory leaks (increasing memory over time)</h2></p>
+<h2>Step 3: Check I/O performance</h2>
+iostat -x 1 5                               # Monitor disk I/O for 5 seconds
+<h2>Problem indicators:</h2>
+<h2>%util consistently >80% (disk bottleneck)</h2>
+<h2>await >100ms (slow disk response)</h2>
+<h2>High r/s or w/s with low rkB/s, wkB/s (many small operations)</h2>
+<p>sudo iotop -o                                # Show processes doing I/O
+<h2>Identify: which processes are causing disk activity</h2>
+<h2>Look for: unexpectedly high I/O from specific applications</h2></p>
+<h2>Step 4: Network performance check</h2>
+ping -c 5 8.8.8.8                           # Test external connectivity
+<h2>Problem indicators: >100ms latency, packet loss</h2>
+<h2>If network-dependent apps are slow</h2>
+<p>ss -tuln | wc -l                             # Count network connections
+<h2>High connection count might indicate network service issues</h2></code></pre></p>
+<strong>Root cause analysis and solutions:</strong>
+<pre><code><h2>High CPU usage solutions:</h2>
+<h2>1. Kill runaway processes</h2>
+sudo kill -15 [PID]                         # Graceful termination
+sudo kill -9 [PID]                          # Force kill if unresponsive
+<h2>2. Lower process priority</h2>
+sudo renice +10 [PID]                       # Lower priority (higher nice value)
+sudo ionice -c 3 -p [PID]                   # Lower I/O priority
+<h2>3. Check for CPU-intensive services</h2>
+systemctl list-units --type=service --state=running
+<h2>Disable unnecessary services:</h2>
+sudo systemctl stop [service-name]
+sudo systemctl disable [service-name]
+<h2>Memory exhaustion solutions:</h2>
+<h2>1. Clear caches (safe operation)</h2>
+sudo sync                                   # Flush file system buffers
+echo 3 | sudo tee /proc/sys/vm/drop_caches  # Clear page cache, dentries, inodes
+<h2>2. Identify and kill memory-hungry processes</h2>
+<h2>Check process memory growth over time:</h2>
+while true; do ps aux --sort=-%mem | head -5; sleep 10; done
+<h2>3. Add swap space (temporary solution)</h2>
+sudo fallocate -l 2G /swapfile              # Create 2GB swap file
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+<h2>Disk I/O bottleneck solutions:</h2>
+<h2>1. Identify I/O-heavy processes</h2>
+sudo iotop -a                                # Accumulated I/O stats
+<h2>Kill or throttle I/O-intensive processes</h2>
+<h2>2. Check for failing disk</h2>
+sudo smartctl -a /dev/sda                    # Check disk health
+dmesg | grep -i error                        # Check for disk errors
+<h2>3. Optimize disk usage</h2>
+<h2>Move large files to different disk</h2>
+<h2>Clean up unnecessary files</h2>
+sudo find /var/log -name "*.log" -size +100M -mtime +7</code></pre>
+<strong>Prevention and monitoring:</strong>
+<pre><code><h2>Set up monitoring alerts</h2>
+<h2>Add to crontab:</h2>
+<h2><em>/5 </em> <em> </em> * uptime | awk '{if($10>4.0) print "High load: " $0}' | mail -s "Load Alert" admin@domain.com</h2>
+<h2>Monitor disk space:</h2>
+<h2>0 6 <em> </em> * df -h | awk '$5>80 {print "Disk usage alert: " $0}' | mail -s "Disk Alert" admin@domain.com</h2>
+<h2>Log performance data:</h2>
+<h2><em>/5 </em> <em> </em> * iostat -x 1 1 >> /var/log/iostat.log</h2></code></pre>
+<h4><strong>Scenario 2: "High memory usage and system freezing"</strong></h4>
+<strong>Problem Description:</strong> System becomes unresponsive, applications crash with out-of-memory errors, frequent freezing.
+<strong>What causes memory issues:</strong> Memory leaks, insufficient RAM, swap exhaustion, runaway processes, or memory-intensive applications.
+<strong>Step-by-step diagnosis:</strong>
+<pre><code><h2>Step 1: Memory status assessment</h2>
+free -h                                      # Current memory usage
+cat /proc/meminfo | grep -E "(MemTotal|MemFree|MemAvailable|SwapTotal|SwapFree)"
+<h2>Calculate: Memory utilization = (MemTotal - MemAvailable) / MemTotal * 100</h2>
+<h2>Problem: >90% memory utilization</h2>
+<h2>Step 2: Identify memory consumption patterns</h2>
+ps aux --sort=-%mem | head -20               # Top memory consumers
+<h2>Look for: processes with unusually high memory usage</h2>
+<h2>Note: RSS (Resident Set Size) values in MB</h2>
+<h2>Check for memory leaks (run multiple times):</h2>
+for i in {1..5}; do ps aux --sort=-%mem | head -5; sleep 60; done
+<h2>Look for: steadily increasing memory usage in specific processes</h2>
+<h2>Step 3: System memory analysis</h2>
+cat /proc/buddyinfo                          # Memory fragmentation info
+<h2>High fragmentation can cause allocation failures</h2>
+<p>slabtop                                      # Kernel memory usage
+<h2>Look for: excessive kernel memory usage</h2></p>
+<h2>Step 4: Swap analysis</h2>
+cat /proc/swaps                              # Active swap spaces
+swapon -s                                    # Swap usage summary
+<h2>Problem: swap usage >50% of total swap</h2>
+<p>vmstat 5 5                                   # Monitor memory and swap activity
+<h2>Look for: high 'si' (swap in) and 'so' (swap out) values</h2>
+<h2>Continuous swapping indicates memory pressure</h2></code></pre></p>
+<strong>Solutions for memory problems:</strong>
+<pre><code><h2>Immediate memory relief:</h2>
+<h2>1. Kill memory-intensive processes</h2>
+sudo pkill -f [process-name]                # Kill by process name
+<h2>Or use system monitor to identify and kill processes</h2>
+<h2>2. Clear system caches</h2>
+sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
+<h2>3. Emergency process termination</h2>
+<h2>Enable SysRq keys for emergency:</h2>
+echo 1 | sudo tee /proc/sys/kernel/sysrq
+<h2>Then use Alt+SysRq+F to kill memory-hungry processes</h2>
+<h2>Long-term solutions:</h2>
+<h2>1. Add more swap space</h2>
+sudo fallocate -l 4G /swapfile2
+sudo chmod 600 /swapfile2
+sudo mkswap /swapfile2
+sudo swapon /swapfile2
+<h2>Make permanent by adding to /etc/fstab:</h2>
+echo '/swapfile2 none swap sw 0 0' | sudo tee -a /etc/fstab
+<h2>2. Optimize swap usage</h2>
+<h2>Reduce swappiness (default is 60):</h2>
+echo 10 | sudo tee /proc/sys/vm/swappiness   # Temporary
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf  # Permanent
+<h2>3. Find and fix memory leaks</h2>
+<h2>Monitor specific process memory over time:</h2>
+watch -n 30 'ps aux | grep [process-name]'
+<h2>If memory continuously grows, process has memory leak</h2>
+<h2>Solutions: restart process, update software, report bug</h2></code></pre>
+<strong>Memory monitoring and prevention:</strong>
+<pre><code><h2>Set up memory monitoring:</h2>
+<h2>Create monitoring script:</h2>
+cat > /usr/local/bin/memory-monitor.sh << 'EOF'
+#!/bin/bash
+THRESHOLD=90
+MEM_USAGE=$(free | awk 'NR==2{printf "%.0f", $3*100/$2}')
+if [ $MEM_USAGE -gt $THRESHOLD ]; then
+    echo "Memory usage is $MEM_USAGE%" | mail -s "Memory Alert" admin@domain.com
+    ps aux --sort=-%mem | head -10 >> /var/log/memory-alert.log
+fi
+EOF
+chmod +x /usr/local/bin/memory-monitor.sh
+<h2>Add to crontab:</h2>
+<h2><em>/10 </em> <em> </em> * /usr/local/bin/memory-monitor.sh</h2></code></pre>
+<h3>Disk Space and Storage Issues</h3>
+<h4><strong>Scenario 3: "No space left on device" errors</strong></h4>
+<strong>Problem Description:</strong> Applications fail with "No space left on device", system becomes unstable, cannot create new files.
+<strong>What causes disk space issues:</strong> Log file growth, temporary file accumulation, large file downloads, database growth, or filesystem corruption.
+<strong>Step-by-step diagnosis:</strong>
+<pre><code><h2>Step 1: Identify full filesystems</h2>
+df -h                                        # Human-readable disk usage
+df -i                                        # Check inode usage (can be full even with disk space)
+<h2>Problem indicators: </h2>
+<h2>>95% disk usage on any filesystem</h2>
+<h2>>90% inode usage</h2>
+<h2>Step 2: Locate space consumers</h2>
+du -h / 2>/dev/null | sort -hr | head -20   # Top 20 largest directories
+<h2>Focus on: /var, /tmp, /home, /opt</h2>
+<h2>Check common problem areas:</h2>
+du -sh /var/log/* | sort -hr | head -10     # Large log files
+du -sh /tmp/* 2>/dev/null | sort -hr | head -10  # Temporary files
+du -sh /home/* | sort -hr | head -10        # User directories
+<h2>Step 3: Find large files</h2>
+find / -type f -size +100M 2>/dev/null | head -20  # Files >100MB
+find /var/log -name "*.log" -size +50M       # Large log files
+find /tmp -type f -mtime +7                  # Old temporary files
+<h2>Step 4: Check for hidden space usage</h2>
+lsof +L1                                     # Find deleted files still held open
+<h2>Deleted files held by processes still consume space</h2>
+<h2>Shows files with link count 0 but still open</h2>
+<h2>Step 5: Analyze specific directories</h2>
+ncdu /var                                    # Interactive disk usage analyzer
+<h2>If ncdu not available:</h2>
+du -ah /var | sort -hr | head -50            # Alternative analysis</code></pre>
+<strong>Solutions for disk space problems:</strong>
+<pre><code><h2>Immediate space recovery:</h2>
+<h2>1. Clean log files (SAFE - logs can be regenerated)</h2>
+sudo find /var/log -name "*.log" -mtime +30 -size +10M -exec gzip {} \;
+sudo find /var/log -name "*.gz" -mtime +90 -delete
+sudo journalctl --vacuum-size=100M           # Limit systemd journal size
+<h2>2. Clean temporary files</h2>
+sudo find /tmp -type f -mtime +7 -delete     # Files older than 7 days  
+sudo find /var/tmp -type f -mtime +30 -delete  # Older temporary files
+<h2>3. Package manager cleanup</h2>
+sudo apt autoremove                          # Remove unused packages
+sudo apt autoclean                           # Clean package cache
+<h2>For yum/dnf:</h2>
+sudo yum clean all                           # Clean package cache
+<h2>4. Clear user caches</h2>
+<h2>For each user:</h2>
+rm -rf /home/user/.cache/*                   # Browser and application caches
+rm -rf /home/user/.thumbnails/*              # Image thumbnails
+<h2>5. Handle deleted files still open</h2>
+lsof +L1 | awk '{print $2}' | tail -n +2 | sort -u | xargs -r sudo kill -HUP
+<h2>Send HUP signal to processes holding deleted files</h2>
+<h2>This forces them to close file handles</h2>
+<h2>Advanced space recovery:</h2>
+<h2>1. Find and remove duplicate files</h2>
+fdupes -r /home                              # Find duplicates (install: apt install fdupes)
+<h2>Manually review and remove duplicates</h2>
+<h2>2. Compress old files</h2>
+find /var/log -name "*.log" -mtime +7 -exec gzip {} \;
+find /home -name "*.txt" -size +10M -mtime +90 -exec gzip {} \;
+<h2>3. Move large files to different filesystem</h2>
+mv /large/file /other/filesystem/location
+ln -s /other/filesystem/location/large/file /original/location/large/file</code></pre>
+<strong>Long-term disk space management:</strong>
+<pre><code><h2>Set up automated cleanup:</h2>
+<h2>Create cleanup script:</h2>
+cat > /usr/local/bin/disk-cleanup.sh << 'EOF'
+#!/bin/bash
+<h2>Clean old log files</h2>
+find /var/log -name "*.log" -mtime +30 -size +10M -exec gzip {} \;
+find /var/log -name "*.gz" -mtime +90 -delete
+<h2>Clean temporary files</h2>
+find /tmp -type f -mtime +7 -delete
+find /var/tmp -type f -mtime +30 -delete
+<h2>Clean package caches</h2>
+apt autoremove -y
+apt autoclean
+<h2>Vacuum journal logs</h2>
+journalctl --vacuum-time=30d
+journalctl --vacuum-size=100M
+<h2>Log cleanup activity</h2>
+echo "Disk cleanup completed at $(date)" >> /var/log/disk-cleanup.log
+EOF
+chmod +x /usr/local/bin/disk-cleanup.sh
+<h2>Schedule weekly cleanup:</h2>
+<h2>Add to crontab:</h2>
+<h2>0 2 <em> </em> 0 /usr/local/bin/disk-cleanup.sh</h2>
+<h2>Set up disk space monitoring:</h2>
+cat > /usr/local/bin/disk-monitor.sh << 'EOF'
+#!/bin/bash
+THRESHOLD=85
+df -h | awk 'NR>1 {gsub(/%/,"",$5); if($5>THRESHOLD) print $0}' THRESHOLD=$THRESHOLD > /tmp/disk-alert
+if [ -s /tmp/disk-alert ]; then
+    mail -s "Disk Space Alert" admin@domain.com < /tmp/disk-alert
+fi
+EOF
+chmod +x /usr/local/bin/disk-monitor.sh
+<h2>Monitor every hour:</h2>
+<h2>0 <em> </em> <em> </em> /usr/local/bin/disk-monitor.sh</h2></code></pre>
+<h4><strong>Scenario 4: "Inode exhaustion - cannot create files despite free space"</strong></h4>
+<strong>Problem Description:</strong> Error "No space left on device" but df shows available space. Cannot create new files or directories.
+<strong>What causes inode exhaustion:</strong> Too many small files, mail queues, temporary files, or filesystem design limitations.
+<strong>Diagnosis and solution:</strong>
+<pre><code><h2>Step 1: Confirm inode exhaustion</h2>
+df -i                                        # Show inode usage
+<h2>Look for: IUse% close to 100% on any filesystem</h2>
+<h2>Step 2: Find directories with many files</h2>
+find / -xdev -type f | cut -d '/' -f 2 | sort | uniq -c | sort -nr | head -10
+<h2>Shows directories with most files</h2>
+<h2>Find directories with excessive small files:</h2>
+find /var -type d -exec sh -c 'echo "$(ls -1A "{}" | wc -l) {}"' \; | sort -nr | head -20
+<h2>Step 3: Identify problem areas</h2>
+find /var/spool -type f | wc -l              # Mail queue files
+find /tmp -type f | wc -l                    # Temporary files
+find /var/cache -type f | wc -l              # Cache files
+<h2>Step 4: Clean up small files</h2>
+<h2>Mail queue cleanup (if mail server):</h2>
+sudo postqueue -f                            # Flush mail queue
+sudo find /var/spool/postfix -type f -delete # Clear queue files
+<h2>Temporary file cleanup:</h2>
+sudo find /tmp -type f -delete               # Clear all temporary files
+sudo find /var/tmp -type f -mtime +1 -delete # Clear old var temp files
+<h2>Cache cleanup:</h2>
+sudo find /var/cache -type f -mtime +30 -delete  # Old cache files
+<h2>Application-specific cleanup:</h2>
+<h2>PHP sessions:</h2>
+sudo find /var/lib/php/sessions -type f -mtime +1 -delete
+<h2>Thumbnail cache:</h2>
+find /home/*/.thumbnails -type f -mtime +30 -delete</code></pre>
+<h3>Network Connectivity Issues</h3>
+<h4><strong>Scenario 5: "Cannot connect to network/internet"</strong></h4>
+<strong>Problem Description:</strong> No network connectivity, DNS resolution fails, services cannot connect to remote hosts.
+<strong>Step-by-step network diagnosis:</strong>
+<pre><code><h2>Step 1: Basic connectivity tests</h2>
+ping -c 3 localhost                          # Test loopback
+ping -c 3 127.0.0.1                         # Test local IP stack
+ping -c 3 $(ip route | grep default | awk '{print $3}')  # Test gateway
+ping -c 3 8.8.8.8                           # Test external connectivity
+ping -c 3 google.com                        # Test DNS resolution
+<h2>Results interpretation:</h2>
+<h2>Localhost fails: IP stack problem</h2>
+<h2>Gateway fails: Local network problem  </h2>
+<h2>8.8.8.8 fails: Internet connectivity problem</h2>
+<h2>google.com fails: DNS problem</h2>
+<h2>Step 2: Interface configuration check  </h2>
+ip addr show                                 # Check interface status and IPs
+ip route show                                # Check routing table
+ip link show                                 # Check physical interface status
+<h2>Look for:</h2>
+<h2>Interfaces in DOWN state</h2>
+<h2>Missing IP addresses</h2>
+<h2>Missing default route</h2>
+<h2>Wrong subnet configuration</h2>
+<h2>Step 3: DNS configuration check</h2>
+cat /etc/resolv.conf                         # Check DNS servers
+nslookup google.com                          # Test DNS resolution
+dig @8.8.8.8 google.com                     # Test with specific DNS server
+<h2>Step 4: Service status check</h2>
+systemctl status NetworkManager              # Network management service
+systemctl status systemd-networkd           # Alternative network service
+systemctl status systemd-resolved           # DNS resolution service</code></pre>
+<strong>Network problem solutions:</strong>
+<pre><code><h2>Interface problems:</h2>
+<h2>1. Restart network interface</h2>
+sudo ip link set eth0 down
+sudo ip link set eth0 up
+<h2>2. Restart network services</h2>
+sudo systemctl restart NetworkManager       # Most desktop systems
+sudo systemctl restart systemd-networkd    # Server systems
+<h2>3. Manual IP configuration (temporary)</h2>
+sudo ip addr add 192.168.1.100/24 dev eth0 # Set IP address
+sudo ip route add default via 192.168.1.1  # Set default gateway
+<h2>DNS problems:</h2>
+<h2>1. Temporary DNS fix</h2>
+echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+echo "nameserver 1.1.1.1" | sudo tee -a /etc/resolv.conf
+<h2>2. Flush DNS cache</h2>
+sudo systemctl restart systemd-resolved     # Systemd systems
+sudo /etc/init.d/nscd restart               # Systems with nscd
+<h2>DHCP problems:</h2>
+<h2>1. Release and renew DHCP lease</h2>
+sudo dhclient -r eth0                       # Release lease
+sudo dhclient eth0                          # Request new lease
+<h2>2. Check DHCP service</h2>
+systemctl status isc-dhcp-server            # If running DHCP server
+journalctl -u NetworkManager                # Check for DHCP errors
+<h2>Firewall issues:</h2>
+<h2>1. Check if firewall is blocking</h2>
+sudo iptables -L                             # List firewall rules
+sudo ufw status                              # Ubuntu firewall status
+<h2>2. Temporarily disable firewall (DANGEROUS - for testing only)</h2>
+sudo ufw disable                             # Ubuntu
+sudo systemctl stop iptables                # CentOS/RHEL</code></pre>
+<h3>Permission and Access Issues</h3>
+<h4><strong>Scenario 6: "Permission denied" errors</strong></h4>
+<strong>Problem Description:</strong> Cannot access files/directories, applications fail with permission errors, users cannot perform required operations.
+<strong>Step-by-step permission diagnosis:</strong>
+<pre><code><h2>Step 1: Identify the exact problem</h2>
+ls -la /path/to/problem/file                # Check file permissions
+ls -ld /path/to/problem/directory           # Check directory permissions
+id                                          # Check current user and groups
+groups                                      # Check group memberships
+<h2>Step 2: Understand permission structure</h2>
+<h2>Permission format: drwxrwxrwx</h2>
+<h2>d = directory, - = file</h2>
+<h2>First rwx: owner permissions</h2>
+<h2>Second rwx: group permissions  </h2>
+<h2>Third rwx: other permissions</h2>
+<h2>r=read(4), w=write(2), x=execute(1)</h2>
+<h2>Step 3: Check ownership</h2>
+stat /path/to/file                          # Detailed file information
+find /path -not -user $(whoami) -ls         # Files not owned by current user
+find /path -not -group $(id -gn) -ls       # Files not in current user's group
+<h2>Step 4: Check special permissions</h2>
+find / -perm -4000 -ls 2>/dev/null          # Files with setuid bit
+find / -perm -2000 -ls 2>/dev/null          # Files with setgid bit
+find / -perm -1000 -ls 2>/dev/null          # Directories with sticky bit</code></pre>
+<strong>Permission problem solutions:</strong>
+<pre><code><h2>File permission fixes:</h2>
+<h2>1. Standard file permissions</h2>
+sudo chmod 644 /path/to/file                # Read/write for owner, read for others
+sudo chmod 755 /path/to/directory           # Full access for owner, read/execute for others
+sudo chmod +x /path/to/script               # Add execute permission
+<h2>2. Recursive permission fixes</h2>
+sudo find /var/www -type f -exec chmod 644 {} \;  # Set file permissions
+sudo find /var/www -type d -exec chmod 755 {} \;  # Set directory permissions
+<h2>3. Ownership fixes</h2>
+sudo chown user:group /path/to/file         # Change owner and group
+sudo chown -R user:group /path/to/directory # Recursive ownership change
+<h2>Application-specific permission fixes:</h2>
+<h2>Web server files:</h2>
+sudo chown -R www-data:www-data /var/www/html
+sudo find /var/www/html -type f -exec chmod 644 {} \;
+sudo find /var/www/html -type d -exec chmod 755 {} \;
+<h2>SSH key permissions:</h2>
+chmod 700 ~/.ssh                            # SSH directory
+chmod 600 ~/.ssh/id_rsa                     # Private key
+chmod 644 ~/.ssh/id_rsa.pub                 # Public key
+chmod 644 ~/.ssh/authorized_keys             # Authorized keys
+<h2>Log file permissions:</h2>
+sudo chown syslog:adm /var/log/*.log        # Standard log ownership
+sudo chmod 640 /var/log/*.log               # Log file permissions
+<h2>Advanced permission troubleshooting:</h2>
+<h2>1. Check ACLs (Access Control Lists)</h2>
+getfacl /path/to/file                       # Show ACL permissions
+<h2>If ACLs are set, use setfacl to modify:</h2>
+sudo setfacl -m u:username:rw /path/to/file # Give user read/write access
+<h2>2. SELinux context (if SELinux enabled)</h2>
+ls -Z /path/to/file                         # Show SELinux context
+sudo restorecon -R /path/to/directory       # Restore default SELinux contexts</code></pre>
+<h3>Boot and System Recovery Issues</h3>
+<h4><strong>Scenario 7: "System won't boot"</strong></h4>
+<strong>Problem Description:</strong> System fails to start, gets stuck at boot, drops to emergency shell, or shows kernel panic.
+<strong>Boot problem diagnosis and recovery:</strong>
+<pre><code><h2>Boot process understanding:</h2>
+<h2>1. BIOS/UEFI → 2. Bootloader (GRUB) → 3. Kernel → 4. Init system → 5. Services</h2>
+<h2>Recovery methods by boot stage:</h2>
+<h2>GRUB Recovery (bootloader problems):</h2>
+<h2>1. Boot from rescue media/live USB</h2>
+<h2>2. Mount root filesystem:</h2>
+sudo mkdir /mnt/recovery
+sudo mount /dev/sda1 /mnt/recovery          # Replace with actual root partition
+sudo mount --bind /dev /mnt/recovery/dev
+sudo mount --bind /proc /mnt/recovery/proc
+sudo mount --bind /sys /mnt/recovery/sys
+<h2>3. Chroot into system:</h2>
+sudo chroot /mnt/recovery
+<h2>4. Reinstall GRUB:</h2>
+grub-install /dev/sda                       # Replace with actual disk
+update-grub                                 # Regenerate GRUB configuration
+<h2>Kernel boot problems:</h2>
+<h2>1. Boot with older kernel from GRUB menu</h2>
+<h2>2. Check kernel logs:</h2>
+dmesg | less                                # Kernel messages
+journalctl -b                               # Boot logs
+<h2>3. Common kernel boot fixes:</h2>
+<h2>Edit GRUB boot parameters (press 'e' in GRUB menu):</h2>
+<h2>Add: nomodeset                            # Disable graphics acceleration</h2>
+<h2>Add: single                               # Boot to single-user mode</h2>
+<h2>Add: init=/bin/bash                       # Boot to bash shell</h2>
+<h2>Filesystem corruption recovery:</h2>
+<h2>1. Boot from rescue media</h2>
+<h2>2. Check filesystem:</h2>
+sudo fsck /dev/sda1                         # Check and repair filesystem
+sudo fsck -f /dev/sda1                      # Force check
+sudo fsck -y /dev/sda1                      # Auto-answer yes to fixes
+<h2>3. Mount and check critical files:</h2>
+sudo mount /dev/sda1 /mnt
+ls -la /mnt/etc/fstab                       # Check fstab for errors
+ls -la /mnt/boot                            # Check boot files exist</code></pre>
+<strong>System recovery procedures:</strong>
+<pre><code><h2>Single-user mode recovery:</h2>
+<h2>1. Boot to single-user mode (add 'single' to kernel parameters)</h2>
+<h2>2. Remount root filesystem as read-write:</h2>
+mount -o remount,rw /
+<h2>3. Common single-user fixes:</h2>
+passwd root                                 # Reset root password
+systemctl enable sshd                       # Enable SSH for remote access
+vim /etc/fstab                              # Fix filesystem mount errors
+<h2>Emergency shell recovery:</h2>
+<h2>If system drops to emergency shell:</h2>
+<h2>1. Check what caused the emergency:</h2>
+systemctl --failed                          # Show failed services
+journalctl -xb                              # Boot logs with explanations
+<h2>2. Fix common issues:</h2>
+systemctl reset-failed                      # Clear failed service states
+systemctl daemon-reload                     # Reload systemd configuration
+systemctl default                           # Try to boot to default target
+<h2>Rescue mode from installation media:</h2>
+<h2>1. Boot from installation USB/DVD</h2>
+<h2>2. Choose "Rescue" option</h2>
+<h2>3. Mount existing installation</h2>
+<h2>4. Common rescue operations:</h2>
+<h2>Fix broken packages:</h2>
+apt --fix-broken install                    # Debian/Ubuntu
+yum history undo last                       # CentOS/RHEL - undo last transaction
+<h2>Restore from backup:</h2>
+<h2>If you have backups in /backup:</h2>
+rsync -av /backup/etc/ /etc/                # Restore configuration
+rsync -av /backup/home/ /home/              # Restore user data
+<h2>Network boot recovery:</h2>
+<h2>1. Configure network in rescue environment:</h2>
+ip addr add 192.168.1.100/24 dev eth0
+ip route add default via 192.168.1.1
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+<h2>2. Remote access for help:</h2>
+systemctl start sshd
+passwd root                                 # Set password for SSH access</code></pre>
+<h4><strong>Scenario 8: "Services failing to start at boot"</strong></h4>
+<strong>Problem Description:</strong> System boots but essential services don't start, applications unavailable, missing functionality.
+<strong>Service startup troubleshooting:</strong>
+<pre><code><h2>Step 1: Identify failed services</h2>
+systemctl --failed                          # List failed services
+systemctl list-units --state=failed         # Alternative command
+<h2>Step 2: Analyze specific service failures</h2>
+systemctl status service-name               # Detailed service status
+journalctl -u service-name                  # Service-specific logs
+journalctl -u service-name --since "today"  # Today's logs only
+<h2>Step 3: Check service dependencies</h2>
+systemctl list-dependencies service-name    # Show service dependencies
+systemctl show service-name                 # Show all service properties
+<h2>Step 4: Manual service testing</h2>
+<h2>Test service manually:</h2>
+sudo /usr/bin/service-binary --test-config  # Test configuration
+sudo -u service-user /usr/bin/service-binary --foreground  # Run in foreground
+<h2>Common service startup problems and fixes:</h2>
+<h2>Configuration file errors:</h2>
+<h2>1. Check configuration syntax:</h2>
+nginx -t                                    # Nginx configuration test
+apache2ctl configtest                       # Apache configuration test
+sshd -t                                     # SSH daemon configuration test
+<h2>2. Fix configuration errors:</h2>
+sudo vim /etc/service/config.conf           # Edit configuration
+<h2>Common issues: syntax errors, wrong file paths, invalid options</h2>
+<h2>Permission problems:</h2>
+<h2>1. Check service file permissions:</h2>
+ls -la /etc/systemd/system/service-name.service
+ls -la /usr/lib/systemd/system/service-name.service
+<h2>2. Fix systemd service file:</h2>
+sudo systemctl daemon-reload                # Reload after editing service files
+sudo systemctl enable service-name          # Ensure service is enabled
+<h2>Dependency problems:</h2>
+<h2>1. Start dependencies manually:</h2>
+sudo systemctl start dependency-service     # Start required services first
+sudo systemctl enable dependency-service    # Enable for future boots
+<h2>2. Fix dependency order:</h2>
+<h2>Edit service file to add:</h2>
+<h2>After=network.target</h2>
+<h2>Requires=postgresql.service</h2>
+<h2>Resource problems:</h2>
+<h2>1. Check available resources:</h2>
+free -h                                     # Memory availability
+df -h                                       # Disk space
+ulimit -a                                   # Resource limits
+<h2>2. Adjust service resource limits:</h2>
+<h2>Edit service file:</h2>
+<h2>[Service]</h2>
+<h2>LimitNOFILE=65536</h2>
+<h2>MemoryLimit=1G</h2>
+<h2>User/group problems:</h2>
+<h2>1. Check service user exists:</h2>
+id service-user                             # Check if user exists
+getent group service-group                  # Check if group exists
+<h2>2. Create missing users:</h2>
+sudo useradd -r -s /bin/false service-user # Create system user
+sudo usermod -aG service-group service-user # Add to group</code></pre>
+<h3>Application and Service Issues</h3>
+<h4><strong>Scenario 9: "Web server not responding"</strong></h4>
+<strong>Problem Description:</strong> Web server returns errors, timeouts, or refuses connections. Website unavailable or performing poorly.
+<strong>Web server troubleshooting:</strong>
+<pre><code><h2>Step 1: Basic connectivity test</h2>
+curl -I http://localhost                     # Test local HTTP connection
+curl -I https://localhost                    # Test local HTTPS connection
+telnet localhost 80                          # Test if port 80 is listening
+telnet localhost 443                         # Test if port 443 is listening
+<h2>Step 2: Check web server status</h2>
+systemctl status apache2                     # Apache status
+systemctl status nginx                       # Nginx status
+systemctl status httpd                       # Apache on CentOS/RHEL
+<h2>Step 3: Check web server processes</h2>
+ps aux | grep apache2                        # Apache processes
+ps aux | grep nginx                          # Nginx processes
+lsof -i :80                                  # What's using port 80
+lsof -i :443                                 # What's using port 443
+<h2>Step 4: Analyze web server logs</h2>
+tail -f /var/log/apache2/error.log          # Apache error log
+tail -f /var/log/nginx/error.log            # Nginx error log
+tail -f /var/log/apache2/access.log         # Apache access log
+journalctl -u apache2 -f                    # Systemd logs for Apache
+<h2>Common web server problems and solutions:</h2>
+<h2>Configuration errors:</h2>
+<h2>1. Test configuration syntax:</h2>
+sudo apache2ctl configtest                  # Apache configuration test
+sudo nginx -t                               # Nginx configuration test
+<h2>2. Common configuration issues:</h2>
+<h2>- Wrong document root path</h2>
+<h2>- Syntax errors in virtual host configuration</h2>
+<h2>- SSL certificate problems</h2>
+<h2>- Module loading issues</h2>
+<h2>Fix configuration errors:</h2>
+sudo vim /etc/apache2/sites-available/000-default.conf  # Apache default site
+sudo vim /etc/nginx/sites-available/default  # Nginx default site
+sudo systemctl reload apache2                # Reload after config changes
+sudo systemctl reload nginx                  # Reload Nginx config
+<h2>Permission problems:</h2>
+<h2>1. Check web directory permissions:</h2>
+ls -la /var/www/html                         # Web root permissions
+<h2>Should be: owner=www-data, group=www-data, permissions=755 for directories, 644 for files</h2>
+<h2>2. Fix web permissions:</h2>
+sudo chown -R www-data:www-data /var/www/html
+sudo find /var/www/html -type d -exec chmod 755 {} \;
+sudo find /var/www/html -type f -exec chmod 644 {} \;
+<h2>Resource exhaustion:</h2>
+<h2>1. Check server resources:</h2>
+free -h                                      # Memory usage
+df -h                                        # Disk space
+iostat -x 1 5                               # I/O performance
+<h2>2. Check Apache/Nginx worker processes:</h2>
+<h2>Apache MPM status:</h2>
+apache2ctl status                            # Shows current connections and workers
+<h2>If unavailable, enable mod_status</h2>
+<h2>Nginx status:</h2>
+curl http://localhost/nginx_status           # If nginx status module enabled
+<h2>3. Adjust worker configuration:</h2>
+<h2>Apache: Edit /etc/apache2/mods-available/mpm_prefork.conf</h2>
+<h2>Nginx: Edit /etc/nginx/nginx.conf worker_processes and worker_connections</h2>
+<h2>Port conflicts:</h2>
+<h2>1. Check what's using web ports:</h2>
+sudo lsof -i :80                             # HTTP port usage
+sudo lsof -i :443                            # HTTPS port usage
+sudo ss -tulpn | grep ":80\|:443"           # Alternative port check
+<h2>2. Resolve conflicts:</h2>
+sudo systemctl stop conflicting-service     # Stop conflicting service
+<h2>Or change port configuration in web server config</h2>
+<h2>SSL/TLS certificate issues:</h2>
+<h2>1. Check certificate validity:</h2>
+openssl x509 -in /path/to/certificate.crt -text -noout  # Certificate details
+openssl x509 -in /path/to/certificate.crt -dates -noout # Expiration dates
+<h2>2. Test SSL configuration:</h2>
+openssl s_client -connect localhost:443     # Test SSL connection
+curl -k https://localhost                    # Test ignoring certificate errors
+<h2>3. Common SSL fixes:</h2>
+<h2>- Renew expired certificates</h2>
+<h2>- Fix certificate chain issues</h2>
+<h2>- Correct private key permissions (600)</h2>
+<h2>- Update cipher suites for security</h2>
+<h2>Database connectivity issues:</h2>
+<h2>1. Test database connection:</h2>
+mysql -u dbuser -p -h localhost              # Test MySQL connection
+psql -U dbuser -h localhost dbname           # Test PostgreSQL connection
+<h2>2. Check database service:</h2>
+systemctl status mysql                       # MySQL service status
+systemctl status postgresql                  # PostgreSQL service status
+<h2>3. Web application database errors:</h2>
+<h2>Check application logs:</h2>
+tail -f /var/log/apache2/error.log | grep -i database
+<h2>Common issues: wrong credentials, database server down, connection limits</h2></code></pre>
+<h4><strong>Scenario 10: "Database performance issues"</strong></h4>
+<strong>Problem Description:</strong> Database queries are slow, applications timeout, database locks, or connection errors.
+<strong>Database troubleshooting methodology:</strong>
+<pre><code><h2>MySQL/MariaDB Performance Issues:</h2>
+<h2>Step 1: Check database service status</h2>
+systemctl status mysql                       # Service status
+systemctl status mariadb                     # MariaDB status
+mysqladmin ping                              # Test database responsiveness
+mysqladmin status                            # Basic database statistics
+<h2>Step 2: Check database connections</h2>
+mysqladmin processlist                       # Show current connections and queries
+<h2>Look for: long-running queries, locked queries, too many connections</h2>
+<h2>Step 3: Monitor database performance</h2>
+mysqladmin extended-status | grep -E "(Threads_connected|Threads_running|Slow_queries)"
+<h2>Threads_connected: current connections</h2>
+<h2>Threads_running: actively running queries  </h2>
+<h2>Slow_queries: queries taking longer than long_query_time</h2>
+<h2>Step 4: Check database logs</h2>
+tail -f /var/log/mysql/error.log             # MySQL error log
+tail -f /var/log/mysql/slow.log              # Slow query log (if enabled)
+journalctl -u mysql -f                       # Systemd logs
+<h2>Database performance analysis:</h2>
+<h2>1. Enable slow query log (temporarily):</h2>
+mysql -u root -p -e "SET GLOBAL slow_query_log = 'ON';"
+mysql -u root -p -e "SET GLOBAL long_query_time = 2;"  # Log queries >2 seconds
+<h2>2. Analyze slow queries:</h2>
+mysqldumpslow /var/log/mysql/slow.log        # Summarize slow query log
+<h2>Look for: frequently slow queries, queries without indexes</h2>
+<h2>3. Check database engine status:</h2>
+mysql -u root -p -e "SHOW ENGINE INNODB STATUS\G" | less
+<h2>Look for: deadlocks, lock waits, buffer pool efficiency</h2>
+<h2>Common database fixes:</h2>
+<h2>1. Kill long-running queries:</h2>
+mysql -u root -p -e "SHOW PROCESSLIST;"      # Get process IDs
+mysql -u root -p -e "KILL [process_id];"     # Kill specific query
+<h2>2. Optimize database configuration:</h2>
+<h2>Edit /etc/mysql/my.cnf or /etc/mysql/mysql.conf.d/mysqld.cnf</h2>
+<h2>Key parameters to adjust:</h2>
+<h2>innodb_buffer_pool_size = 70% of available RAM</h2>
+<h2>max_connections = adjust based on load</h2>
+<h2>query_cache_size = 32M (for read-heavy workloads)</h2>
+<h2>tmp_table_size = 32M</h2>
+<h2>max_heap_table_size = 32M</h2>
+<h2>3. Database maintenance:</h2>
+mysql -u root -p -e "ANALYZE TABLE database.table;"  # Update table statistics
+mysql -u root -p -e "OPTIMIZE TABLE database.table;" # Defragment table
+mysqlcheck -u root -p --auto-repair --all-databases  # Check and repair all tables
+<h2>PostgreSQL Performance Issues:</h2>
+<h2>Step 1: Check PostgreSQL status</h2>
+systemctl status postgresql                  # Service status
+pg_isready                                   # Test database readiness
+psql -U postgres -c "SELECT version();"     # Test connection and version
+<h2>Step 2: Monitor active connections and queries:</h2>
+psql -U postgres -c "SELECT * FROM pg_stat_activity;" # Current connections
+<h2>Look for: long-running queries (state != 'idle'), blocked queries</h2>
+<h2>Step 3: Check PostgreSQL logs:</h2>
+tail -f /var/log/postgresql/postgresql-*-main.log  # Main log file
+journalctl -u postgresql -f                 # Systemd logs
+<h2>Step 4: PostgreSQL performance analysis:</h2>
+<h2>1. Check database statistics:</h2>
+psql -U postgres -c "SELECT * FROM pg_stat_database;" # Database stats
+psql -U postgres -c "SELECT * FROM pg_stat_user_tables;" # Table statistics
+<h2>2. Find slow queries:</h2>
+<h2>Enable logging in /etc/postgresql/*/main/postgresql.conf:</h2>
+<h2>log_min_duration_statement = 1000          # Log queries >1 second</h2>
+<h2>log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '</h2>
+<h2>3. Common PostgreSQL fixes:</h2>
+<h2>Kill long-running queries:</h2>
+psql -U postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state != 'idle' AND query_start < NOW() - INTERVAL '5 minutes';"
+<h2>Vacuum and analyze tables:</h2>
+psql -U postgres -d database -c "VACUUM ANALYZE;"  # Update statistics and clean up
+<h2>Monitor locks and blocks:</h2>
+psql -U postgres -c "SELECT * FROM pg_locks WHERE NOT granted;" # Blocked queries</code></pre>
+<h3>System Security Issues</h3>
+<h4><strong>Scenario 11: "Suspected security breach or malware"</strong></h4>
+<strong>Problem Description:</strong> Unusual system behavior, unexpected network connections, high resource usage, or suspected unauthorized access.
+<strong>Security incident response:</strong>
+<pre><code><h2>Step 1: Immediate assessment</h2>
+<h2>Check currently logged-in users:</h2>
+who                                          # Current users
+w                                            # Detailed user activity
+last | head -20                              # Recent login history
+lastb | head -10                             # Failed login attempts
+<h2>Check unusual processes:</h2>
+ps aux --sort=-%cpu | head -20               # High CPU processes
+ps aux --sort=-%mem | head -20               # High memory processes
+ps aux | grep -E "(nc|netcat|ncat|socat|telnet|ssh|ftp)" # Network tools
+<h2>Check network connections:</h2>
+ss -tupln                                    # All listening ports
+ss -tuap                                     # All connections with process info
+lsof -i                                      # Files/processes using network
+<h2>Step 2: Check for unauthorized changes</h2>
+<h2>File integrity checking:</h2>
+find /etc -type f -mtime -1                 # Recently modified config files
+find /bin /sbin /usr/bin /usr/sbin -type f -mtime -7  # Recently modified binaries
+find / -name "*.sh" -type f -mtime -1 2>/dev/null     # Recent shell scripts
+<h2>Check for suspicious files:</h2>
+find /tmp -type f -executable               # Executable files in /tmp
+find /var/tmp -type f -executable           # Executable files in /var/tmp
+find /dev/shm -type f 2>/dev/null           # Files in shared memory
+<h2>Step 3: Analyze system logs</h2>
+<h2>Authentication logs:</h2>
+grep -i "failed\|invalid\|break-in" /var/log/auth.log | tail -50
+grep -i "accepted\|session opened" /var/log/auth.log | tail -20
+<h2>System logs:</h2>
+journalctl --since "24 hours ago" | grep -i -E "(fail|error|attack|intrusion)"
+dmesg | grep -i -E "(kill|attack|exploit)"
+<h2>Web server logs (if applicable):</h2>
+tail -1000 /var/log/apache2/access.log | grep -E "(POST|PUT|DELETE)" | grep -v "200"
+tail -1000 /var/log/nginx/access.log | awk '$9 >= 400' # HTTP error codes
+<h2>Step 4: Network security analysis</h2>
+<h2>Check for suspicious connections:</h2>
+netstat -an | grep ESTABLISHED | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -nr
+<h2>Look for: unusual IP addresses, high connection counts</h2>
+<h2>Check DNS queries (if logging enabled):</h2>
+tail -1000 /var/log/syslog | grep -i dns    # DNS queries
+<h2>Look for: suspicious domain names, DNS tunneling attempts</h2>
+<h2>Step 5: Malware detection</h2>
+<h2>Install and run security scanners:</h2>
+sudo apt update && sudo apt install clamav clamav-daemon
+sudo freshclam                               # Update virus definitions
+sudo clamscan -r /home /tmp /var/tmp        # Scan common infection areas
+<h2>Rootkit detection:</h2>
+sudo apt install rkhunter chkrootkit
+sudo rkhunter --update
+sudo rkhunter --check                        # Comprehensive rootkit scan
+sudo chkrootkit                              # Alternative rootkit scanner</code></pre>
+<strong>Security hardening and recovery:</strong>
+<pre><code><h2>Immediate security measures:</h2>
+<h2>1. Change all passwords:</h2>
+sudo passwd root                             # Root password
+passwd                                       # Current user password
+<h2>Force password change for all users:</h2>
+sudo chage -d 0 username                     # Force password change on next login
+<h2>2. Disable/remove suspicious users:</h2>
+sudo usermod -L username                     # Lock user account
+sudo userdel -r username                     # Remove user and home directory
+<h2>3. Secure SSH access:</h2>
+<h2>Edit /etc/ssh/sshd_config:</h2>
+<h2>PermitRootLogin no</h2>
+<h2>PasswordAuthentication no</h2>
+<h2>PubkeyAuthentication yes</h2>
+<h2>Port 2222                                  # Change default port</h2>
+sudo systemctl restart sshd
+<h2>4. Configure firewall:</h2>
+sudo ufw enable                              # Enable UFW firewall
+sudo ufw default deny incoming               # Block all incoming by default
+sudo ufw allow ssh                           # Allow SSH
+sudo ufw allow 80/tcp                        # Allow HTTP if needed
+sudo ufw allow 443/tcp                       # Allow HTTPS if needed
+<h2>5. Install intrusion detection:</h2>
+sudo apt install fail2ban                    # Install fail2ban
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+<h2>Configure fail2ban (/etc/fail2ban/jail.local):</h2>
+cat > /etc/fail2ban/jail.local << 'EOF'
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 3
+<p>[sshd]
+enabled = true
+port = ssh
+logpath = /var/log/auth.log
+maxretry = 3
+EOF
+sudo systemctl restart fail2ban</p>
+<h2>6. System hardening:</h2>
+<h2>Disable unnecessary services:</h2>
+systemctl list-units --type=service --state=running
+sudo systemctl disable service-name         # Disable unused services
+<h2>Set proper file permissions:</h2>
+sudo chmod 700 /root                         # Secure root home
+sudo chmod 600 /etc/shadow                   # Secure password file
+sudo chmod 644 /etc/passwd                   # User database
+<h2>Update system:</h2>
+sudo apt update && sudo apt upgrade -y       # Update all packages
+sudo apt autoremove                          # Remove unused packages
+<h2>7. Monitoring and logging:</h2>
+<h2>Enable process accounting:</h2>
+sudo apt install acct
+sudo systemctl enable acct
+sudo systemctl start acct
+<h2>Set up log monitoring:</h2>
+sudo apt install logwatch
+<h2>Configure logwatch to email daily reports</h2>
+<h2>File integrity monitoring:</h2>
+sudo apt install aide
+sudo aideinit                                # Initialize database
+sudo aide --check                            # Check for changes</code></pre>
+<h4><strong>Scenario 12: "System crashes and kernel panics"</strong></h4>
+<strong>Problem Description:</strong> System randomly crashes, kernel panic messages, system freezes, or unexpected reboots.
+<strong>Crash analysis and troubleshooting:</strong>
+<pre><code><h2>Step 1: Gather crash information</h2>
+<h2>Check system logs for crash details:</h2>
+journalctl -b -1                             # Previous boot logs
+journalctl --since "24 hours ago" | grep -i -E "(panic|oops|bug|crash|segfault)"
+dmesg | grep -i -E "(panic|oops|bug|crash)"  # Kernel messages
+<h2>Check crash dumps (if configured):</h2>
+ls -la /var/crash/                           # Ubuntu crash dumps
+ls -la /var/lib/systemd/coredump/            # Systemd core dumps
+<h2>Step 2: Hardware diagnostics</h2>
+<h2>Memory testing:</h2>
+sudo memtester 1G 3                          # Test 1GB RAM, 3 passes
+<h2>Note: This requires free memory, may need to run from single-user mode</h2>
+<h2>Check hardware logs:</h2>
+dmesg | grep -i -E "(hardware|temperature|thermal|mce|edac)"
+<h2>Look for: overheating, memory errors, hardware failures</h2>
+<h2>CPU and temperature monitoring:</h2>
+sensors                                      # Hardware sensors (install lm-sensors)
+<h2>Look for: high temperatures, fan failures</h2>
+<h2>Hard drive health:</h2>
+sudo smartctl -a /dev/sda                    # SMART data for /dev/sda
+sudo smartctl -t short /dev/sda              # Run short self-test
+<h2>Look for: reallocated sectors, pending sectors, hardware errors</h2>
+<h2>Step 3: Software analysis</h2>
+<h2>Check for problematic drivers/modules:</h2>
+lsmod                                        # Loaded kernel modules
+dmesg | grep -i -E "(module|driver)" | tail -20
+<h2>Check recent software changes:</h2>
+cat /var/log/dpkg.log | tail -50             # Recent package changes (Debian/Ubuntu)
+cat /var/log/yum.log | tail -50              # Recent package changes (CentOS/RHEL)
+<h2>Step 4: System stability testing</h2>
+<h2>Stress testing (install stress-ng):</h2>
+sudo apt install stress-ng
+stress-ng --cpu 4 --timeout 300s            # CPU stress test for 5 minutes
+stress-ng --vm 2 --vm-bytes 1G --timeout 300s  # Memory stress test
+<h2>Monitor during stress test:</h2>
+watch -n 1 'dmesg | tail -10'               # Watch for kernel messages
+watch -n 1 'sensors'                         # Monitor temperatures
+<h2>Common crash solutions:</h2>
+<h2>1. Memory issues:</h2>
+<h2>Boot with reduced memory to test:</h2>
+<h2>Add to kernel parameters: mem=2G           # Limit to 2GB RAM</h2>
+<h2>Replace or remove faulty RAM modules</h2>
+<h2>2. Overheating:</h2>
+<h2>Clean dust from fans and heat sinks</h2>
+<h2>Check thermal paste on CPU</h2>
+<h2>Improve case ventilation</h2>
+<h2>Reduce CPU frequency temporarily:</h2>
+echo 'conservative' | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+<h2>3. Driver issues:</h2>
+<h2>Boot with older kernel version</h2>
+<h2>Blacklist problematic modules:</h2>
+echo 'blacklist module_name' | sudo tee -a /etc/modprobe.d/blacklist.conf
+<h2>4. Filesystem corruption:</h2>
+<h2>Boot from rescue media and run:</h2>
+sudo fsck -f /dev/sda1                       # Force filesystem check
+sudo fsck -c /dev/sda1                       # Check for bad blocks
+<h2>5. Power supply issues:</h2>
+<h2>Check power supply stability</h2>
+<h2>Monitor voltage levels with hardware tools</h2>
+<h2>Test with different power supply if available</h2></code></pre>
+<h3>Recovery and Backup Procedures</h3>
+<h4><strong>Scenario 13: "Data recovery after accidental deletion"</strong></h4>
+<strong>Problem Description:</strong> Important files or directories were accidentally deleted, need to recover data before it's permanently lost.
+<strong>Data recovery procedures:</strong>
+<pre><code><h2>IMPORTANT: Stop writing to the affected filesystem immediately!</h2>
+<h2>Every write operation reduces chances of successful recovery</h2>
+<h2>Step 1: Assess the situation</h2>
+df -h                                        # Check available space on filesystems
+mount | grep -E "(ext[234]|xfs|btrfs)"      # Identify filesystem types
+lsof | grep deleted                          # Find processes with deleted files still open
+<h2>Step 2: Check for simple recovery options</h2>
+<h2>Look in trash/recycle bin:</h2>
+ls -la ~/.local/share/Trash/files/          # User trash (GNOME/KDE)
+ls -la ~/.trash/                            # Alternative trash location
+<h2>Check backup locations:</h2>
+ls -la /home/.backup/                       # User backups
+ls -la /var/backups/                        # System backups
+ls -la /backup/                             # Common backup location
+<h2>Step 3: Recover from deleted but open files</h2>
+<h2>If process still has file open:</h2>
+lsof | grep deleted | grep filename         # Find process with deleted file
+<h2>Copy from /proc filesystem:</h2>
+sudo cp /proc/[PID]/fd/[FD] /path/to/recovery/location
+<h2>Step 4: Filesystem-specific recovery</h2>
+<h2>For ext2/ext3/ext4 filesystems:</h2>
+sudo apt install extundelete                # Install recovery tool
+<h2>Unmount filesystem (if possible):</h2>
+sudo umount /dev/sda1                       # Replace with actual partition
+<h2>Recover specific file:</h2>
+sudo extundelete /dev/sda1 --restore-file path/to/deleted/file
+<h2>Recover all deleted files:</h2>
+sudo extundelete /dev/sda1 --restore-all
+<h2>Recovered files go to ./RECOVERED_FILES/</h2>
+<h2>For more complex recovery:</h2>
+sudo apt install testdisk photorec          # Advanced recovery tools
+sudo photorec                               # Recover files by type
+sudo testdisk                               # Recover partitions and boot sectors
+<h2>Step 5: Advanced recovery with ddrescue</h2>
+<h2>Create disk image first (safer):</h2>
+sudo apt install gddrescue
+sudo ddrescue /dev/sda1 /path/to/recovery.img /path/to/recovery.log
+<h2>Then work on the image instead of original disk</h2>
+<h2>Step 6: Alternative recovery methods</h2>
+<h2>Using grep to find file content in raw disk:</h2>
+sudo grep -a -C 500 "unique string from file" /dev/sda1 > recovered_data.txt
+<h2>Search for text that was in the deleted file</h2>
+<h2>Using strings to extract readable text:</h2>
+sudo strings /dev/sda1 | grep -A 10 -B 10 "known file content" > recovered.txt</code></pre>
+<strong>Backup strategy implementation:</strong>
+<pre><code><h2>Implement comprehensive backup strategy:</h2>
+<h2>1. Daily incremental backups:</h2>
+cat > /usr/local/bin/daily-backup.sh << 'EOF'
+#!/bin/bash
+BACKUP_DIR="/backup/daily"
+SOURCE_DIRS="/home /etc /var/www"
+DATE=$(date +%Y%m%d)
+<h2>Create backup directory</h2>
+mkdir -p "$BACKUP_DIR"
+<h2>Create incremental backup</h2>
+rsync -av --link-dest="$BACKUP_DIR/latest" $SOURCE_DIRS "$BACKUP_DIR/$DATE/"
+<h2>Update latest symlink</h2>
+rm -f "$BACKUP_DIR/latest"
+ln -s "$DATE" "$BACKUP_DIR/latest"
+<h2>Clean old backups (keep 30 days)</h2>
+find "$BACKUP_DIR" -maxdepth 1 -type d -mtime +30 -exec rm -rf {} \;
+<h2>Log backup completion</h2>
+echo "Backup completed at $(date)" >> /var/log/backup.log
+EOF
+chmod +x /usr/local/bin/daily-backup.sh
+<h2>Schedule daily backup:</h2>
+echo "0 2 <em> </em> * /usr/local/bin/daily-backup.sh" | crontab -
+<h2>2. Database backups:</h2>
+cat > /usr/local/bin/db-backup.sh << 'EOF'
+#!/bin/bash
+BACKUP_DIR="/backup/databases"
+DATE=$(date +%Y%m%d_%H%M%S)
+<p>mkdir -p "$BACKUP_DIR"</p>
+<h2>MySQL backup:</h2>
+mysqldump --all-databases --single-transaction --routines --triggers > "$BACKUP_DIR/mysql_$DATE.sql"
+gzip "$BACKUP_DIR/mysql_$DATE.sql"
+<h2>PostgreSQL backup:</h2>
+sudo -u postgres pg_dumpall > "$BACKUP_DIR/postgresql_$DATE.sql"
+gzip "$BACKUP_DIR/postgresql_$DATE.sql"
+<h2>Clean old database backups (keep 14 days)</h2>
+find "$BACKUP_DIR" -name "*.sql.gz" -mtime +14 -delete
+<p>echo "Database backup completed at $(date)" >> /var/log/backup.log
+EOF
+chmod +x /usr/local/bin/db-backup.sh</p>
+<h2>3. System configuration backup:</h2>
+cat > /usr/local/bin/config-backup.sh << 'EOF'
+#!/bin/bash
+BACKUP_DIR="/backup/config"
+DATE=$(date +%Y%m%d)
+<p>mkdir -p "$BACKUP_DIR"</p>
+<h2>Backup system configuration</h2>
+tar -czf "$BACKUP_DIR/etc_$DATE.tar.gz" /etc/
+tar -czf "$BACKUP_DIR/boot_$DATE.tar.gz" /boot/
+<h2>Backup package lists:</h2>
+dpkg --get-selections > "$BACKUP_DIR/package_list_$DATE.txt"
+apt-mark showmanual > "$BACKUP_DIR/manual_packages_$DATE.txt"
+<h2>Clean old config backups (keep 60 days)</h2>
+find "$BACKUP_DIR" -name "*.tar.gz" -mtime +60 -delete
+find "$BACKUP_DIR" -name "*.txt" -mtime +60 -delete
+<p>echo "Configuration backup completed at $(date)" >> /var/log/backup.log
+EOF
+chmod +x /usr/local/bin/config-backup.sh</p>
+<h2>4. Remote backup synchronization:</h2>
+cat > /usr/local/bin/remote-sync.sh << 'EOF'
+#!/bin/bash
+REMOTE_HOST="backup-server.example.com"
+REMOTE_USER="backup"
+LOCAL_BACKUP="/backup"
+REMOTE_BACKUP="/remote-backup/$(hostname)"
+<h2>Sync to remote server</h2>
+rsync -av --delete-after "$LOCAL_BACKUP/" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP/"
+<h2>Log sync completion</h2>
+if [ $? -eq 0 ]; then
+    echo "Remote sync completed successfully at $(date)" >> /var/log/backup.log
+else
+    echo "Remote sync failed at $(date)" >> /var/log/backup.log
+fi
+EOF
+chmod +x /usr/local/bin/remote-sync.sh
+<h2>5. Backup verification:</h2>
+cat > /usr/local/bin/verify-backups.sh << 'EOF'
+#!/bin/bash
+BACKUP_DIR="/backup"
+<h2>Check if backup directories exist and contain recent files</h2>
+if [ ! -d "$BACKUP_DIR/daily/latest" ]; then
+    echo "ERROR: Daily backup missing" | mail -s "Backup Alert" admin@domain.com
+fi
+<h2>Check backup age</h2>
+LATEST_BACKUP=$(find "$BACKUP_DIR" -type f -name "<em>.tar.gz" -o -name "</em>.sql.gz" | head -1)
+if [ -n "$LATEST_BACKUP" ]; then
+    BACKUP_AGE=$(find "$LATEST_BACKUP" -mtime +2)
+    if [ -n "$BACKUP_AGE" ]; then
+        echo "WARNING: Backup is older than 2 days" | mail -s "Backup Alert" admin@domain.com
+    fi
+fi
+<h2>Test backup integrity</h2>
+find "$BACKUP_DIR" -name "*.tar.gz" -exec tar -tzf {} \; > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "ERROR: Backup integrity check failed" | mail -s "Backup Alert" admin@domain.com
+fi
+EOF
+chmod +x /usr/local/bin/verify-backups.sh
+<h2>Schedule all backup scripts:</h2>
+<h2>0 2 <em> </em> * /usr/local/bin/daily-backup.sh       # Daily at 2 AM</h2>
+<h2>0 3 <em> </em> * /usr/local/bin/db-backup.sh          # Daily at 3 AM  </h2>
+<h2>0 4 <em> </em> 0 /usr/local/bin/config-backup.sh      # Weekly at 4 AM on Sunday</h2>
+<h2>0 5 <em> </em> * /usr/local/bin/remote-sync.sh        # Daily at 5 AM</h2>
+<h2>0 6 <em> </em> * /usr/local/bin/verify-backups.sh     # Daily at 6 AM</h2></code></pre>
+<h3>Emergency Procedures and System Recovery</h3>
+<h4><strong>Final Emergency Recovery Checklist</strong></h4>
+<strong>When all else fails - Emergency System Recovery:</strong>
+<pre><code><h2>1. Boot Recovery Environment:</h2>
+<h2>- Boot from USB/DVD installer</h2>
+<h2>- Choose "Rescue Mode" or "Try Ubuntu/Live Mode"</h2>
+<h2>- Open terminal</h2>
+<h2>2. Mount and Access System:</h2>
+sudo fdisk -l                               # Identify system partitions
+sudo mkdir /mnt/system
+sudo mount /dev/sda1 /mnt/system            # Mount root partition
+sudo mount /dev/sda2 /mnt/system/boot       # Mount boot partition (if separate)
+sudo mount --bind /dev /mnt/system/dev
+sudo mount --bind /proc /mnt/system/proc
+sudo mount --bind /sys /mnt/system/sys
+sudo chroot /mnt/system                      # Enter system environment
+<h2>3. Critical System Repairs:</h2>
+<h2>Fix boot loader:</h2>
+grub-install /dev/sda
+update-grub
+<h2>Fix filesystem corruption:</h2>
+fsck -f /dev/sda1                           # Force filesystem check
+fsck -y /dev/sda1                           # Auto-repair filesystem
+<h2>Reset root password:</h2>
+passwd root
+<h2>Fix SSH access:</h2>
+systemctl enable ssh
+systemctl start ssh
+<h2>4. Data Rescue Priority:</h2>
+<h2>Copy critical data first:</h2>
+cp -r /home/user/important /backup/location
+cp -r /etc /backup/location
+cp -r /var/www /backup/location
+<h2>5. System Restoration:</h2>
+<h2>Restore from backups:</h2>
+rsync -av /backup/location/ /restored/location/
+<h2>Reinstall system packages:</h2>
+apt update
+apt install ubuntu-desktop                   # Or appropriate package group
+<h2>6. Preventive Measures Post-Recovery:</h2>
+<h2>Implement monitoring:</h2>
+apt install htop iotop nethogs
+<h2>Set up automated backups</h2>
+<h2>Configure system monitoring</h2>
+<h2>Document what went wrong and how it was fixed</h2></code></pre>
+<p>This comprehensive troubleshooting guide provides systematic approaches to diagnosing and resolving the most common Linux system problems. Each scenario includes step-by-step procedures, command explanations, and prevention strategies to help maintain system stability and recover from various failure modes.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

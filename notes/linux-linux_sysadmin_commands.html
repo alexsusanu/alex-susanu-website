@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux System Administration Commands Guide - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Linux System Administration Commands Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                General (linux) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Linux System Administration Commands Guide</h2>
+<strong>Category:</strong> System Administration & DevOps  
+<strong>Tags:</strong> linux, system-admin, process-management, file-operations, user-management, monitoring
+<h3>Essential System Administration Commands</h3>
+<strong>What this guide covers:</strong> Comprehensive reference for Linux system administration commands covering process management, file operations, user management, system monitoring, and maintenance tasks.
+<strong>Why master these commands:</strong> System administrators need these commands for daily operations, troubleshooting, automation, and maintaining healthy Linux systems. These are the foundation tools for managing servers and workstations.
+<h3>Process Management Commands</h3>
+<h4><strong>ps</strong> - Display running processes</h4>
+<strong>What it does:</strong> Shows information about currently running processes including process IDs (PIDs), CPU usage, memory usage, and command details.
+<strong>Why essential:</strong> Process management is fundamental to system administration. You need to identify running processes, find resource-heavy applications, and manage system performance.
+<strong>When to use:</strong> Troubleshoot high CPU/memory usage, find specific processes, monitor system activity, identify processes before killing them.
+<pre><code><h2>Basic process listing</h2>
+ps                                           # Shows processes for current user in current terminal
+ps aux                                       # Shows ALL processes with detailed information (most common)
+ps -ef                                       # Alternative format showing all processes with full command lines
+ps -u username                               # Shows processes for specific user only
+<h2>Why: Get overview of system activity, identify resource usage,</h2>
+<h2>find processes by user, see complete command arguments</h2>
+<h2>Advanced process filtering</h2>
+ps aux | grep nginx                          # Find specific processes by name
+ps aux --sort=-%cpu                          # Sort by CPU usage (highest first)
+ps aux --sort=-%mem                          # Sort by memory usage (highest first)
+ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu  # Custom columns sorted by CPU
+<h2>Why: Quickly find problematic processes, identify resource hogs,</h2>
+<h2>get specific information about processes of interest</h2>
+<h2>Process tree view</h2>
+ps auxf                                      # Shows process hierarchy (parent-child relationships)
+ps -ejH                                      # Alternative tree view format
+pstree                                       # Dedicated command for process tree visualization
+pstree -p                                    # Process tree with PIDs
+<h2>Why: Understand process relationships, identify parent processes,</h2>
+<h2>see which processes spawn others, troubleshoot process dependencies</h2></code></pre>
+<h4><strong>top/htop</strong> - Real-time process monitoring</h4>
+<strong>What it does:</strong> Displays and continuously updates information about running processes, system load, CPU usage, and memory usage in real-time.
+<strong>Why crucial:</strong> Essential for real-time system monitoring, identifying performance bottlenecks, and watching system behavior as it changes.
+<strong>When to use:</strong> System performance issues, monitor resource usage over time, identify processes causing problems, system capacity planning.
+<pre><code><h2>Basic top usage</h2>
+top                                          # Real-time process monitor with system summary
+htop                                         # Enhanced version with better interface and features
+top -u username                              # Show processes for specific user only
+top -p 1234,5678                            # Monitor specific processes by PID
+<h2>Why: Watch system performance in real-time, see immediate impact of changes,</h2>
+<h2>identify intermittent performance issues</h2>
+<h2>Top interactive commands (while top is running)</h2>
+<h2>Press 'q' to quit</h2>
+<h2>Press 'k' then PID to kill process</h2>
+<h2>Press 'r' then PID to renice (change priority)</h2>
+<h2>Press 'M' to sort by memory usage</h2>
+<h2>Press 'P' to sort by CPU usage</h2>
+<h2>Press '1' to show individual CPU cores</h2>
+<h2>Why: Interactive control allows immediate response to problems,</h2>
+<h2>sort by different criteria to find issues, kill problematic processes immediately</h2>
+<h2>Advanced monitoring</h2>
+top -b -n 1                                  # Batch mode - single snapshot (useful in scripts)
+top -d 2                                     # Update every 2 seconds instead of default
+watch -n 1 'ps aux --sort=-%cpu | head -10' # Alternative: watch top CPU processes
+<h2>Why: Automate monitoring in scripts, adjust update frequency for different needs,</h2>
+<h2>create custom monitoring views</h2></code></pre>
+<h4><strong>kill/killall</strong> - Terminate processes</h4>
+<strong>What it does:</strong> Sends signals to processes to terminate them, restart them, or modify their behavior. Different signals provide different ways to stop processes.
+<strong>Why essential:</strong> Sometimes processes hang, consume too many resources, or need to be restarted. Proper process termination is crucial for system stability.
+<strong>When to use:</strong> Unresponsive applications, runaway processes consuming resources, scheduled process restarts, emergency system recovery.
+<pre><code><h2>Basic process termination</h2>
+kill 1234                                    # Sends TERM signal to process ID 1234 (polite shutdown)
+kill -9 1234                                 # Sends KILL signal (force termination - last resort)
+kill -15 1234                               # Sends TERM signal explicitly (same as kill 1234)
+killall nginx                               # Kills all processes named "nginx"
+<h2>Why: TERM signal allows graceful shutdown (process can clean up),</h2>
+<h2>KILL signal forces immediate termination, killall affects multiple processes at once</h2>
+<h2>Different signal types</h2>
+kill -HUP 1234                              # Hangup signal (often causes process to reload config)
+kill -USR1 1234                             # User-defined signal 1 (application-specific behavior)
+kill -STOP 1234                             # Stops process (can be resumed)
+kill -CONT 1234                             # Continues stopped process
+<h2>Why: Different signals provide different process control options,</h2>
+<h2>HUP often reloads configuration without full restart,</h2>
+<h2>STOP/CONT allows pausing processes temporarily</h2>
+<h2>Find and kill processes</h2>
+pkill nginx                                  # Kills processes by name (more flexible than killall)
+pkill -u username                            # Kills all processes owned by user
+pkill -f "python script.py"                 # Kills processes matching command line pattern
+pgrep nginx                                  # Finds process IDs by name (doesn't kill)
+<h2>Why: More flexible process identification, kill by user or command pattern,</h2>
+<h2>pgrep helps verify what will be killed before actually killing</h2></code></pre>
+<h4><strong>jobs/bg/fg</strong> - Job control</h4>
+<strong>What it does:</strong> Manages processes started from the current shell, allowing you to run processes in background, bring them to foreground, and control job execution.
+<strong>Why useful:</strong> Allows multitasking in terminal, run long processes in background while continuing to work, manage multiple tasks efficiently.
+<strong>When to use:</strong> Running long-running tasks, managing multiple terminal processes, continuing work while processes run in background.
+<pre><code><h2>Job control basics</h2>
+command &                                    # Runs command in background immediately
+jobs                                         # Lists all jobs running from current shell
+fg                                          # Brings most recent background job to foreground
+fg %1                                       # Brings specific job number to foreground
+bg                                          # Resumes most recent stopped job in background
+<h2>Why: Continue working while long processes run, manage multiple tasks,</h2>
+<h2>switch between different running processes</h2>
+<h2>Practical job control</h2>
+./long-script.sh &                          # Start script in background
+<h2>Press Ctrl+Z to stop current foreground process</h2>
+bg                                          # Resume stopped process in background
+nohup ./script.sh &                         # Run process that survives shell logout
+disown %1                                   # Detach job from shell (survives shell exit)
+<h2>Why: Keep processes running after logout, handle accidental stops,</h2>
+<h2>manage processes independently of shell session</h2></code></pre>
+<h3>File Operations Commands</h3>
+<h4><strong>ls</strong> - List directory contents</h4>
+<strong>What it does:</strong> Displays files and directories in specified locations with various formatting and filtering options.
+<strong>Why fundamental:</strong> Basic file system navigation and information gathering. Essential for understanding directory structure and file properties.
+<strong>When to use:</strong> Navigate file system, check file permissions, find files, verify file modifications, audit directory contents.
+<pre><code><h2>Basic directory listing</h2>
+ls                                           # Lists files in current directory
+ls /path/to/directory                        # Lists files in specific directory
+ls -l                                        # Long format with permissions, ownership, size, dates
+ls -la                                       # Long format including hidden files (starting with .)
+ls -lh                                       # Long format with human-readable file sizes (KB, MB, GB)
+<h2>Why: See what files exist, check file details, verify permissions,</h2>
+<h2>understand directory structure</h2>
+<h2>Advanced listing options</h2>
+ls -lt                                       # Sort by modification time (newest first)
+ls -lS                                       # Sort by file size (largest first)
+ls -lR                                       # Recursive listing (shows subdirectories)
+ls -d */                                     # List only directories
+ls *.txt                                     # List files matching pattern
+<h2>Why: Find recently modified files, identify large files taking space,</h2>
+<h2>explore directory structure, filter by file type</h2>
+<h2>Detailed file information</h2>
+ls -li                                       # Shows inode numbers (useful for hardlink identification)
+ls --color=always                            # Force colored output even when piped
+ls -F                                        # Add indicators (/ for directories, * for executables)
+ls -1                                        # One file per line (useful for scripting)
+<h2>Why: Understand file system structure at low level, create readable output,</h2>
+<h2>identify different file types visually, format for script processing</h2></code></pre>
+<h4><strong>find</strong> - Search for files and directories</h4>
+<strong>What it does:</strong> Recursively searches directory trees for files and directories matching specified criteria. Can execute commands on found files.
+<strong>Why powerful:</strong> Most flexible file searching tool. Can find files by name, size, date, permissions, content, and many other criteria. Essential for system administration and maintenance.
+<strong>When to use:</strong> Locate specific files, find large files consuming disk space, search for security issues, automate file management tasks, clean up old files.
+<pre><code><h2>Basic file searching</h2>
+find /path -name "filename"                  # Find files with exact name
+find /path -name "*.txt"                     # Find files matching pattern
+find /path -iname "*.TXT"                    # Case-insensitive name search
+find . -name "config*"                       # Find files starting with "config" in current directory
+<h2>Why: Locate specific files quickly, find files by pattern across directory tree,</h2>
+<h2>handle case-insensitive searches</h2>
+<h2>Search by file properties</h2>
+find /path -type f                           # Find regular files only
+find /path -type d                           # Find directories only
+find /path -size +100M                       # Find files larger than 100MB
+find /path -size -1k                         # Find files smaller than 1KB
+find /path -mtime -7                         # Find files modified in last 7 days
+find /path -mtime +30                        # Find files modified more than 30 days ago
+<h2>Why: Clean up large files, find recently changed files for troubleshooting,</h2>
+<h2>identify old files for archival, locate specific file types</h2>
+<h2>Search by permissions and ownership</h2>
+find /path -perm 777                         # Find files with exact permissions
+find /path -perm -u+w                        # Find files writable by owner
+find /path -user username                    # Find files owned by specific user
+find /path -group groupname                  # Find files owned by specific group
+find /path -perm /u+s                        # Find files with setuid bit
+<h2>Why: Security auditing, find files with dangerous permissions,</h2>
+<h2>locate files owned by specific users, identify security risks</h2>
+<h2>Execute commands on found files</h2>
+find /path -name "*.log" -delete             # Delete all .log files
+find /path -name "*.tmp" -exec rm {} \;      # Alternative deletion method
+find /path -name "*.txt" -exec wc -l {} \;   # Count lines in all .txt files
+find /path -type f -exec chmod 644 {} \;     # Set permissions on all files
+<h2>Why: Automate file management, perform bulk operations,</h2>
+<h2>maintain file permissions, clean up unwanted files</h2></code></pre>
+<h4><strong>chmod/chown</strong> - Change file permissions and ownership</h4>
+<strong>What it does:</strong> chmod changes file permissions (read, write, execute for owner, group, others). chown changes file ownership (user and group).
+<strong>Why critical:</strong> File permissions are fundamental to Linux security. Proper permissions prevent unauthorized access and ensure system security.
+<strong>When to use:</strong> Set up new files/directories, fix permission problems, secure sensitive files, configure web server files, troubleshoot access issues.
+<pre><code><h2>chmod - Change permissions using numeric mode</h2>
+chmod 755 file.txt                           # rwxr-xr-x (owner: rwx, group: rx, others: rx)
+chmod 644 file.txt                           # rw-r--r-- (owner: rw, group: r, others: r)
+chmod 600 file.txt                           # rw------- (owner: rw, group: none, others: none)
+chmod 777 file.txt                           # rwxrwxrwx (everyone: rwx - dangerous!)
+<h2>Why: Numeric mode is precise and commonly used in documentation,</h2>
+<h2>755 is common for directories, 644 for files, 600 for private files</h2>
+<h2>chmod - Change permissions using symbolic mode</h2>
+chmod u+x file.txt                           # Add execute permission for owner
+chmod g-w file.txt                           # Remove write permission for group
+chmod o+r file.txt                           # Add read permission for others
+chmod a+x file.txt                           # Add execute permission for all (owner, group, others)
+chmod u=rw,g=r,o= file.txt                   # Set exact permissions (owner: rw, group: r, others: none)
+<h2>Why: Symbolic mode is more intuitive, easier to modify specific permissions,</h2>
+<h2>clearer when making incremental changes</h2>
+<h2>Recursive permission changes</h2>
+chmod -R 755 /path/to/directory              # Apply permissions to directory and all contents
+chmod -R u+w /path/to/directory              # Add write permission recursively
+find /path -type f -exec chmod 644 {} \;     # Set file permissions only (not directories)
+find /path -type d -exec chmod 755 {} \;     # Set directory permissions only
+<h2>Why: Configure entire directory trees, separate file and directory permissions,</h2>
+<h2>fix permission problems in bulk</h2>
+<h2>chown - Change ownership</h2>
+chown user file.txt                          # Change owner to 'user'
+chown user:group file.txt                    # Change owner to 'user' and group to 'group'
+chown :group file.txt                        # Change group only
+chown -R user:group /path/to/directory       # Change ownership recursively
+<h2>Why: Transfer file ownership, set up proper ownership for services,</h2>
+<h2>fix ownership problems after file transfers</h2></code></pre>
+<h4><strong>cp/mv/rm</strong> - Copy, move, and remove files</h4>
+<strong>What it does:</strong> Basic file operations - copying files/directories, moving/renaming them, and deleting them.
+<strong>Why essential:</strong> Fundamental file management operations needed daily for organizing files, making backups, cleaning up systems.
+<strong>When to use:</strong> File organization, creating backups, system maintenance, installing/configuring software, cleaning up disk space.
+<pre><code><h2>cp - Copy files and directories</h2>
+cp file1.txt file2.txt                       # Copy file1 to file2 (creates new file)
+cp file1.txt /path/to/destination/           # Copy file to different directory
+cp -r directory1 directory2                  # Copy directory recursively
+cp -p file1.txt file2.txt                    # Preserve permissions, timestamps, ownership
+cp -u source/* destination/                  # Copy only if source is newer than destination
+<h2>Why: Create backups, duplicate files for modification,</h2>
+<h2>preserve file attributes when needed, efficient incremental copying</h2>
+<h2>Advanced copy options</h2>
+cp -a source destination                     # Archive mode (preserves everything, recursive)
+cp -i file1.txt file2.txt                    # Interactive mode (prompts before overwriting)
+cp -v file1.txt file2.txt                    # Verbose mode (shows what's being copied)
+cp --backup=numbered file1.txt file2.txt     # Create numbered backups of existing files
+<h2>Why: Complete file preservation, prevent accidental overwrites,</h2>
+<h2>see progress of copy operations, maintain backup versions</h2>
+<h2>mv - Move and rename files</h2>
+mv oldname.txt newname.txt                   # Rename file
+mv file.txt /path/to/destination/            # Move file to different directory
+mv directory1 directory2                     # Rename directory
+mv *.txt /path/to/destination/               # Move all .txt files
+<h2>Why: Organize files, rename for clarity, move files between locations,</h2>
+<h2>batch operations with wildcards</h2>
+<h2>rm - Remove files and directories</h2>
+rm file.txt                                  # Delete file
+rm -i file.txt                               # Interactive deletion (prompts for confirmation)
+rm -f file.txt                               # Force deletion (no prompts, ignore non-existent files)
+rm -r directory                              # Delete directory and contents recursively
+rm -rf directory                             # Force recursive deletion (dangerous!)
+<h2>Why: Clean up unwanted files, remove old backups, free disk space,</h2>
+<h2>interactive mode prevents accidents</h2>
+<h2>Safe deletion practices</h2>
+rm -i *.txt                                  # Confirm each deletion
+ls -la before_deleting/                      # Always check contents before rm -rf
+mv unwanted_directory /tmp/                  # Move to /tmp instead of immediate deletion
+find /path -name "*.tmp" -mtime +7 -delete  # Safer automated cleanup
+<h2>Why: Prevent accidental data loss, provide opportunity to recover,</h2>
+<h2>automate cleanup safely with specific criteria</h2></code></pre>
+<h3>User Management Commands</h3>
+<h4><strong>useradd/usermod/userdel</strong> - User account management</h4>
+<strong>What it does:</strong> Creates, modifies, and deletes user accounts on the system. Manages user properties like home directories, groups, shells, and account expiration.
+<strong>Why essential:</strong> User management is fundamental to system security and administration. Proper user accounts ensure access control and system organization.
+<strong>When to use:</strong> Setting up new users, modifying user properties, removing departed users, managing user access, configuring service accounts.
+<pre><code><h2>useradd - Create new users</h2>
+sudo useradd username                        # Create user with default settings
+sudo useradd -m username                     # Create user with home directory
+sudo useradd -m -s /bin/bash username       # Create user with specific shell
+sudo useradd -m -G sudo,www-data username   # Create user and add to groups
+sudo useradd -m -c "Full Name" username     # Create user with comment/description
+<h2>Why: Default settings may not be appropriate, home directories needed for user files,</h2>
+<h2>specific shells required for functionality, group membership for permissions</h2>
+<h2>Advanced user creation</h2>
+sudo useradd -m -d /custom/home/path username     # Custom home directory location
+sudo useradd -m -e 2024-12-31 username           # Account expires on specific date
+sudo useradd -m -u 1500 username                 # Specify user ID
+sudo useradd -r -s /bin/false serviceaccount     # Create system account (no login)
+<h2>Why: Custom home locations for specific setups, temporary accounts with expiration,</h2>
+<h2>specific UIDs for consistency, service accounts for applications</h2>
+<h2>usermod - Modify existing users</h2>
+sudo usermod -aG sudo username               # Add user to additional group (append)
+sudo usermod -G sudo,www-data username      # Set user's groups (replaces existing)
+sudo usermod -s /bin/zsh username           # Change user's shell
+sudo usermod -d /new/home username          # Change home directory
+sudo usermod -l newname oldname             # Change username
+<h2>Why: Grant additional permissions through groups, change user preferences,</h2>
+<h2>relocate user data, rename accounts for clarity</h2>
+<h2>userdel - Delete users</h2>
+sudo userdel username                        # Delete user account (keeps home directory)
+sudo userdel -r username                     # Delete user and home directory
+sudo userdel -f username                     # Force deletion even if user is logged in
+<h2>Why: Remove access for departed users, clean up unused accounts,</h2>
+<h2>force removal in emergency situations</h2>
+<h2>Verify user operations</h2>
+id username                                  # Show user ID, group memberships
+getent passwd username                       # Show user account details
+groups username                              # Show user's group memberships
+finger username                              # Show detailed user information
+<h2>Why: Verify changes were applied correctly, troubleshoot permission issues,</h2>
+<h2>audit user configuration</h2></code></pre>
+<h4><strong>passwd/chage</strong> - Password and account aging management</h4>
+<strong>What it does:</strong> passwd changes user passwords. chage manages password aging policies including expiration dates, minimum age, and warning periods.
+<strong>Why important:</strong> Password security is crucial for system protection. Password aging policies enforce regular password changes and account security.
+<strong>When to use:</strong> New user setup, password resets, implementing security policies, managing account lockouts, configuring service accounts.
+<pre><code><h2>passwd - Password management</h2>
+passwd                                       # Change current user's password
+sudo passwd username                         # Change another user's password (as root)
+sudo passwd -l username                      # Lock user account (disable password login)
+sudo passwd -u username                      # Unlock user account
+sudo passwd -d username                      # Delete password (passwordless login - dangerous!)
+<h2>Why: Regular password changes for security, administrative password resets,</h2>
+<h2>temporarily disable accounts, emergency access configuration</h2>
+<h2>Advanced password options</h2>
+sudo passwd -n 7 username                    # Set minimum password age (7 days)
+sudo passwd -x 90 username                   # Set maximum password age (90 days)
+sudo passwd -w 7 username                    # Set warning period (7 days before expiration)
+sudo passwd -e username                      # Force password change on next login
+<h2>Why: Implement security policies, force password updates,</h2>
+<h2>provide advance warning of expiration, ensure regular password changes</h2>
+<h2>chage - Account aging management</h2>
+chage -l username                            # Display password aging information
+sudo chage -d 0 username                     # Force password change on next login
+sudo chage -M 90 username                    # Set password to expire in 90 days
+sudo chage -m 7 username                     # Set minimum password age to 7 days
+sudo chage -W 14 username                    # Set warning period to 14 days
+<h2>Why: View current password policies, implement consistent aging policies,</h2>
+<h2>force password updates for security, provide user warnings</h2>
+<h2>Account expiration</h2>
+sudo chage -E 2024-12-31 username           # Set account to expire on specific date
+sudo chage -E -1 username                   # Remove account expiration
+sudo chage -I 30 username                   # Set account inactive period after password expires
+<h2>Why: Temporary accounts with automatic expiration, remove expiration for permanent accounts,</h2>
+<h2>grace period for password updates</h2></code></pre>
+<h4><strong>su/sudo</strong> - Switch user and execute commands as other users</h4>
+<strong>What it does:</strong> su switches to another user account. sudo executes commands as another user (typically root) with proper authentication and logging.
+<strong>Why crucial:</strong> Administrative tasks require elevated privileges. These commands provide secure ways to gain necessary permissions while maintaining accountability.
+<strong>When to use:</strong> Administrative tasks, troubleshooting user issues, running services as specific users, emergency system recovery.
+<pre><code><h2>su - Switch user</h2>
+su                                           # Switch to root user (requires root password)
+su -                                         # Switch to root with full environment
+su username                                  # Switch to specific user
+su - username                                # Switch to user with their environment
+exit                                         # Return to original user
+<h2>Why: Full user environment provides proper settings, specific user context for testing,</h2>
+<h2>root access for administrative tasks</h2>
+<h2>sudo - Execute commands as other users</h2>
+sudo command                                 # Execute command as root
+sudo -u username command                     # Execute command as specific user
+sudo -i                                      # Start interactive root shell
+sudo -s                                      # Start shell as root (keeps environment)
+sudo -l                                      # List allowed sudo commands for current user
+<h2>Why: Temporary privilege elevation, maintain audit trail,</h2>
+<h2>granular permission control, safer than full root access</h2>
+<h2>Advanced sudo usage</h2>
+sudo -k                                      # Clear sudo timestamp (require password again)
+sudo -v                                      # Validate sudo credentials (extend timeout)
+sudo !!                                      # Execute previous command with sudo
+EDITOR=nano sudo visudo                      # Edit sudo configuration safely
+<h2>Why: Force re-authentication for security, extend session for multiple commands,</h2>
+<h2>quickly retry commands with elevated privileges, safely modify sudo settings</h2>
+<h2>Check user privileges</h2>
+sudo -l -U username                          # Check what sudo privileges user has
+groups                                       # Show current user's groups
+id                                          # Show current user ID and group memberships
+whoami                                      # Show current effective username
+<h2>Why: Audit user permissions, troubleshoot access issues,</h2>
+<h2>verify current user context, understand permission inheritance</h2></code></pre>
+<h3>System Monitoring Commands</h3>
+<h4><strong>df/du</strong> - Disk space monitoring</h4>
+<strong>What it does:</strong> df shows filesystem disk space usage. du shows directory space usage. Essential for monitoring disk space and identifying what's consuming storage.
+<strong>Why critical:</strong> Running out of disk space can crash systems, prevent logging, and stop services. Regular monitoring prevents storage-related outages.
+<strong>When to use:</strong> System maintenance, troubleshooting disk space issues, capacity planning, identifying large files/directories for cleanup.
+<pre><code><h2>df - Filesystem space usage</h2>
+df -h                                        # Human-readable format (GB, MB, KB)
+df -i                                        # Show inode usage instead of disk space
+df -T                                        # Show filesystem type
+df /path/to/directory                        # Show usage for specific filesystem
+df --total                                   # Show total usage summary
+<h2>Why: Quick overview of all filesystem usage, identify full filesystems,</h2>
+<h2>monitor inode exhaustion, understand filesystem types</h2>
+<h2>Advanced df usage</h2>
+df -h --exclude-type=tmpfs                   # Exclude temporary filesystems
+df -h | grep -v snap                         # Exclude snap packages from output
+watch -n 5 'df -h'                          # Monitor filesystem usage in real-time
+df -h | awk '$5 > 80 {print $0}'            # Show filesystems over 80% full
+<h2>Why: Focus on persistent storage only, continuous monitoring for changes,</h2>
+<h2>automated alerting for high usage, filter relevant information</h2>
+<h2>du - Directory space usage</h2>
+du -h /path/to/directory                     # Human-readable sizes for directory tree
+du -sh /path/to/directory                    # Summary total for directory only
+du -ah /path/to/directory                    # All files (not just directories)
+du -h --max-depth=1 /path                    # Show only one level deep
+<h2>Why: Identify which directories consume most space, find large files,</h2>
+<h2>limit output depth for large directory trees</h2>
+<h2>Finding large files and directories</h2>
+du -h /home | sort -hr | head -10            # Top 10 largest directories in /home
+find /path -size +100M -exec ls -lh {} \;    # Find files larger than 100MB
+find /path -type f -exec du -h {} \; | sort -hr | head -20  # Top 20 largest files
+ncdu /path                                   # Interactive disk usage analyzer
+<h2>Why: Quickly identify space consumers, locate files for cleanup,</h2>
+<h2>interactive exploration of disk usage, prioritize cleanup efforts</h2></code></pre>
+<h4><strong>free/vmstat</strong> - Memory and system performance monitoring</h4>
+<strong>What it does:</strong> free shows memory usage (RAM and swap). vmstat shows system performance statistics including memory, CPU, and I/O.
+<strong>Why essential:</strong> Memory problems cause performance issues and system crashes. These tools help identify memory bottlenecks and system performance problems.
+<strong>When to use:</strong> Performance troubleshooting, capacity planning, monitoring system health, identifying memory leaks.
+<pre><code><h2>free - Memory usage</h2>
+free -h                                      # Human-readable memory usage
+free -m                                      # Memory usage in megabytes
+free -s 5                                    # Update every 5 seconds
+free -t                                      # Show total memory + swap
+<h2>Why: Quick memory overview, monitor memory usage over time,</h2>
+<h2>see total available memory, identify memory pressure</h2>
+<h2>Understanding free output</h2>
+<h2>total: Total physical RAM</h2>
+<h2>used: Used memory (buffers/cache + applications)</h2>
+<h2>free: Completely unused memory</h2>
+<h2>available: Memory available for new applications (includes reclaimable cache)</h2>
+<h2>buff/cache: Memory used for buffers and caching (can be reclaimed)</h2>
+<h2>vmstat - System performance statistics</h2>
+vmstat                                       # Single snapshot of system stats
+vmstat 5                                     # Update every 5 seconds
+vmstat 5 10                                  # Update every 5 seconds, 10 times then exit
+vmstat -S M                                  # Display values in megabytes
+<h2>Why: Monitor system performance trends, identify I/O bottlenecks,</h2>
+<h2>watch CPU and memory usage patterns, troubleshoot performance issues</h2>
+<h2>Key vmstat fields:</h2>
+<h2>procs: r=running processes, b=blocked processes</h2>
+<h2>memory: swpd=swap used, free=free memory, buff=buffers, cache=cache</h2>
+<h2>swap: si=swap in, so=swap out (should be near 0)</h2>
+<h2>io: bi=blocks in, bo=blocks out</h2>
+<h2>system: in=interrupts, cs=context switches</h2>
+<h2>cpu: us=user time, sy=system time, id=idle time, wa=wait time</h2>
+<h2>Advanced memory monitoring</h2>
+cat /proc/meminfo                            # Detailed memory information
+slabtop                                      # Kernel slab allocator information
+sar -r 5 10                                  # Memory utilization over time
+watch -n 1 'free -h && echo && ps aux --sort=-%mem | head -10'  # Memory usage with top processes
+<h2>Why: Deep memory analysis, kernel memory usage, historical memory data,</h2>
+<h2>combine memory overview with process details</h2></code></pre>
+<h4><strong>iostat/iotop</strong> - I/O performance monitoring</h4>
+<strong>What it does:</strong> iostat shows input/output statistics for devices. iotop shows I/O usage by processes. Essential for diagnosing disk performance issues.
+<strong>Why important:</strong> I/O bottlenecks are common performance problems. These tools help identify which processes or devices are causing I/O issues.
+<strong>When to use:</strong> System slowness investigation, database performance issues, backup performance problems, storage troubleshooting.
+<pre><code><h2>iostat - I/O statistics</h2>
+iostat                                       # Basic I/O statistics snapshot
+iostat -x                                    # Extended statistics with more details
+iostat 5                                     # Update every 5 seconds
+iostat -x 5 10                               # Extended stats, 5-second intervals, 10 reports
+<h2>Why: Identify I/O bottlenecks, monitor disk performance,</h2>
+<h2>track I/O patterns over time, troubleshoot storage issues</h2>
+<h2>Key iostat metrics:</h2>
+<h2>%util: Percentage of time device was busy (high = bottleneck)</h2>
+<h2>r/s, w/s: Read/write requests per second</h2>
+<h2>rkB/s, wkB/s: Read/write kilobytes per second</h2>
+<h2>await: Average wait time for I/O requests</h2>
+<h2>svctm: Average service time per I/O request</h2>
+<h2>iotop - I/O usage by process (requires root)</h2>
+sudo iotop                                   # Real-time I/O usage by process
+sudo iotop -o                                # Show only processes doing I/O
+sudo iotop -a                                # Show accumulated I/O instead of current
+sudo iotop -p PID                            # Monitor specific process
+<h2>Why: Identify which processes cause I/O load, troubleshoot specific applications,</h2>
+<h2>monitor I/O patterns by process, find I/O-heavy operations</h2>
+<h2>Alternative I/O monitoring</h2>
+sudo iftop                                   # Network I/O by connection
+dstat                                        # Combined system statistics
+pidstat -d 5                                # Per-process I/O statistics
+lsof +D /path                                # Show processes using specific directory
+<h2>Why: Network I/O analysis, comprehensive system view,</h2>
+<h2>detailed per-process I/O data, identify file usage conflicts</h2></code></pre>
+<h3>Package Management Commands</h3>
+<h4><strong>apt/yum/dnf</strong> - Package management</h4>
+<strong>What it does:</strong> Package managers install, update, and remove software packages. Different distributions use different package managers.
+<strong>Why essential:</strong> Software installation and updates are fundamental system administration tasks. Package managers handle dependencies and maintain system integrity.
+<strong>When to use:</strong> Installing new software, applying security updates, removing unnecessary packages, maintaining system updates.
+<pre><code><h2>APT (Debian/Ubuntu systems)</h2>
+sudo apt update                              # Update package list from repositories
+sudo apt upgrade                             # Upgrade all installed packages
+sudo apt install package-name               # Install specific package
+sudo apt remove package-name                # Remove package (keep configuration)
+sudo apt purge package-name                 # Remove package and configuration files
+<h2>Why: Keep system secure with updates, install needed software,</h2>
+<h2>remove unused packages to save space, clean configuration when needed</h2>
+<h2>Advanced APT usage</h2>
+apt search keyword                           # Search for packages
+apt show package-name                        # Show package information
+sudo apt autoremove                          # Remove orphaned dependencies
+sudo apt autoclean                           # Clean package cache
+apt list --installed                         # List installed packages
+apt list --upgradable                        # Show packages with available updates
+<h2>Why: Find available software, understand package details,</h2>
+<h2>maintain clean system, monitor installed software</h2>
+<h2>YUM/DNF (RHEL/CentOS/Fedora systems)</h2>
+sudo yum update                              # Update all packages (CentOS/RHEL 7)
+sudo dnf update                              # Update all packages (CentOS/RHEL 8+, Fedora)
+sudo yum install package-name                # Install package
+sudo yum remove package-name                 # Remove package
+yum search keyword                           # Search for packages
+<h2>Why: Different distributions require different package managers,</h2>
+<h2>same concepts with different syntax, maintain system across distributions</h2>
+<h2>Package information and maintenance</h2>
+yum list installed                           # List installed packages
+yum history                                  # Show package transaction history
+sudo yum clean all                           # Clean package caches
+yum provides /path/to/file                   # Find which package provides file
+<h2>Why: Audit installed software, track changes for troubleshooting,</h2>
+<h2>manage disk space usage, identify package sources</h2></code></pre>
+<h4><strong>systemctl</strong> - Service management</h4>
+<strong>What it does:</strong> Controls systemd services - starting, stopping, enabling, disabling, and monitoring system services and processes.
+<strong>Why crucial:</strong> Modern Linux systems use systemd for service management. Services like web servers, databases, and system processes need proper management.
+<strong>When to use:</strong> Starting/stopping services, configuring automatic startup, troubleshooting service issues, monitoring service status.
+<pre><code><h2>Basic service control</h2>
+sudo systemctl start service-name           # Start service immediately
+sudo systemctl stop service-name            # Stop service
+sudo systemctl restart service-name         # Stop and start service
+sudo systemctl reload service-name          # Reload configuration without stopping
+sudo systemctl status service-name          # Show service status and recent logs
+<h2>Why: Control service availability, apply configuration changes,</h2>
+<h2>restart problematic services, check service health</h2>
+<h2>Service startup configuration</h2>
+sudo systemctl enable service-name          # Enable service to start at boot
+sudo systemctl disable service-name         # Disable service from starting at boot
+sudo systemctl is-enabled service-name      # Check if service is enabled
+sudo systemctl is-active service-name       # Check if service is currently running
+<h2>Why: Configure which services start automatically, manage startup time,</h2>
+<h2>verify service configuration, troubleshoot boot issues</h2>
+<h2>System-wide service management</h2>
+systemctl list-units --type=service         # List all services
+systemctl list-units --type=service --state=running  # List only running services
+systemctl list-units --type=service --state=failed   # List failed services
+systemctl --failed                          # Show failed services (shortcut)
+<h2>Why: Get overview of system services, identify problematic services,</h2>
+<h2>monitor system health, troubleshoot service dependencies</h2>
+<h2>Advanced service management</h2>
+sudo systemctl mask service-name            # Prevent service from being started (stronger than disable)
+sudo systemctl unmask service-name          # Remove mask from service
+systemctl show service-name                 # Show detailed service properties
+journalctl -u service-name                  # Show logs for specific service
+journalctl -u service-name -f               # Follow logs for service in real-time
+<h2>Why: Completely prevent unwanted services, detailed service configuration,</h2>
+<h2>troubleshoot service issues with logs, monitor service behavior</h2>
+<h2>System control</h2>
+sudo systemctl reboot                        # Reboot system
+sudo systemctl poweroff                      # Shutdown system
+sudo systemctl suspend                       # Suspend system
+sudo systemctl hibernate                     # Hibernate system
+systemctl get-default                        # Show default system target (runlevel)
+sudo systemctl set-default multi-user.target # Set system to boot to command line
+<h2>Why: Controlled system shutdown/restart, power management,</h2>
+<h2>configure system boot behavior, server vs desktop configuration</h2></code></pre>
+<h3>Log Management Commands</h3>
+<h4><strong>journalctl</strong> - Systemd journal viewer</h4>
+<strong>What it does:</strong> Views and analyzes systemd journal logs, which contain system and service messages. Modern replacement for traditional syslog viewing.
+<strong>Why essential:</strong> Logs are crucial for troubleshooting system issues, security analysis, and understanding system behavior. journalctl provides powerful log analysis capabilities.
+<strong>When to use:</strong> Troubleshooting service failures, security investigations, system performance analysis, monitoring system events.
+<pre><code><h2>Basic log viewing</h2>
+journalctl                                   # Show all journal entries (oldest first)
+journalctl -r                                # Show entries in reverse order (newest first)
+journalctl -f                                # Follow journal in real-time (like tail -f)
+journalctl -n 50                             # Show last 50 entries
+journalctl --no-pager                        # Don't use pager (show all output at once)
+<h2>Why: Get overview of system activity, monitor real-time events,</h2>
+<h2>focus on recent events, handle large log volumes</h2>
+<h2>Filter by service and unit</h2>
+journalctl -u ssh                            # Show logs for SSH service
+journalctl -u nginx.service                  # Show logs for nginx service
+journalctl -u ssh -f                         # Follow SSH service logs in real-time
+journalctl _PID=1234                         # Show logs for specific process ID
+<h2>Why: Focus on specific service issues, monitor critical services,</h2>
+<h2>troubleshoot service-specific problems, track process behavior</h2>
+<h2>Time-based filtering</h2>
+journalctl --since "2023-01-01"             # Logs since specific date
+journalctl --since "1 hour ago"             # Logs from last hour
+journalctl --since yesterday                 # Logs since yesterday
+journalctl --until "30 min ago"             # Logs until 30 minutes ago
+journalctl --since "09:00" --until "17:00"  # Logs between specific times
+<h2>Why: Focus on relevant time periods, investigate specific incidents,</h2>
+<h2>analyze system behavior during known events</h2>
+<h2>Priority and severity filtering</h2>
+journalctl -p err                            # Show only error messages and above
+journalctl -p warning                        # Show warning messages and above
+journalctl -p debug                          # Show all messages including debug
+journalctl -p crit                           # Show only critical messages
+<h2>Why: Focus on serious issues, filter noise from logs,</h2>
+<h2>identify critical system problems, adjust detail level</h2>
+<h2>Advanced filtering and analysis</h2>
+journalctl -k                                # Show kernel messages only
+journalctl -b                                # Show logs from current boot
+journalctl -b -1                             # Show logs from previous boot
+journalctl --list-boots                      # List all boots with timestamps
+journalctl -o json                           # Output in JSON format
+journalctl --disk-usage                      # Show journal disk usage
+<h2>Why: Focus on kernel issues, compare current vs previous boot,</h2>
+<h2>analyze boot problems, structured data processing, manage log storage</h2>
+<h2>System maintenance</h2>
+sudo journalctl --vacuum-size=100M           # Keep only 100MB of logs
+sudo journalctl --vacuum-time=30d            # Keep only last 30 days of logs
+sudo journalctl --verify                     # Verify journal integrity
+sudo journalctl --rotate                     # Rotate journal files
+<h2>Why: Manage disk space usage, comply with retention policies,</h2>
+<h2>ensure log integrity, organize log files</h2></code></pre>
+<h4><strong>tail/head/grep</strong> - Log file analysis</h4>
+<strong>What it does:</strong> tail shows end of files, head shows beginning, grep searches for patterns. Essential for analyzing traditional log files.
+<strong>Why important:</strong> Many applications still use traditional log files. These tools provide powerful log analysis capabilities for troubleshooting and monitoring.
+<strong>When to use:</strong> Analyzing application logs, monitoring log files in real-time, searching for specific events, extracting relevant information.
+<pre><code><h2>tail - View end of files</h2>
+tail /var/log/syslog                         # Show last 10 lines of syslog
+tail -n 50 /var/log/apache2/error.log        # Show last 50 lines
+tail -f /var/log/nginx/access.log            # Follow log file in real-time
+tail -F /var/log/app.log                     # Follow file even if it's rotated
+<h2>Why: See recent events quickly, monitor ongoing activity,</h2>
+<h2>handle log rotation gracefully, focus on current issues</h2>
+<h2>head - View beginning of files</h2>
+head /var/log/syslog                         # Show first 10 lines
+head -n 100 /var/log/boot.log               # Show first 100 lines
+head -c 1024 /var/log/large.log             # Show first 1024 characters
+<h2>Why: See how logs start, check log format, sample large log files,</h2>
+<h2>understand log structure before analysis</h2>
+<h2>grep - Search for patterns</h2>
+grep "ERROR" /var/log/application.log        # Find lines containing "ERROR"
+grep -i "error" /var/log/application.log     # Case-insensitive search
+grep -n "404" /var/log/nginx/access.log     # Show line numbers with matches
+grep -A 5 -B 5 "CRITICAL" /var/log/app.log  # Show 5 lines before and after matches
+<h2>Why: Find specific events quickly, case-insensitive searches,</h2>
+<h2>locate problems in logs, see context around issues</h2>
+<h2>Advanced log analysis</h2>
+grep -E "(ERROR|WARN|CRITICAL)" /var/log/app.log  # Multiple patterns with regex
+grep -v "INFO" /var/log/app.log | head -20   # Exclude INFO messages, show first 20
+tail -f /var/log/nginx/access.log | grep "404"  # Real-time monitoring for 404 errors
+zgrep "ERROR" /var/log/app.log.gz            # Search compressed log files
+<h2>Why: Complex pattern matching, filter unwanted messages,</h2>
+<h2>real-time filtered monitoring, search archived logs</h2>
+<h2>Combining commands for powerful analysis</h2>
+tail -1000 /var/log/auth.log | grep "Failed password" | wc -l  # Count recent failed logins
+grep "$(date +%Y-%m-%d)" /var/log/syslog | grep ERROR  # Today's errors only
+find /var/log -name "*.log" -exec grep -l "OutOfMemory" {} \;  # Find logs containing memory errors
+<h2>Why: Quantify security events, time-based analysis,</h2>
+<h2>search across multiple log files, identify system-wide issues</h2></code></pre>
+<h3>Performance Monitoring Commands</h3>
+<h4><strong>uptime/w/who</strong> - System load and user activity</h4>
+<strong>What it does:</strong> uptime shows system load averages and uptime. w shows logged-in users and their activity. who shows who is logged in.
+<strong>Why useful:</strong> System load indicates performance health. User activity monitoring is important for security and resource management.
+<strong>When to use:</strong> Quick system health check, identify high load periods, monitor user access, security auditing.
+<pre><code><h2>uptime - System load and uptime</h2>
+uptime                                       # Show uptime and load averages
+<h2>Output: up 15 days, 2:30, 3 users, load average: 0.15, 0.10, 0.05</h2>
+<h2>Understanding load averages:</h2>
+<h2>First number: 1-minute average</h2>
+<h2>Second number: 5-minute average  </h2>
+<h2>Third number: 15-minute average</h2>
+<h2>Values represent number of processes waiting for CPU</h2>
+<h2>On single-core system: 1.0 = fully loaded, >1.0 = overloaded</h2>
+<h2>On multi-core system: multiply by number of cores</h2>
+<h2>Why: Quick performance overview, identify system stress,</h2>
+<h2>understand load trends over time, capacity planning</h2>
+<h2>w - Show logged-in users and their activity</h2>
+w                                            # Show all logged-in users with activity
+w username                                   # Show specific user's activity
+<h2>Output columns:</h2>
+<h2>USER: Username</h2>
+<h2>TTY: Terminal type</h2>
+<h2>FROM: Source IP/hostname</h2>
+<h2>LOGIN@: Login time</h2>
+<h2>IDLE: Idle time</h2>
+<h2>JCPU: Total CPU time for all processes</h2>
+<h2>PCPU: CPU time for current process</h2>
+<h2>WHAT: Current command</h2>
+<h2>Why: Monitor user access, identify suspicious activity,</h2>
+<h2>see what users are doing, troubleshoot user issues</h2>
+<h2>who - Show who is logged in</h2>
+who                                          # Show logged-in users
+who -a                                       # Show all information
+who -b                                       # Show last system boot time
+who -r                                       # Show current runlevel
+<h2>Why: Simple user presence check, verify system boot time,</h2>
+<h2>check system state, security monitoring</h2>
+<h2>User session monitoring</h2>
+last                                         # Show login history
+last username                                # Show specific user's login history
+last -n 10                                   # Show last 10 login sessions
+lastb                                        # Show failed login attempts
+lastlog                                      # Show last login for all users
+<h2>Why: Security auditing, track user access patterns,</h2>
+<h2>identify unauthorized access attempts, compliance reporting</h2></code></pre>
+<h4><strong>sar</strong> - System Activity Reporter</h4>
+<strong>What it does:</strong> Collects and reports system activity information including CPU, memory, I/O, and network statistics over time.
+<strong>Why powerful:</strong> Provides historical system performance data, essential for identifying trends and performance patterns that momentary snapshots miss.
+<strong>When to use:</strong> Performance trend analysis, capacity planning, identifying recurring performance issues, system optimization.
+<pre><code><h2>CPU monitoring</h2>
+sar                                          # Show CPU usage for current day
+sar -u 5 10                                  # CPU usage every 5 seconds, 10 reports
+sar -u -f /var/log/sysstat/saXX             # CPU usage from specific date file
+<h2>Why: Historical CPU usage patterns, identify peak usage times,</h2>
+<h2>track CPU performance trends, compare different time periods</h2>
+<h2>Memory monitoring</h2>
+sar -r 5 10                                  # Memory utilization every 5 seconds
+sar -S 5 10                                  # Swap utilization monitoring
+sar -W 5 10                                  # Swapping statistics
+<h2>Why: Memory usage trends, identify memory leaks,</h2>
+<h2>monitor swap usage patterns, capacity planning</h2>
+<h2>I/O monitoring</h2>
+sar -d 5 10                                  # Disk I/O statistics
+sar -b 5 10                                  # I/O transfer rate statistics
+sar -p 5 10                                  # Block device statistics
+<h2>Why: Identify I/O bottlenecks, track storage performance,</h2>
+<h2>monitor disk utilization trends, optimize storage configuration</h2>
+<h2>Network monitoring</h2>
+sar -n DEV 5 10                              # Network device statistics
+sar -n EDEV 5 10                             # Network error statistics
+sar -n TCP 5 10                              # TCP connection statistics
+<h2>Why: Network performance analysis, identify network bottlenecks,</h2>
+<h2>monitor network errors, track connection patterns</h2>
+<h2>Generate reports</h2>
+sar -A                                       # All available statistics for today
+sar -A -f /var/log/sysstat/sa01             # All statistics for specific date
+sadf -d /var/log/sysstat/sa01               # Database format output
+sadf -j /var/log/sysstat/sa01               # JSON format output
+<h2>Why: Comprehensive system analysis, historical data analysis,</h2>
+<h2>data export for external analysis, automated reporting</h2></code></pre>
+<h3>System Maintenance Commands</h3>
+<h4><strong>crontab</strong> - Task scheduling</h4>
+<strong>What it does:</strong> Schedules tasks to run automatically at specified times and intervals. Essential for system maintenance, backups, and automated operations.
+<strong>Why essential:</strong> Automation is crucial for system administration. Regular maintenance tasks, monitoring, and backups need to run without manual intervention.
+<strong>When to use:</strong> Schedule backups, automate system maintenance, regular monitoring tasks, log rotation, system updates.
+<pre><code><h2>Crontab management</h2>
+crontab -l                                   # List current user's cron jobs
+crontab -e                                   # Edit current user's cron jobs
+sudo crontab -l -u username                  # List another user's cron jobs
+sudo crontab -e -u username                  # Edit another user's cron jobs
+crontab -r                                   # Remove all cron jobs (dangerous!)
+<h2>Why: View existing scheduled tasks, create new automation,</h2>
+<h2>manage tasks for different users, clean up unwanted jobs</h2>
+<h2>Cron time format: minute hour day month weekday command</h2>
+<h2>Examples:</h2>
+<h2>0 2 <em> </em> * /path/to/backup.sh              # Daily at 2:00 AM</h2>
+<h2>30 14 <em> </em> 1 /path/to/weekly.sh            # Weekly on Monday at 2:30 PM</h2>
+<h2>0 <em>/6 </em> <em> </em> /path/to/check.sh             # Every 6 hours</h2>
+<h2><em>/15 </em> <em> </em> * /path/to/monitor.sh          # Every 15 minutes</h2>
+<h2>0 0 1 <em> </em> /path/to/monthly.sh             # Monthly on 1st day at midnight</h2>
+<h2>Common maintenance tasks</h2>
+<h2>0 2 <em> </em> * /usr/bin/apt update && /usr/bin/apt upgrade -y  # Daily updates</h2>
+<h2>0 3 <em> </em> 0 /home/user/backup.sh            # Weekly backup on Sunday</h2>
+<h2><em>/10 </em> <em> </em> * /usr/bin/df -h | mail -s "Disk Usage" admin@example.com  # Disk monitoring</h2>
+<h2>0 1 <em> </em> * /usr/sbin/logrotate /etc/logrotate.conf  # Daily log rotation</h2>
+<h2>Why: Automate routine maintenance, ensure regular backups,</h2>
+<h2>proactive monitoring, consistent system updates</h2>
+<h2>System-wide cron</h2>
+sudo ls -la /etc/cron.d/                     # System cron jobs directory
+sudo ls -la /etc/cron.daily/                 # Daily cron scripts
+sudo ls -la /etc/cron.weekly/                # Weekly cron scripts
+sudo ls -la /etc/cron.monthly/               # Monthly cron scripts
+<h2>Why: System-wide automation, organize scripts by frequency,</h2>
+<h2>standard maintenance tasks, package-installed automation</h2></code></pre>
+<h4><strong>tar/gzip</strong> - File compression and archiving</h4>
+<strong>What it does:</strong> tar creates archives of files and directories. gzip compresses files. Combined, they provide powerful backup and file management capabilities.
+<strong>Why important:</strong> Backups, file transfers, and space management require archiving and compression. These tools are standards for file packaging.
+<strong>When to use:</strong> Creating backups, preparing files for transfer, archiving old data, reducing storage usage, distributing software.
+<pre><code><h2>tar - Create and extract archives</h2>
+tar -cvf archive.tar /path/to/directory      # Create archive (c=create, v=verbose, f=file)
+tar -czvf archive.tar.gz /path/to/directory  # Create compressed archive with gzip
+tar -cjvf archive.tar.bz2 /path/to/directory # Create compressed archive with bzip2
+tar -xvf archive.tar                         # Extract archive (x=extract)
+tar -xzvf archive.tar.gz                     # Extract gzip compressed archive
+<h2>Why: Bundle multiple files, compress for space savings,</h2>
+<h2>different compression algorithms for different needs, preserve directory structure</h2>
+<h2>Advanced tar usage</h2>
+tar -tvf archive.tar                         # List contents without extracting (t=list)
+tar -xvf archive.tar -C /destination/path    # Extract to specific directory
+tar --exclude='*.log' -czvf backup.tar.gz /home  # Exclude files matching pattern
+tar -czvf backup-$(date +%Y%m%d).tar.gz /important/data  # Date-stamped backups
+<h2>Why: Verify archive contents, organize extractions,</h2>
+<h2>selective backups, automated backup naming</h2>
+<h2>gzip/gunzip - File compression</h2>
+gzip file.txt                                # Compress file (creates file.txt.gz, removes original)
+gzip -k file.txt                             # Keep original file after compression
+gunzip file.txt.gz                          # Decompress file
+zcat file.txt.gz                             # View compressed file without decompressing
+<h2>Why: Reduce file sizes, preserve originals when needed,</h2>
+<h2>quick access to compressed content, space management</h2>
+<h2>Practical backup examples</h2>
+tar -czvf backup-$(date +%Y%m%d).tar.gz /home /etc /var/log  # System backup
+tar -czvf website-backup.tar.gz /var/www/html  # Website backup
+find /home -name "*.log" -mtime +30 -exec gzip {} \;  # Compress old log files
+tar -czvf - /important/data | ssh user@backup-server 'cat > backup.tar.gz'  # Remote backup
+<h2>Why: Regular system backups, application-specific backups,</h2>
+<h2>automated log management, secure remote backups</h2></code></pre>
+<h3>Security Commands</h3>
+<h4><strong>chmod/chown (Advanced Security Applications)</strong></h4>
+<pre><code><h2>Advanced permission scenarios</h2>
+find /var/www -type f -exec chmod 644 {} \;  # Set all files to read-write for owner, read for others
+find /var/www -type d -exec chmod 755 {} \;  # Set all directories to allow traversal
+chmod u+s /usr/bin/program                   # Set setuid bit (program runs as file owner)
+chmod g+s /shared/directory                   # Set setgid bit (files inherit group ownership)
+chmod +t /tmp                                # Set sticky bit (only owner can delete files)
+<h2>Why: Web server security, special permission bits for functionality,</h2>
+<h2>shared directory management, temporary directory protection</h2>
+<h2>Security auditing</h2>
+find / -perm -4000 -type f 2>/dev/null       # Find all setuid files (potential security risk)
+find / -perm -2000 -type f 2>/dev/null       # Find all setgid files
+find / -perm -1000 -type d 2>/dev/null       # Find directories with sticky bit
+find /home -perm 777 -type f 2>/dev/null     # Find world-writable files (security risk)
+<h2>Why: Security auditing, identify potential vulnerabilities,</h2>
+<h2>compliance checking, maintain security standards</h2></code></pre>
+<h4><strong>fail2ban/iptables (Security Monitoring)</strong></h4>
+<pre><code><h2>fail2ban - Intrusion prevention</h2>
+sudo fail2ban-client status                 # Show fail2ban status
+sudo fail2ban-client status sshd            # Show SSH jail status
+sudo fail2ban-client set sshd unbanip IP    # Unban specific IP address
+sudo fail2ban-client get sshd banned        # List banned IP addresses
+<h2>Why: Automated protection against brute force attacks,</h2>
+<h2>monitor attack attempts, manage blocked addresses</h2>
+<h2>Security log monitoring</h2>
+grep "Failed password" /var/log/auth.log | tail -20  # Recent failed login attempts
+grep "Invalid user" /var/log/auth.log       # Login attempts with invalid usernames
+awk '/Failed password/ {print $11}' /var/log/auth.log | sort | uniq -c | sort -nr  # Count failed attempts by IP
+<h2>Why: Identify attack patterns, monitor unauthorized access attempts,</h2>
+<h2>analyze security threats, improve security measures</h2></code></pre>
+<h3>Practical System Administration Scenarios</h3>
+<h4><strong>Scenario 1: "System is running slow"</strong></h4>
+<strong>Step-by-step investigation:</strong>
+<pre><code><h2>1. Check system load</h2>
+uptime                                       # Quick load overview
+top                                          # Real-time process monitoring
+<h2>Look for high load averages, high CPU processes</h2>
+<h2>2. Check memory usage</h2>
+free -h                                      # Memory overview
+ps aux --sort=-%mem | head -10              # Top memory-consuming processes
+<h2>Look for high memory usage, excessive swap usage</h2>
+<h2>3. Check disk I/O</h2>
+iostat -x 5 3                               # I/O statistics
+sudo iotop -o                               # Processes doing I/O
+<h2>Look for high %util, high await times</h2>
+<h2>4. Check disk space</h2>
+df -h                                        # Filesystem usage
+du -sh /var/log /tmp /home                  # Check common space consumers
+<h2>Look for full filesystems that might cause slowdowns</h2>
+<h2>5. Check system resources over time</h2>
+sar -u 5 12                                 # CPU usage pattern
+sar -r 5 12                                 # Memory usage pattern
+<h2>Identify patterns and peak usage times</h2></code></pre>
+<h4><strong>Scenario 2: "Service won't start"</strong></h4>
+<pre><code><h2>1. Check service status</h2>
+systemctl status service-name               # Detailed service status
+journalctl -u service-name --since "1 hour ago"  # Recent service logs
+<h2>2. Check for port conflicts</h2>
+sudo lsof -i :80                            # Check if port is in use
+sudo ss -tulpn | grep :80                   # Alternative port check
+<h2>3. Check file permissions</h2>
+ls -la /etc/service-name/                   # Configuration file permissions
+ls -la /var/log/service-name/               # Log directory permissions
+<h2>4. Check dependencies</h2>
+systemctl list-dependencies service-name    # Service dependencies
+systemctl status dependency-service         # Check dependent services
+<h2>5. Manual testing</h2>
+sudo -u service-user /usr/bin/service-binary --test-config  # Test configuration
+<h2>Run service manually to see detailed error messages</h2></code></pre>
+<h4><strong>Scenario 3: "Disk space full"</strong></h4>
+<pre><code><h2>1. Identify full filesystems</h2>
+df -h                                        # Find full filesystems
+<h2>2. Find large directories</h2>
+du -h /var | sort -hr | head -20            # Largest directories in /var
+du -h /home | sort -hr | head -20           # Largest directories in /home
+<h2>3. Find large files</h2>
+find /var/log -type f -size +100M -exec ls -lh {} \;  # Large log files
+find /tmp -type f -size +50M -mtime +7 -exec rm {} \;  # Clean old large temp files
+<h2>4. Clean up common space consumers</h2>
+sudo journalctl --vacuum-size=100M          # Limit journal size
+sudo apt autoremove                         # Remove unused packages
+sudo apt autoclean                          # Clean package cache
+<h2>5. Set up monitoring</h2>
+<h2>Add to crontab:</h2>
+<h2>0 6 <em> </em> * df -h | awk '$5 > 80 {print}' | mail -s "Disk Usage Alert" admin@example.com</h2></code></pre>
+<p>This comprehensive system administration guide provides the essential commands and real-world scenarios that system administrators encounter daily, with detailed explanations of what each command does, why it's important, and when to use it.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

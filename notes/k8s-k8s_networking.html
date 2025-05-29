@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Networking - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Networking</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">networking</span><span class="tag">service</span><span class="tag">ingress</span><span class="tag">networkpolicy</span><span class="tag">dns</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Networking</h2>
+<h3>Service</h3>
+<strong>What it is:</strong> Stable network endpoint that provides access to a set of pods, with built-in load balancing and service discovery.
+<strong>Why it matters:</strong> Pods are ephemeral and get new IP addresses when recreated. Services provide stable networking that doesn't change, enabling reliable communication between application components.
+<h4><strong>ClusterIP (Default)</strong></h4>
+<strong>What it is:</strong> Creates an internal IP address that's only accessible within the Kubernetes cluster.
+<strong>Why use it:</strong> 
+<ul><li><strong>Internal communication</strong> - Backend services that don't need external access</li>
+<li><strong>Security</strong> - Keep sensitive services (databases, internal APIs) hidden from outside</li>
+<li><strong>Service discovery</strong> - Other pods can reach this service by name via DNS</li>
+<li><strong>Microservices architecture</strong> - Enable service-to-service communication</li>
+<strong>How it works:</strong>
+<li><strong>Virtual IP</strong> - Kubernetes assigns a cluster-internal IP (e.g., 10.96.0.1)</li>
+<li><strong>DNS resolution</strong> - Service accessible via <code>service-name.namespace.svc.cluster.local</code></li>
+<li><strong>Load balancing</strong> - Distributes traffic across healthy pod replicas using iptables rules</li>
+<li><strong>Port mapping</strong> - Service port can differ from container port</li>
+<li><strong>Endpoint tracking</strong> - Automatically updates as pods are added/removed</li>
+<strong>Example:</strong>
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: database-service
+  namespace: production
+spec:
+  type: ClusterIP  # This is the default
+  ports:
+  - name: postgres
+    port: 5432        # Service port (what clients connect to)
+    targetPort: 5432  # Container port (where app listens)
+    protocol: TCP
+  selector:
+    app: postgres
+    tier: database</code></pre>
+<strong>Service discovery:</strong>
+<pre><code><h2>DNS resolution within cluster</h2>
+nslookup database-service.production.svc.cluster.local
+<h2>Environment variables (legacy)</h2>
+echo $DATABASE_SERVICE_SERVICE_HOST
+echo $DATABASE_SERVICE_SERVICE_PORT</code></pre>
+<strong>When you'll use it:</strong> Database services, internal APIs, background services, caching layers - any service that only needs cluster-internal access.
+<h4><strong>NodePort</strong></h4>
+<strong>What it is:</strong> Exposes the service on a specific port on every node in the cluster, making it accessible from outside.
+<strong>Why use it:</strong>
+<li><strong>External access</strong> - Allow traffic from outside the cluster without cloud load balancer</li>
+<li><strong>Simple setup</strong> - No cloud provider integration needed</li>
+<li><strong>Development/testing</strong> - Easy way to test services externally</li>
+<li><strong>On-premises</strong> - When you don't have cloud load balancers available</li>
+<li><strong>Legacy integration</strong> - Connect to applications that expect specific ports</li>
+<strong>How it works:</strong>
+<li><strong>Port allocation</strong> - Kubernetes assigns a port between 30000-32767 (configurable)</li>
+<li><strong>Every node listens</strong> - All cluster nodes forward traffic to the service</li>
+<li><strong>Automatic routing</strong> - Traffic reaches correct pods regardless of which node receives it</li>
+<li><strong>Still has ClusterIP</strong> - Internal access continues to work</li>
+<li><strong>kube-proxy</strong> - Handles the port forwarding on each node</li>
+<strong>Limitations:</strong>
+<li><strong>Port range restriction</strong> - Limited to 30000-32767 range by default</li>
+<li><strong>Node dependency</strong> - Clients need to know node IP addresses</li>
+<li><strong>Not highly available</strong> - If node fails, that access point is lost</li>
+<li><strong>Security exposure</strong> - Opens ports on all nodes in cluster</li>
+<li><strong>Port conflicts</strong> - Limited port space can cause conflicts</li>
+<strong>Example:</strong>
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-service
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80          # ClusterIP port (internal access)
+    targetPort: 8080  # Container port
+    nodePort: 30080   # External port (optional, auto-assigned if omitted)
+    protocol: TCP
+  selector:
+    app: web-app
+    tier: frontend</code></pre>
+<strong>Access methods:</strong>
+<pre><code><h2>Access via any node IP</h2>
+curl http://192.168.1.10:30080
+curl http://192.168.1.11:30080  # Works from any node
+<h2>Find node IPs</h2>
+kubectl get nodes -o wide
+<h2>Find assigned NodePort</h2>
+kubectl get service web-app-service</code></pre>
+<strong>When you'll use it:</strong> Development environments, on-premises setups, temporary external access, or when cloud load balancers aren't available.
+<h4><strong>LoadBalancer</strong></h4>
+<strong>What it is:</strong> Creates an external load balancer (through cloud provider) that routes traffic to the service.
+<strong>Why use it:</strong>
+<li><strong>Production external access</strong> - Proper way to expose services to internet</li>
+<li><strong>Cloud integration</strong> - Leverages cloud provider's load balancing infrastructure</li>
+<li><strong>High availability</strong> - Built-in redundancy and health checking</li>
+<li><strong>Automatic setup</strong> - Cloud provider handles external IP assignment and routing</li>
+<li><strong>Enterprise features</strong> - SSL termination, WAF, DDoS protection (depending on provider)</li>
+<strong>How it works:</strong>
+<li><strong>Cloud provisioning</strong> - Creates actual load balancer resource in cloud (AWS ELB, GCP Load Balancer, Azure LB)</li>
+<li><strong>External IP assignment</strong> - Gets public IP address automatically from cloud provider</li>
+<li><strong>Health checks</strong> - Cloud load balancer monitors service/pod health</li>
+<li><strong>Traffic routing</strong> - Routes external traffic to healthy cluster nodes</li>
+<li><strong>Includes NodePort</strong> - Still creates NodePort as backup access method</li>
+<li><strong>Integration</strong> - Works with cloud provider's networking stack</li>
+<strong>Requirements:</strong>
+<li><strong>Cloud provider</strong> - Only works on supported cloud platforms (AWS, GCP, Azure, etc.)</li>
+<li><strong>Cloud integration</strong> - Cluster must be configured with cloud provider credentials</li>
+<li><strong>Costs money</strong> - Each LoadBalancer service creates billable cloud resource</li>
+<li><strong>Permissions</strong> - Cluster needs permissions to create cloud load balancers</li>
+<strong>Example:</strong>
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  annotations:
+    # AWS-specific annotations
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    # GCP-specific annotations
+    cloud.google.com/load-balancer-type: "External"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 3000
+    protocol: TCP
+  selector:
+    app: frontend
+    tier: web</code></pre>
+<strong>Cloud provider features:</strong>
+<pre><code><h2>AWS Application Load Balancer</h2>
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "alb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-certificate-arn: "arn:aws:acm:..."
+<h2>Azure Load Balancer</h2>
+metadata:
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+    service.beta.kubernetes.io/azure-dns-label-name: "myapp"</code></pre>
+<strong>Checking LoadBalancer status:</strong>
+<pre><code><h2>Check external IP assignment</h2>
+kubectl get service frontend-service -w  # Watch for EXTERNAL-IP
+<h2>Check LoadBalancer events</h2>
+kubectl describe service frontend-service
+<h2>Find cloud provider load balancer</h2>
+<h2>AWS: Check EC2 console > Load Balancers</h2>
+<h2>GCP: Check Network services > Load balancing</h2>
+<h2>Azure: Check Load balancers in portal</h2></code></pre>
+<strong>When you'll use it:</strong> Production web applications, public APIs, any service that needs reliable internet access with high availability.
+<h4><strong>ExternalName</strong></h4>
+<strong>What it is:</strong> Maps the service to an external DNS name, acting as an alias for external services without proxying traffic.
+<strong>Why use it:</strong>
+<li><strong>External service integration</strong> - Access external databases, APIs, third-party services</li>
+<li><strong>Service abstraction</strong> - Hide external service details from applications</li>
+<li><strong>Environment flexibility</strong> - Point to different external services per environment</li>
+<li><strong>Migration support</strong> - Gradually move external services to internal ones</li>
+<li><strong>Legacy integration</strong> - Connect to services that can't be moved to Kubernetes</li>
+<strong>How it works:</strong>
+<li><strong>DNS CNAME</strong> - Creates DNS alias to external service (no traffic proxying)</li>
+<li><strong>No load balancing</strong> - Just DNS redirection, external service handles load balancing</li>
+<li><strong>No health checking</strong> - Kubernetes doesn't monitor external service health</li>
+<li><strong>No port mapping</strong> - Applications connect directly to external service ports</li>
+<li><strong>Cluster DNS integration</strong> - Works with Kubernetes internal DNS</li>
+<strong>Limitations:</strong>
+<li><strong>DNS only</strong> - Only works for DNS-resolvable services</li>
+<li><strong>No service mesh</strong> - Traffic doesn't go through Kubernetes networking</li>
+<li><strong>No policies</strong> - Can't apply Kubernetes network policies</li>
+<li><strong>External dependency</strong> - Service availability depends on external system</li>
+<strong>Example:</strong>
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: external-database
+  namespace: production
+spec:
+  type: ExternalName
+  externalName: database.company.com  # External DNS name
+  ports:
+  - port: 5432  # Optional: document the port for clarity</code></pre>
+<strong>Usage in applications:</strong>
+<pre><code><h2>Application can connect to external-database.production.svc.cluster.local</h2>
+<h2>which resolves to database.company.com</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:v1.0
+        env:
+        - name: DATABASE_HOST
+          value: "external-database.production.svc.cluster.local"
+        - name: DATABASE_PORT
+          value: "5432"</code></pre>
+<strong>Migration pattern:</strong>
+<pre><code><h2>Stage 1: Point to external service</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+spec:
+  type: ExternalName
+  externalName: users.legacy-system.com
+<p>---
+<h2>Stage 2: Migrate to internal service (change type, add selector)</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: user-service</code></pre></p>
+<strong>When you'll use it:</strong> Accessing external databases during migration, third-party APIs, legacy systems, SaaS services, or any external dependency that needs service discovery integration.
+<h3>Common Service Commands</h3>
+<pre><code><h2>Service operations</h2>
+kubectl get services                                 # List all services
+kubectl get svc                                     # Short form
+kubectl get svc -o wide                             # Additional information
+kubectl describe service <service-name>              # Detailed service info
+kubectl delete service <service-name>               # Delete service
+<h2>Service endpoints</h2>
+kubectl get endpoints                               # List service endpoints
+kubectl get endpoints <service-name>                # Specific service endpoints
+kubectl describe endpoints <service-name>           # Detailed endpoint info
+<h2>Service discovery testing</h2>
+kubectl run test-pod --image=busybox -it --rm -- nslookup <service-name>
+kubectl run test-pod --image=busybox -it --rm -- wget -qO- <service-name>:<port>
+<h2>Port forwarding (for testing)</h2>
+kubectl port-forward service/<service-name> 8080:80  # Forward local port to service
+<h2>Service troubleshooting</h2>
+kubectl get pods --selector=<service-selector>      # Find pods behind service
+kubectl logs deployment/<deployment-name>           # Check application logs</code></pre>
+<h3>Ingress</h3>
+<strong>What it is:</strong> API object that manages external access to services in a cluster, typically HTTP/HTTPS, providing load balancing, SSL termination, and name-based virtual hosting.
+<strong>Why it matters:</strong> Ingress provides a single entry point for multiple services, enables path-based and host-based routing, handles SSL certificates, and reduces the need for multiple LoadBalancer services (which can be expensive).
+<strong>Ingress vs Service:</strong>
+<li><strong>Service LoadBalancer</strong> - One external IP per service, expensive in cloud</li>
+<li><strong>Ingress</strong> - One external IP for many services, more cost-effective</li>
+<li><strong>Ingress</strong> - Layer 7 (HTTP/HTTPS) routing with advanced features</li>
+<li><strong>Service</strong> - Layer 4 (TCP/UDP) routing, simpler but less flexible</li>
+<strong>Key features:</strong>
+<li><strong>Path-based routing</strong> - Route different URLs to different services</li>
+<li><strong>Host-based routing</strong> - Route different domains to different services</li>
+<li><strong>SSL/TLS termination</strong> - Handle HTTPS certificates centrally</li>
+<li><strong>Load balancing</strong> - Distribute traffic across service endpoints</li>
+<li><strong>Authentication</strong> - Integration with auth providers (OAuth, LDAP)</li>
+<strong>Ingress Controller requirement:</strong>
+<li><strong>Not built-in</strong> - Kubernetes doesn't include Ingress controller by default</li>
+<li><strong>Must install</strong> - Need to deploy controller (NGINX, Traefik, HAProxy, etc.)</li>
+<li><strong>Cloud managed</strong> - Some cloud providers offer managed controllers</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Ingress operations</h2>
+kubectl get ingress                                 # List all ingresses
+kubectl get ing                                    # Short form
+kubectl describe ingress <ingress-name>            # Detailed ingress info
+kubectl delete ingress <ingress-name>             # Delete ingress
+<h2>Ingress troubleshooting</h2>
+kubectl get ingress -o wide                        # Show ingress with addresses
+kubectl logs -n ingress-nginx deployment/ingress-nginx-controller  # NGINX controller logs
+kubectl get events --sort-by=.metadata.creationTimestamp  # Recent events
+<h2>SSL certificate management</h2>
+kubectl get certificates                           # List TLS certificates (if using cert-manager)
+kubectl describe certificate <cert-name>          # Certificate details</code></pre>
+<strong>Example Ingress YAML (Basic routing):</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - myapp.example.com
+    secretName: myapp-tls
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80</code></pre>
+<strong>Advanced Ingress example (Multiple hosts, auth):</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multi-app-ingress
+  annotations:
+    # NGINX specific
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    # Rate limiting
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://mydomain.com"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - app1.example.com
+    - app2.example.com
+    secretName: multi-app-tls
+  rules:
+  - host: app1.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app1-service
+            port:
+              number: 80
+  - host: app2.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app2-service
+            port:
+              number: 80</code></pre>
+<strong>Popular Ingress Controllers:</strong>
+<li><strong>NGINX Ingress</strong> - Most popular, feature-rich, good performance</li>
+<li><strong>Traefik</strong> - Modern, automatic service discovery, good for microservices</li>
+<li><strong>HAProxy Ingress</strong> - High performance, enterprise features</li>
+<li><strong>AWS ALB Ingress</strong> - AWS Application Load Balancer integration</li>
+<li><strong>GCE Ingress</strong> - Google Cloud Load Balancer integration</li>
+<li><strong>Istio Gateway</strong> - Service mesh integration, advanced traffic management</li>
+<strong>When you'll use it:</strong> Web applications needing external access, microservices with different paths, SSL termination, domain-based routing, or when you need Layer 7 load balancing features.
+<h3>NetworkPolicy</h3>
+<strong>What it is:</strong> Kubernetes resource that defines rules for controlling network traffic between pods, providing micro-segmentation and security at the network level.
+<strong>Why it matters:</strong> By default, all pods in a Kubernetes cluster can communicate with each other. NetworkPolicies enable zero-trust networking by explicitly defining allowed communication paths, improving security posture.
+<strong>Default behavior without NetworkPolicies:</strong>
+<li><strong>All pods can communicate</strong> - No network restrictions</li>
+<li><strong>All ingress allowed</strong> - Pods accept traffic from anywhere</li>
+<li><strong>All egress allowed</strong> - Pods can send traffic anywhere</li>
+<li><strong>Potential security risk</strong> - Compromised pod can access everything</li>
+<strong>NetworkPolicy behavior:</strong>
+<li><strong>Deny by default</strong> - Once a NetworkPolicy selects a pod, only explicitly allowed traffic is permitted</li>
+<li><strong>Additive</strong> - Multiple policies can apply to same pod, rules are combined</li>
+<li><strong>Namespace scoped</strong> - Policies apply within their namespace</li>
+<li><strong>Requires CNI support</strong> - Not all network plugins support NetworkPolicies</li>
+<strong>NetworkPolicy types:</strong>
+<li><strong>Ingress</strong> - Control incoming traffic to pods</li>
+<li><strong>Egress</strong> - Control outgoing traffic from pods</li>
+<li><strong>Both</strong> - Can specify both ingress and egress rules</li>
+<strong>Common commands:</strong>
+<pre><code><h2>NetworkPolicy operations</h2>
+kubectl get networkpolicies                         # List all network policies
+kubectl get netpol                                # Short form
+kubectl describe networkpolicy <policy-name>       # Detailed policy info
+kubectl delete networkpolicy <policy-name>        # Delete policy
+<h2>Testing network connectivity</h2>
+kubectl run test-pod --image=busybox -it --rm -- wget -qO- <service-name>
+kubectl exec <pod-name> -- nc -zv <target-ip> <port>  # Test connection</code></pre>
+<strong>Example NetworkPolicy (Deny all ingress):</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: production
+spec:
+  podSelector: {}  # Selects all pods in namespace
+  policyTypes:
+  - Ingress
+  # No ingress rules = deny all ingress traffic</code></pre>
+<strong>Example NetworkPolicy (Allow specific traffic):</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-app-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: web-app
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from frontend pods
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow traffic from specific namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow access to database
+  - to:
+    - podSelector:
+        matchLabels:
+          app: database
+    ports:
+    - protocol: TCP
+      port: 5432</code></pre>
+<strong>Complex NetworkPolicy example:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-service-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: api-service
+      tier: backend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow from web tier in same namespace
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: web
+    - namespaceSelector:
+        matchLabels:
+          environment: production
+      podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow monitoring from any namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090
+  egress:
+  # Allow DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow database access
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow external API calls
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443</code></pre>
+<strong>NetworkPolicy best practices:</strong>
+<li><strong>Start with deny-all</strong> - Create restrictive baseline</li>
+<li><strong>Allow necessary traffic</strong> - Add specific allow rules</li>
+<li><strong>Test thoroughly</strong> - Verify application functionality</li>
+<li><strong>Monitor traffic</strong> - Use network monitoring tools</li>
+<li><strong>Document policies</strong> - Clear naming and documentation</li>
+<strong>CNI support:</strong>
+<li><strong>Supported</strong> - Calico, Cilium, Weave Net, Antrea</li>
+<li><strong>Not supported</strong> - Flannel (basic version), Docker bridge</li>
+<li><strong>Cloud providers</strong> - Most managed Kubernetes services support NetworkPolicies</li>
+<strong>When you'll use it:</strong> Security-conscious environments, multi-tenant clusters, compliance requirements (PCI DSS, HIPAA), microservices with sensitive data, or any application requiring network segmentation.
+<h3>DNS</h3>
+<strong>What it is:</strong> Kubernetes internal DNS service that provides name resolution for services and pods within the cluster, enabling service discovery by name rather than IP address.
+<strong>Why it matters:</strong> DNS makes it possible for applications to find and communicate with services using human-readable names instead of ever-changing IP addresses. It's fundamental to how Kubernetes networking and service discovery work.
+<strong>Kubernetes DNS components:</strong>
+<li><strong>CoreDNS</strong> - Default DNS server (replaced kube-dns)</li>
+<li><strong>DNS pods</strong> - Run in kube-system namespace</li>
+<li><strong>DNS service</strong> - ClusterIP service exposing DNS to pods</li>
+<li><strong>kubelet</strong> - Configures pod DNS settings</li>
+<strong>DNS resolution patterns:</strong>
+<li><strong>Services</strong> - <code><service-name>.<namespace>.svc.cluster.local</code></li>
+<li><strong>Pods</strong> - <code><pod-ip-dashed>.<namespace>.pod.cluster.local</code></li>
+<li><strong>Headless services</strong> - Direct pod DNS records</li>
+<li><strong>External services</strong> - Custom DNS entries</li>
+<strong>DNS search domains:</strong>
+Pods automatically get search domains configured:
+<li><code><namespace>.svc.cluster.local</code></li>
+<li><code>svc.cluster.local</code></li>
+<li><code>cluster.local</code></li>
+<strong>Common commands:</strong>
+<pre><code><h2>DNS troubleshooting</h2>
+kubectl get pods -n kube-system -l k8s-app=kube-dns    # Check DNS pods
+kubectl logs -n kube-system -l k8s-app=kube-dns       # DNS pod logs
+kubectl get service -n kube-system kube-dns           # DNS service
+<h2>Test DNS resolution</h2>
+kubectl run test-pod --image=busybox -it --rm -- nslookup kubernetes.default
+kubectl run test-pod --image=busybox -it --rm -- nslookup <service-name>.<namespace>
+<h2>Check pod DNS configuration</h2>
+kubectl exec <pod-name> -- cat /etc/resolv.conf
+kubectl exec <pod-name> -- nslookup <service-name></code></pre>
+<strong>DNS resolution examples:</strong>
+<pre><code><h2>Full DNS names</h2>
+nslookup web-service.production.svc.cluster.local
+<h2>Short names (using search domains)</h2>
+nslookup web-service.production    # From any namespace
+nslookup web-service              # From same namespace (production)
+<h2>Service types</h2>
+nslookup database-service         # ClusterIP service
+nslookup api-service             # NodePort service  
+nslookup web-service             # LoadBalancer service</code></pre>
+<strong>Headless service DNS:</strong>
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: database-headless
+spec:
+  clusterIP: None  # Makes it headless
+  ports:
+  - port: 5432
+  selector:
+    app: database</code></pre>
+<strong>Headless service resolution:</strong>
+<pre><code><h2>Returns individual pod IPs instead of service IP</h2>
+nslookup database-headless.production.svc.cluster.local
+<h2>Individual pod records</h2>
+nslookup 10-244-1-5.production.pod.cluster.local</code></pre>
+<strong>Custom DNS configuration:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: custom-dns-pod
+spec:
+  dnsPolicy: "None"
+  dnsConfig:
+    nameservers:
+    - 8.8.8.8
+    - 8.8.4.4
+    searches:
+    - my-company.com
+    options:
+    - name: ndots
+      value: "2"
+  containers:
+  - name: app
+    image: busybox</code></pre>
+<strong>DNS policies:</strong>
+<li><strong>ClusterFirst</strong> (default) - Use cluster DNS, fallback to upstream</li>
+<li><strong>ClusterFirstWithHostNet</strong> - For pods using host network</li>
+<li><strong>Default</strong> - Use node's DNS configuration</li>
+<li><strong>None</strong> - Custom DNS configuration required</li></ul>
+<strong>DNS performance optimization:</strong>
+<pre><code><h2>CoreDNS configuration</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+           lameduck 5s
+        }
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+           pods insecure
+           fallthrough in-addr.arpa ip6.arpa
+           ttl 30
+        }
+        prometheus :9153
+        forward . /etc/resolv.conf {
+           max_concurrent 1000
+        }
+        cache 30
+        loop
+        reload
+        loadbalance
+    }</code></pre>
+<strong>When you'll use it:</strong> DNS is used automatically by all Kubernetes applications. You'll work with it when troubleshooting connectivity issues, setting up service discovery, configuring external DNS, or optimizing DNS performance.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

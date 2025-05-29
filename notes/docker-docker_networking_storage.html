@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Networking & Storage - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Docker Networking & Storage</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (docker) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">docker</span><span class="tag">networking</span><span class="tag">volumes</span><span class="tag">storage</span><span class="tag">ports</span><span class="tag">bind-mounts</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Docker Networking & Storage</h2>
+<h3>Docker Networks</h3>
+<strong>What it is:</strong> Docker's networking system that allows containers to communicate with each other and the outside world through various network drivers and configurations.
+<strong>Why it matters:</strong> Proper networking is essential for container communication, security isolation, and connecting containerized applications to external services. Understanding Docker networking helps you design secure, scalable container architectures.
+<strong>Default networks:</strong>
+<ul><li><strong>bridge</strong> - Default network for containers on single host</li>
+<li><strong>host</strong> - Container uses host's network stack directly</li>
+<li><strong>none</strong> - Container has no network access</li>
+<strong>Network types:</strong>
+<li><strong>Bridge networks</strong> - Isolated networks on single Docker host</li>
+<li><strong>Overlay networks</strong> - Multi-host networking for Docker Swarm</li>
+<li><strong>Macvlan networks</strong> - Assign MAC addresses to containers</li>
+<li><strong>Host networks</strong> - Direct access to host networking</li>
+<li><strong>None networks</strong> - Completely isolated containers</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Network management</h2>
+docker network ls                                   # List all networks
+docker network inspect <network-name>              # Detailed network info
+docker network create <network-name>               # Create custom network
+docker network rm <network-name>                   # Remove network
+docker network prune                               # Remove unused networks
+<h2>Container network operations</h2>
+docker run --network=<network-name> nginx          # Connect to specific network
+docker network connect <network-name> <container>  # Connect running container
+docker network disconnect <network-name> <container> # Disconnect container
+<h2>Network troubleshooting</h2>
+docker exec <container> ping <target>              # Test connectivity
+docker exec <container> netstat -tlnp              # Check listening ports
+docker exec <container> nslookup <hostname>        # DNS resolution test</code></pre>
+<h4><strong>Bridge Networks (Default)</strong></h4>
+<strong>What it is:</strong> Software-defined network that allows containers on the same Docker host to communicate with each other.
+<strong>How it works:</strong>
+<li><strong>Virtual bridge</strong> - Docker creates virtual network interface (docker0)</li>
+<li><strong>Container interfaces</strong> - Each container gets virtual ethernet interface</li>
+<li><strong>IP allocation</strong> - Containers get IP addresses from bridge subnet</li>
+<li><strong>NAT translation</strong> - Outbound traffic is NAT'd through host IP</li>
+<strong>Default bridge limitations:</strong>
+<li><strong>No automatic DNS</strong> - Containers can't resolve each other by name</li>
+<li><strong>All containers connected</strong> - No network isolation between containers</li>
+<li><strong>Legacy networking</strong> - Older, less flexible approach</li>
+<strong>Custom bridge networks:</strong>
+<pre><code><h2>Create custom bridge network</h2>
+docker network create my-network
+<h2>Run containers on custom network</h2>
+docker run -d --name web --network my-network nginx
+docker run -d --name db --network my-network postgres
+<h2>Containers can communicate by name</h2>
+docker exec web ping db  # This works with custom networks</code></pre>
+<strong>Example bridge network configuration:</strong>
+<pre><code><h2>Create network with custom subnet</h2>
+docker network create \
+  --driver bridge \
+  --subnet=172.20.0.0/16 \
+  --ip-range=172.20.240.0/20 \
+  --gateway=172.20.0.1 \
+  my-custom-network
+<h2>Run container with static IP</h2>
+docker run -d \
+  --name web-server \
+  --network my-custom-network \
+  --ip 172.20.240.10 \
+  nginx</code></pre>
+<h4><strong>Host Networks</strong></h4>
+<strong>What it is:</strong> Container uses the host's network stack directly, without network isolation.
+<strong>When to use:</strong>
+<li><strong>High performance</strong> - No network virtualization overhead</li>
+<li><strong>Direct port access</strong> - Container services accessible on host ports</li>
+<li><strong>Network tools</strong> - Containers needing raw network access</li>
+<li><strong>Legacy applications</strong> - Apps expecting specific network behavior</li>
+<strong>Limitations:</strong>
+<li><strong>No isolation</strong> - Container has full network access</li>
+<li><strong>Port conflicts</strong> - Multiple containers can't use same ports</li>
+<li><strong>Security concerns</strong> - Less isolation between containers and host</li>
+<strong>Example:</strong>
+<pre><code><h2>Run container with host networking</h2>
+docker run -d --network host nginx
+<h2>Container binds directly to host port 80</h2>
+curl localhost:80  # Accesses nginx directly</code></pre>
+<h4><strong>Overlay Networks</strong></h4>
+<strong>What it is:</strong> Multi-host network that allows containers on different Docker hosts to communicate securely.
+<strong>Use cases:</strong>
+<li><strong>Docker Swarm</strong> - Multi-node cluster networking</li>
+<li><strong>Microservices</strong> - Services across multiple hosts</li>
+<li><strong>Load balancing</strong> - Distribute containers across nodes</li>
+<strong>Features:</strong>
+<li><strong>Encryption</strong> - Traffic encrypted between hosts</li>
+<li><strong>Service discovery</strong> - Built-in DNS for service names</li>
+<li><strong>Load balancing</strong> - Automatic load balancing for services</li>
+<strong>Example (Docker Swarm):</strong>
+<pre><code><h2>Create overlay network</h2>
+docker network create --driver overlay my-overlay
+<h2>Deploy service across multiple nodes</h2>
+docker service create \
+  --name web-service \
+  --network my-overlay \
+  --replicas 3 \
+  nginx</code></pre>
+<h3>Port Mapping</h3>
+<strong>What it is:</strong> Mechanism to expose container ports to the host system or external networks, allowing external access to containerized applications.
+<strong>Why it matters:</strong> Containers run in isolated networks by default. Port mapping creates pathways for external traffic to reach container services, enabling web servers, APIs, and other services to be accessible.
+<strong>Port mapping syntax:</strong>
+<li><strong>-p host_port:container_port</strong> - Map specific host port to container port</li>
+<li><strong>-p container_port</strong> - Map container port to random host port</li>
+<li><strong>-P</strong> - Publish all exposed ports to random host ports</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Port mapping examples</h2>
+docker run -p 8080:80 nginx                        # Host port 8080 → container port 80
+docker run -p 80:80 -p 443:443 nginx              # Multiple port mappings
+docker run -p 127.0.0.1:8080:80 nginx             # Bind to specific host interface
+docker run -P nginx                                # Publish all exposed ports randomly
+<h2>Port inspection</h2>
+docker port <container-name>                       # Show port mappings
+docker ps                                         # Shows port mappings in output
+netstat -tlnp | grep docker                       # Host ports used by Docker</code></pre>
+<strong>Advanced port mapping:</strong>
+<pre><code><h2>Bind to specific interface</h2>
+docker run -p 192.168.1.100:8080:80 nginx
+<h2>UDP port mapping</h2>
+docker run -p 53:53/udp my-dns-server
+<h2>Range of ports</h2>
+docker run -p 8000-8010:8000-8010 my-app
+<h2>Random port assignment</h2>
+docker run -p 80 nginx  # Docker assigns random host port</code></pre>
+<strong>Port mapping in Docker Compose:</strong>
+<pre><code>version: '3.8'
+services:
+  web:
+    image: nginx
+    ports:
+      - "8080:80"        # host:container
+      - "443:443"
+      - "80"             # random host port
+    expose:
+      - "9000"           # Internal port (not mapped to host)</code></pre>
+<strong>Security considerations:</strong>
+<li><strong>Bind to localhost</strong> - Use 127.0.0.1:port for local-only access</li>
+<li><strong>Firewall rules</strong> - Configure host firewall appropriately</li>
+<li><strong>Least privilege</strong> - Only expose necessary ports</li>
+<li><strong>Non-root ports</strong> - Use ports > 1024 when possible</li>
+<h3>Volumes</h3>
+<strong>What it is:</strong> Docker's mechanism for persisting data generated by and used by containers, providing persistent storage that survives container lifecycle.
+<strong>Why it matters:</strong> Containers are ephemeral - when they're removed, all data inside is lost. Volumes provide data persistence, enable data sharing between containers, and allow data to outlive container lifecycles.
+<strong>Volume types:</strong>
+<li><strong>Named volumes</strong> - Managed by Docker, stored in Docker area</li>
+<li><strong>Bind mounts</strong> - Mount host directory into container</li>
+<li><strong>tmpfs mounts</strong> - Temporary storage in memory (Linux only)</li>
+<li><strong>Volume plugins</strong> - Third-party storage drivers</li>
+<strong>Volume vs Bind Mount vs tmpfs:</strong>
+<li><strong>Volumes</strong> - Docker managed, portable, better performance</li>
+<li><strong>Bind mounts</strong> - Direct host path access, less portable</li>
+<li><strong>tmpfs</strong> - Memory storage, fast but temporary</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Volume management</h2>
+docker volume ls                                    # List all volumes
+docker volume create <volume-name>                 # Create named volume
+docker volume inspect <volume-name>                # Volume details
+docker volume rm <volume-name>                     # Remove volume
+docker volume prune                                # Remove unused volumes
+<h2>Using volumes with containers</h2>
+docker run -v <volume-name>:/path/in/container nginx    # Named volume
+docker run -v /host/path:/container/path nginx          # Bind mount
+docker run --tmpfs /tmp nginx                           # tmpfs mount
+<h2>Volume inspection</h2>
+docker exec <container> df -h                      # Check mounted filesystems
+docker exec <container> ls -la /path/to/volume     # List volume contents</code></pre>
+<h4><strong>Named Volumes</strong></h4>
+<strong>What they are:</strong> Docker-managed volumes stored in Docker's storage area, providing the best way to persist data.
+<strong>Advantages:</strong>
+<li><strong>Docker managed</strong> - Docker handles storage location and management</li>
+<li><strong>Portable</strong> - Work across different host systems</li>
+<li><strong>Performance</strong> - Optimized for container I/O</li>
+<li><strong>Backup friendly</strong> - Easy to backup and restore</li>
+<li><strong>Permission handling</strong> - Docker manages permissions automatically</li>
+<strong>Examples:</strong>
+<pre><code><h2>Create and use named volume</h2>
+docker volume create my-data
+docker run -d -v my-data:/var/lib/mysql mysql:8.0
+<h2>Volume with specific driver options</h2>
+docker volume create \
+  --driver local \
+  --opt type=nfs \
+  --opt o=addr=192.168.1.100,rw \
+  --opt device=:/path/to/dir \
+  nfs-volume</code></pre>
+<h4><strong>Bind Mounts</strong></h4>
+<strong>What they are:</strong> Direct mounting of host filesystem paths into containers.
+<strong>Use cases:</strong>
+<li><strong>Development</strong> - Share source code with container</li>
+<li><strong>Configuration</strong> - Mount config files from host</li>
+<li><strong>Logs</strong> - Direct access to container logs</li>
+<li><strong>Shared data</strong> - Multiple containers accessing same host data</li>
+<strong>Examples:</strong>
+<pre><code><h2>Bind mount examples</h2>
+docker run -v /host/source:/container/source node:16    # Source code mounting
+docker run -v /host/config:/etc/app/config my-app      # Configuration mounting
+docker run -v /var/log:/app/logs my-app                # Log directory mounting
+<h2>Read-only bind mount</h2>
+docker run -v /host/data:/container/data:ro nginx
+<h2>Bind mount with specific options</h2>
+docker run --mount type=bind,source=/host/path,target=/container/path,readonly nginx</code></pre>
+<strong>Bind mount considerations:</strong>
+<li><strong>Host dependency</strong> - Relies on specific host paths</li>
+<li><strong>Permission issues</strong> - Host/container user ID mismatches</li>
+<li><strong>Security</strong> - Container has direct host filesystem access</li>
+<li><strong>Portability</strong> - Less portable across different hosts</li>
+<h4><strong>Volume Plugins</strong></h4>
+<strong>What they are:</strong> Third-party storage drivers that extend Docker's storage capabilities.
+<strong>Popular plugins:</strong>
+<li><strong>NFS</strong> - Network File System storage</li>
+<li><strong>GlusterFS</strong> - Distributed file system</li>
+<li><strong>Ceph</strong> - Distributed storage system</li>
+<li><strong>AWS EBS</strong> - Amazon Elastic Block Store</li>
+<li><strong>Azure File</strong> - Azure cloud storage</li>
+<strong>Example NFS volume:</strong>
+<pre><code><h2>Install NFS plugin</h2>
+docker plugin install store/sumologic/docker-volume-driver:1.0.0
+<h2>Create NFS volume</h2>
+docker volume create \
+  --driver sumologic/docker-volume-driver:1.0.0 \
+  --opt server=nfs.example.com \
+  --opt share=/exports/data \
+  nfs-data</code></pre>
+<h3>Bind Mounts</h3>
+<strong>What they are:</strong> Method of mounting files or directories from the host machine into containers, creating a direct link between host and container filesystems.
+<strong>Why use them:</strong> Bind mounts provide direct access to host files, enable real-time development workflows, and allow containers to interact with existing host data without copying.
+<strong>Bind mount characteristics:</strong>
+<li><strong>Direct host access</strong> - Container sees live host filesystem</li>
+<li><strong>Bidirectional</strong> - Changes in container affect host and vice versa</li>
+<li><strong>Performance</strong> - Direct filesystem access, no copy overhead</li>
+<li><strong>Host dependent</strong> - Relies on specific host paths existing</li>
+<strong>Bind mount syntax:</strong>
+<pre><code><h2>Basic bind mount</h2>
+docker run -v /host/path:/container/path image
+<h2>Using --mount (preferred, more explicit)</h2>
+docker run --mount type=bind,source=/host/path,target=/container/path image
+<h2>Read-only bind mount</h2>
+docker run -v /host/path:/container/path:ro image
+docker run --mount type=bind,source=/host/path,target=/container/path,readonly image</code></pre>
+<strong>Development workflow example:</strong>
+<pre><code><h2>Mount source code for live development</h2>
+docker run -d \
+  --name dev-container \
+  -v $(pwd):/app \
+  -w /app \
+  -p 3000:3000 \
+  node:16 \
+  npm run dev
+<h2>Changes to host files immediately reflected in container</h2></code></pre>
+<strong>Configuration management:</strong>
+<pre><code><h2>Mount configuration files</h2>
+docker run -d \
+  --name web-server \
+  -v /host/nginx.conf:/etc/nginx/nginx.conf:ro \
+  -v /host/ssl-certs:/etc/ssl/certs:ro \
+  -p 80:80 -p 443:443 \
+  nginx
+<h2>Mount environment-specific configs</h2>
+docker run -d \
+  -v /etc/myapp/prod.conf:/app/config.conf:ro \
+  my-application</code></pre>
+<strong>Log file access:</strong>
+<pre><code><h2>Mount log directory for direct access</h2>
+docker run -d \
+  --name app-server \
+  -v /var/log/myapp:/app/logs \
+  my-application
+<h2>Host can directly access logs at /var/log/myapp</h2>
+tail -f /var/log/myapp/application.log</code></pre>
+<strong>Bind mount best practices:</strong>
+<li><strong>Use absolute paths</strong> - Avoid relative paths for consistency</li>
+<li><strong>Consider permissions</strong> - Match user IDs between host and container</li>
+<li><strong>Use read-only</strong> - Mount configs and static files as read-only</li>
+<li><strong>Security awareness</strong> - Containers can modify host files</li>
+<li><strong>Documentation</strong> - Document host path requirements clearly</li></ul>
+<strong>Permission handling:</strong>
+<pre><code><h2>Run container with specific user ID</h2>
+docker run -u $(id -u):$(id -g) -v $(pwd):/app my-app
+<h2>Fix ownership issues</h2>
+docker run -v /host/data:/data alpine chown -R 1000:1000 /data</code></pre>
+<strong>Troubleshooting bind mounts:</strong>
+<pre><code><h2>Check if path exists on host</h2>
+ls -la /host/path
+<h2>Inspect container mounts</h2>
+docker inspect <container> | grep -A 10 "Mounts"
+<h2>Test file permissions</h2>
+docker exec <container> ls -la /mounted/path
+docker exec <container> touch /mounted/path/test-file</code></pre>
+<strong>When you'll use them:</strong> Development environments, configuration management, log file access, sharing data between host and containers, and any scenario requiring direct host filesystem access.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

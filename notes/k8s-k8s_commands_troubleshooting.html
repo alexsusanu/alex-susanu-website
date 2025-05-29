@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Commands & Troubleshooting - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kubernetes Commands & Troubleshooting</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">kubectl</span><span class="tag">troubleshooting</span><span class="tag">debugging</span><span class="tag">monitoring</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Commands & Troubleshooting</h2>
+<h3>Essential kubectl Commands</h3>
+<strong>What kubectl is:</strong> The command-line tool for interacting with Kubernetes clusters, providing a way to deploy applications, inspect and manage cluster resources, and view logs.
+<strong>Why it matters:</strong> kubectl is your primary interface to Kubernetes. Mastering kubectl commands is essential for daily operations, troubleshooting, and cluster management.
+<h4><strong>Basic Resource Operations</strong></h4>
+<strong>Get resources:</strong>
+<pre><code><h2>List resources</h2>
+kubectl get pods                                   # List pods in current namespace
+kubectl get pods -A                               # List pods in all namespaces
+kubectl get pods -o wide                          # Additional info (node, IP, etc.)
+kubectl get pods --show-labels                    # Show pod labels
+kubectl get pods -l app=nginx                     # Filter by labels
+kubectl get pods --field-selector=status.phase=Running  # Filter by field
+<h2>Different output formats</h2>
+kubectl get pods -o yaml                          # YAML output
+kubectl get pods -o json                          # JSON output
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'  # Custom output
+kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase</code></pre>
+<strong>Describe resources:</strong>
+<pre><code>kubectl describe pod <pod-name>                   # Detailed pod information
+kubectl describe node <node-name>                 # Node details
+kubectl describe service <service-name>           # Service details
+kubectl describe deployment <deployment-name>     # Deployment details</code></pre>
+<strong>Create and apply resources:</strong>
+<pre><code>kubectl create -f manifest.yaml                   # Create resources from file
+kubectl apply -f manifest.yaml                    # Apply configuration (create or update)
+kubectl apply -f directory/                       # Apply all YAML files in directory
+kubectl apply -R -f manifests/                    # Recursively apply files
+<h2>Create resources imperatively</h2>
+kubectl create deployment nginx --image=nginx:1.21
+kubectl create service clusterip nginx --tcp=80:80
+kubectl create configmap app-config --from-literal=key=value
+kubectl create secret generic app-secret --from-literal=password=secret123</code></pre>
+<strong>Delete resources:</strong>
+<pre><code>kubectl delete pod <pod-name>                     # Delete specific pod
+kubectl delete -f manifest.yaml                   # Delete resources defined in file
+kubectl delete deployment,service nginx           # Delete multiple resource types
+kubectl delete pods --all                         # Delete all pods in namespace
+kubectl delete pods -l app=nginx                  # Delete pods matching label
+kubectl delete namespace <namespace-name>         # Delete namespace and all resources</code></pre>
+<h4><strong>Advanced kubectl Operations</strong></h4>
+<strong>Edit resources:</strong>
+<pre><code>kubectl edit pod <pod-name>                       # Edit pod in default editor
+kubectl edit deployment <deployment-name>         # Edit deployment
+kubectl patch pod <pod-name> -p '{"spec":{"containers":[{"name":"app","image":"nginx:1.22"}]}}'</code></pre>
+<strong>Scale resources:</strong>
+<pre><code>kubectl scale deployment <deployment-name> --replicas=5
+kubectl scale --replicas=3 -f deployment.yaml
+kubectl autoscale deployment <deployment-name> --min=2 --max=10 --cpu-percent=80</code></pre>
+<strong>Resource usage:</strong>
+<pre><code>kubectl top nodes                                 # Node resource usage
+kubectl top pods                                  # Pod resource usage
+kubectl top pods --containers                     # Container resource usage
+kubectl top pods -l app=nginx                     # Resource usage for labeled pods</code></pre>
+<h4><strong>Logs and Debugging</strong></h4>
+<strong>View logs:</strong>
+<pre><code>kubectl logs <pod-name>                           # Pod logs
+kubectl logs <pod-name> -c <container-name>       # Specific container logs
+kubectl logs -f <pod-name>                        # Follow logs (tail -f)
+kubectl logs --previous <pod-name>                # Previous container instance logs
+kubectl logs -l app=nginx                         # Logs from all pods with label
+kubectl logs --since=1h <pod-name>                # Logs from last hour
+kubectl logs --tail=100 <pod-name>                # Last 100 lines</code></pre>
+<strong>Execute commands in containers:</strong>
+<pre><code>kubectl exec <pod-name> -- ls /                   # Execute single command
+kubectl exec -it <pod-name> -- /bin/bash          # Interactive shell
+kubectl exec -it <pod-name> -c <container> -- /bin/sh  # Specific container
+kubectl exec <pod-name> -- env                    # View environment variables</code></pre>
+<strong>Port forwarding:</strong>
+<pre><code>kubectl port-forward pod/<pod-name> 8080:80       # Forward local port to pod
+kubectl port-forward service/<service-name> 8080:80  # Forward to service
+kubectl port-forward deployment/<deployment-name> 8080:80  # Forward to deployment
+kubectl port-forward --address 0.0.0.0 pod/<pod-name> 8080:80  # Listen on all interfaces</code></pre>
+<strong>Copy files:</strong>
+<pre><code>kubectl cp <pod-name>:/path/to/file ./local-file  # Copy from pod to local
+kubectl cp ./local-file <pod-name>:/path/to/file  # Copy from local to pod
+kubectl cp <pod-name>:/path/to/directory ./local-directory -c <container-name></code></pre>
+<h3>Troubleshooting Techniques</h3>
+<strong>What troubleshooting involves:</strong> Systematic approach to identifying, diagnosing, and resolving issues in Kubernetes clusters and applications.
+<strong>Why it's important:</strong> Kubernetes complexity means issues can occur at multiple layers - infrastructure, networking, storage, application, and configuration. Effective troubleshooting minimizes downtime and maintains reliability.
+<h4><strong>Pod Troubleshooting</strong></h4>
+<strong>Pod states and issues:</strong>
+<pre><code><h2>Check pod status</h2>
+kubectl get pods                                  # Overall pod status
+kubectl describe pod <pod-name>                   # Detailed status and events
+<h2>Common pod states</h2>
+<h2>Pending - Pod accepted but not scheduled</h2>
+<h2>Running - Pod is executing</h2>
+<h2>Succeeded - All containers terminated successfully  </h2>
+<h2>Failed - All containers terminated, at least one failed</h2>
+<h2>Unknown - Pod state cannot be determined</h2></code></pre>
+<strong>ImagePullBackOff / ErrImagePull:</strong>
+<pre><code><h2>Check image name and tag</h2>
+kubectl describe pod <pod-name> | grep -i image
+<h2>Verify image exists</h2>
+docker pull <image-name>
+<h2>Check image pull secrets</h2>
+kubectl get pods <pod-name> -o yaml | grep imagePullSecrets
+kubectl describe secret <image-pull-secret>
+<h2>Fix common issues:</h2>
+<h2>- Incorrect image name/tag</h2>
+<h2>- Missing or incorrect registry credentials</h2>
+<h2>- Network connectivity to registry</h2>
+<h2>- Registry authentication issues</h2></code></pre>
+<strong>CrashLoopBackOff:</strong>
+<pre><code><h2>Check container logs</h2>
+kubectl logs <pod-name> --previous               # Previous container logs
+kubectl logs <pod-name> -c <container-name>     # Specific container
+<h2>Check resource limits</h2>
+kubectl describe pod <pod-name> | grep -A 5 Limits
+<h2>Common causes:</h2>
+<h2>- Application startup failures</h2>
+<h2>- Missing environment variables or secrets</h2>
+<h2>- Resource constraints (CPU/memory limits)</h2>
+<h2>- Health check failures</h2>
+<h2>- Dependency issues (database connectivity, etc.)</h2></code></pre>
+<strong>Pending pods:</strong>
+<pre><code><h2>Check why pod is not scheduled</h2>
+kubectl describe pod <pod-name> | grep Events -A 10
+<h2>Check node resources</h2>
+kubectl top nodes
+kubectl describe nodes
+<h2>Common issues:</h2>
+<h2>- Insufficient resources (CPU, memory)</h2>
+<h2>- Node selector constraints</h2>
+<h2>- Taints and tolerations</h2>
+<h2>- Affinity/anti-affinity rules</h2>
+<h2>- PVC binding issues</h2></code></pre>
+<h4><strong>Service and Networking Troubleshooting</strong></h4>
+<strong>Service connectivity issues:</strong>
+<pre><code><h2>Check service endpoints</h2>
+kubectl get endpoints <service-name>
+kubectl describe service <service-name>
+<h2>Test service connectivity</h2>
+kubectl run test-pod --image=busybox -it --rm -- nslookup <service-name>
+kubectl run test-pod --image=busybox -it --rm -- wget -qO- <service-name>:<port>
+<h2>Check service selector matches pod labels  </h2>
+kubectl get pods --show-labels
+kubectl get service <service-name> -o yaml | grep selector -A 5</code></pre>
+<strong>DNS resolution issues:</strong>
+<pre><code><h2>Test DNS resolution</h2>
+kubectl run test-pod --image=busybox -it --rm -- nslookup kubernetes.default
+kubectl run test-pod --image=busybox -it --rm -- nslookup <service-name>.<namespace>.svc.cluster.local
+<h2>Check CoreDNS pods</h2>
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+kubectl logs -n kube-system -l k8s-app=kube-dns
+<h2>Check DNS configuration in pods</h2>
+kubectl exec <pod-name> -- cat /etc/resolv.conf</code></pre>
+<strong>NetworkPolicy troubleshooting:</strong>
+<pre><code><h2>Check if NetworkPolicies are applied</h2>
+kubectl get networkpolicies
+kubectl describe networkpolicy <policy-name>
+<h2>Test connectivity between pods</h2>
+kubectl exec <source-pod> -- nc -zv <target-service> <port>
+kubectl exec <source-pod> -- telnet <target-ip> <port>
+<h2>Check CNI plugin logs (varies by plugin)</h2>
+kubectl logs -n kube-system -l k8s-app=calico-node  # Calico example</code></pre>
+<h4><strong>Storage Troubleshooting</strong></h4>
+<strong>PVC binding issues:</strong>
+<pre><code><h2>Check PVC status</h2>
+kubectl get pvc
+kubectl describe pvc <pvc-name>
+<h2>Check available PVs</h2>
+kubectl get pv
+kubectl describe pv <pv-name>
+<h2>Common issues:</h2>
+<h2>- No matching PV available</h2>
+<h2>- Storage class not found</h2>
+<h2>- Access mode mismatch</h2>
+<h2>- Size requirements not met</h2>
+<h2>- Node affinity constraints</h2></code></pre>
+<strong>Volume mount failures:</strong>
+<pre><code><h2>Check pod events for mount errors</h2>
+kubectl describe pod <pod-name> | grep Events -A 20
+<h2>Check volume mounts in pod spec</h2>
+kubectl get pod <pod-name> -o yaml | grep -A 10 volumeMounts
+<h2>Verify file permissions</h2>
+kubectl exec <pod-name> -- ls -la /mounted/path
+kubectl exec <pod-name> -- df -h  # Check if volume is mounted</code></pre>
+<h4><strong>Application Troubleshooting</strong></h4>
+<strong>Container startup issues:</strong>
+<pre><code><h2>Check container logs</h2>
+kubectl logs <pod-name> -c <container-name>
+kubectl logs <pod-name> --previous  # Previous instance
+<h2>Check container resource usage</h2>
+kubectl top pod <pod-name> --containers
+<h2>Check environment variables</h2>
+kubectl exec <pod-name> -- env
+<h2>Check mounted secrets and configmaps</h2>
+kubectl exec <pod-name> -- ls -la /etc/secrets
+kubectl exec <pod-name> -- cat /etc/config/app.conf</code></pre>
+<strong>Health check failures:</strong>
+<pre><code><h2>Check liveness and readiness probes</h2>
+kubectl describe pod <pod-name> | grep -A 5 Liveness
+kubectl describe pod <pod-name> | grep -A 5 Readiness
+<h2>Test health endpoints manually</h2>
+kubectl exec <pod-name> -- curl -f http://localhost:8080/health
+kubectl port-forward <pod-name> 8080:8080
+curl http://localhost:8080/health</code></pre>
+<strong>Resource constraints:</strong>
+<pre><code><h2>Check resource requests and limits</h2>
+kubectl describe pod <pod-name> | grep -A 10 Limits
+kubectl describe pod <pod-name> | grep -A 10 Requests
+<h2>Check if pod is being throttled or OOMKilled</h2>
+kubectl describe pod <pod-name> | grep -i oom
+kubectl describe pod <pod-name> | grep -i killed
+<h2>Check node resources</h2>
+kubectl top nodes
+kubectl describe node <node-name> | grep -A 5 "Allocated resources"</code></pre>
+<h3>Monitoring and Observability</h3>
+<strong>What monitoring involves:</strong> Collecting, analyzing, and acting on metrics, logs, and traces from Kubernetes clusters and applications to ensure reliability and performance.
+<strong>Why it's essential:</strong> Kubernetes complexity requires proactive monitoring to detect issues early, understand system behavior, optimize performance, and maintain reliability.
+<h4><strong>Cluster Monitoring</strong></h4>
+<strong>Cluster health checks:</strong>
+<pre><code><h2>Check cluster component status</h2>
+kubectl get componentstatuses
+kubectl cluster-info
+kubectl get nodes
+kubectl top nodes
+<h2>Check system pods</h2>
+kubectl get pods -n kube-system
+kubectl get pods -n kube-system -o wide
+<h2>Check cluster events</h2>
+kubectl get events --sort-by=.metadata.creationTimestamp
+kubectl get events --field-selector type=Warning</code></pre>
+<strong>Resource monitoring:</strong>
+<code>`</code>bash
+<h2>Resource usage across cluster</h2>
+kubectl top nodes
+kubectl top pods --all-namespaces
+kubectl top pods --
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Fundamentals - Alex Susanu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .tag {
+            background: #e8f0ff;
+            color: #4a90e2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .note-content h2 {
+            color: #4a90e2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e8f0ff;
+            padding-bottom: 8px;
+        }
+        
+        .note-content h3 {
+            color: #4a90e2;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .note-content h4 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .note-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .note-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .note-content li {
+            margin-bottom: 8px;
+        }
+        
+        .note-content pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .note-content code {
+            background: #f8f9ff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .note-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Docker Fundamentals</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="content">
+            <div class="note-meta">
+                DevOps (docker) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">docker</span><span class="tag">containers</span><span class="tag">images</span><span class="tag">dockerfile</span><span class="tag">registry</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Docker Fundamentals</h2>
+<h3>Container</h3>
+<strong>What it is:</strong> A lightweight, standalone package that includes everything needed to run an application: code, runtime, system tools, libraries, and settings.
+<strong>Why it matters:</strong> Containers solve the "it works on my machine" problem by providing consistent environments across development, testing, and production. They're the foundation of modern application deployment and microservices architecture.
+<strong>Key characteristics:</strong>
+<ul><li><strong>Isolation</strong> - Containers are isolated from each other and the host system</li>
+<li><strong>Portability</strong> - Run anywhere Docker is installed, regardless of underlying OS</li>
+<li><strong>Efficiency</strong> - Share the host OS kernel, much lighter than virtual machines</li>
+<li><strong>Immutable</strong> - Containers don't change; new versions create new containers</li>
+<li><strong>Stateless</strong> - Data should be stored outside the container for persistence</li>
+<strong>Container vs Virtual Machine:</strong>
+<li><strong>Containers</strong> - Share OS kernel, faster startup, less resource usage</li>
+<li><strong>VMs</strong> - Full OS per instance, stronger isolation, more overhead</li>
+<li><strong>Use cases</strong> - Containers for applications, VMs for different OS requirements</li>
+<strong>Container lifecycle:</strong>
+<li><strong>Created</strong> - Container exists but hasn't started</li>
+<li><strong>Running</strong> - Container is executing</li>
+<li><strong>Paused</strong> - Container processes are suspended</li>
+<li><strong>Stopped</strong> - Container has finished executing</li>
+<li><strong>Deleted</strong> - Container and its filesystem are removed</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Running containers</h2>
+docker run nginx                              # Run nginx container
+docker run -d nginx                           # Run in background (detached)
+docker run -p 8080:80 nginx                  # Map host port 8080 to container port 80
+docker run -it ubuntu bash                   # Interactive terminal
+docker run --name my-nginx nginx             # Assign custom name
+docker run -e ENV_VAR=value myapp            # Set environment variable
+<h2>Managing containers</h2>
+docker ps                                    # List running containers
+docker ps -a                                 # List all containers (including stopped)
+docker stop <container-id>                   # Stop running container
+docker start <container-id>                  # Start stopped container
+docker restart <container-id>                # Restart container
+docker rm <container-id>                     # Remove container
+docker rm -f <container-id>                  # Force remove running container
+<h2>Interacting with containers</h2>
+docker exec -it <container-id> bash          # Shell into running container
+docker logs <container-id>                   # View container logs
+docker logs -f <container-id>                # Follow logs in real-time
+docker inspect <container-id>                # Detailed container information
+docker stats                                 # Real-time resource usage
+docker top <container-id>                    # Running processes in container</code></pre>
+<strong>Resource management:</strong>
+<pre><code><h2>Limit CPU and memory</h2>
+docker run --cpus="1.5" --memory="512m" nginx
+<h2>Set restart policy</h2>
+docker run --restart=always nginx            # Always restart
+docker run --restart=unless-stopped nginx   # Restart unless manually stopped
+docker run --restart=on-failure:3 nginx     # Restart up to 3 times on failure</code></pre>
+<strong>When you'll use it:</strong> Every Docker workflow involves running and managing containers. Daily operations include starting, stopping, monitoring, and troubleshooting containers.
+<h3>Image</h3>
+<strong>What it is:</strong> Read-only template used to create containers, containing application code, runtime, system tools, libraries, and configuration files.
+<strong>Why it matters:</strong> Images are the blueprints for containers. They ensure consistency across environments, enable easy sharing and distribution of applications, and form the basis of container deployment strategies.
+<strong>Image structure:</strong>
+<li><strong>Layers</strong> - Images are built in layers for efficiency and reusability</li>
+<li><strong>Base layer</strong> - Starting point (often OS like Ubuntu, Alpine, or scratch)</li>
+<li><strong>Application layers</strong> - Code, dependencies, configuration added on top</li>
+<li><strong>Metadata</strong> - Information about the image (creation date, author, etc.)</li>
+<strong>Image naming:</strong>
+<li><strong>Repository</strong> - Name of the image (nginx, ubuntu, myapp)</li>
+<li><strong>Tag</strong> - Version or variant (latest, v1.0, alpine)</li>
+<li><strong>Registry</strong> - Where image is stored (docker.io, gcr.io, private registry)</li>
+<li><strong>Full name</strong> - <code>registry/repository:tag</code> (docker.io/nginx:1.21)</li>
+<strong>Image layers and caching:</strong>
+<li><strong>Layer sharing</strong> - Multiple images can share common layers</li>
+<li><strong>Copy-on-write</strong> - Containers share image layers until they write to them</li>
+<li><strong>Build cache</strong> - Docker reuses layers when building similar images</li>
+<li><strong>Layer optimization</strong> - Order Dockerfile commands to maximize cache hits</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Image management</h2>
+docker images                                # List local images
+docker images -a                             # List all images (including intermediate)
+docker pull nginx:1.21                       # Download image from registry
+docker push myapp:v1.0                      # Upload image to registry
+docker rmi <image-id>                        # Remove image
+docker rmi $(docker images -q)              # Remove all images
+<h2>Image information</h2>
+docker inspect <image-id>                    # Detailed image information
+docker history <image-id>                    # Show image layer history
+docker image ls --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"  # Custom format
+<h2>Building images</h2>
+docker build -t myapp:v1.0 .                # Build image from Dockerfile
+docker build -t myapp:v1.0 -f Custom.dockerfile .  # Use custom Dockerfile
+docker build --no-cache -t myapp:v1.0 .     # Build without cache
+docker build --target production -t myapp:v1.0 .    # Multi-stage build target
+<h2>Image cleanup</h2>
+docker image prune                           # Remove unused images
+docker image prune -a                        # Remove all unused images
+docker system prune                          # Remove unused containers, images, networks</code></pre>
+<strong>Image registry operations:</strong>
+<pre><code><h2>Docker Hub (default registry)</h2>
+docker login                                 # Login to Docker Hub
+docker logout                               # Logout
+docker search nginx                          # Search for images
+docker pull nginx:alpine                     # Pull specific tag
+<h2>Private registries</h2>
+docker login registry.company.com           # Login to private registry
+docker tag myapp:v1.0 registry.company.com/myapp:v1.0  # Tag for private registry
+docker push registry.company.com/myapp:v1.0 # Push to private registry</code></pre>
+<strong>When you'll use it:</strong> Images are central to Docker - you'll pull base images, build custom images, manage image versions, and distribute images for deployment.
+<h3>Dockerfile</h3>
+<strong>What it is:</strong> Text file containing instructions to build a Docker image automatically, defining the environment and steps needed to create a container image.
+<strong>Why it matters:</strong> Dockerfiles provide reproducible, version-controlled way to build images. They document exactly how an application environment is constructed and enable automated image builds in CI/CD pipelines.
+<strong>Common Dockerfile instructions:</strong>
+<li><strong>FROM</strong> - Specify base image</li>
+<li><strong>RUN</strong> - Execute commands during build</li>
+<li><strong>COPY/ADD</strong> - Copy files from host to image</li>
+<li><strong>WORKDIR</strong> - Set working directory</li>
+<li><strong>EXPOSE</strong> - Document which ports the container listens on</li>
+<li><strong>ENV</strong> - Set environment variables</li>
+<li><strong>CMD</strong> - Default command when container starts</li>
+<li><strong>ENTRYPOINT</strong> - Configures container to run as executable</li>
+<strong>Dockerfile best practices:</strong>
+<li><strong>Use specific base image tags</strong> - Avoid 'latest' for predictability</li>
+<li><strong>Minimize layers</strong> - Combine RUN commands with &&</li>
+<li><strong>Order instructions by change frequency</strong> - Least changing first</li>
+<li><strong>Use .dockerignore</strong> - Exclude unnecessary files from build context</li>
+<li><strong>Don't run as root</strong> - Create and use non-root user</li>
+<li><strong>Multi-stage builds</strong> - Reduce final image size</li>
+<strong>Example Dockerfile (Node.js app):</strong>
+<pre><code><h2>Use specific Node.js version</h2>
+FROM node:16-alpine
+<h2>Set working directory</h2>
+WORKDIR /app
+<h2>Copy package files first (for better caching)</h2>
+COPY package*.json ./
+<h2>Install dependencies</h2>
+RUN npm ci --only=production
+<h2>Create non-root user</h2>
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+<h2>Copy application code</h2>
+COPY . .
+<h2>Change ownership to non-root user</h2>
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+<h2>Expose port</h2>
+EXPOSE 3000
+<h2>Health check</h2>
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+<h2>Default command</h2>
+CMD ["npm", "start"]</code></pre>
+<strong>Multi-stage Dockerfile example:</strong>
+<pre><code><h2>Build stage</h2>
+FROM node:16-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+<h2>Production stage</h2>
+FROM node:16-alpine AS production
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+COPY --from=builder /app/dist ./dist
+USER node
+CMD ["npm", "start"]</code></pre>
+<strong>Common commands:</strong>
+<pre><code><h2>Building images</h2>
+docker build -t myapp:v1.0 .                # Build from Dockerfile in current directory
+docker build -t myapp:v1.0 -f prod.dockerfile .  # Use specific Dockerfile
+docker build --build-arg VERSION=1.0 -t myapp .  # Pass build arguments
+docker build --target builder -t myapp:build .    # Build specific stage
+<h2>Build with context</h2>
+docker build -t myapp https://github.com/user/repo.git  # Build from Git repo
+docker build -t myapp - < Dockerfile         # Build from stdin
+<h2>Debugging builds</h2>
+docker build --no-cache -t myapp .          # Build without cache
+docker build --progress=plain -t myapp .    # Show build output</code></pre>
+<strong>Dockerfile optimization tips:</strong>
+<li><strong>Layer caching</strong> - Structure commands to maximize cache reuse</li>
+<li><strong>Minimize image size</strong> - Use Alpine base images, remove unnecessary packages</li>
+<li><strong>Security</strong> - Don't include secrets, use non-root users, scan for vulnerabilities</li>
+<li><strong>Build context</strong> - Use .dockerignore to exclude unnecessary files</li>
+<strong>When you'll use it:</strong> Every custom Docker image needs a Dockerfile. You'll write Dockerfiles for applications, modify existing ones, and optimize them for build speed and image size.
+<h3>Registry</h3>
+<strong>What it is:</strong> Centralized storage and distribution system for Docker images, allowing teams to share, version, and deploy container images.
+<strong>Why it matters:</strong> Registries enable image sharing across teams and environments, provide version control for container images, and integrate with CI/CD pipelines for automated deployment.
+<strong>Types of registries:</strong>
+<li><strong>Public registries</strong> - Docker Hub, Quay.io, GitHub Container Registry</li>
+<li><strong>Private cloud registries</strong> - AWS ECR, Google GCR, Azure ACR</li>
+<li><strong>Self-hosted registries</strong> - Harbor, GitLab Container Registry, Sonatype Nexus</li>
+<li><strong>Local registries</strong> - For development and testing</li>
+<strong>Docker Hub (default registry):</strong>
+<li><strong>Official images</strong> - Maintained by Docker (nginx, ubuntu, postgres)</li>
+<li><strong>Verified publishers</strong> - Images from trusted organizations</li>
+<li><strong>Community images</strong> - User-contributed images</li>
+<li><strong>Automated builds</strong> - Build images from GitHub/Bitbucket repositories</li>
+<li><strong>Webhooks</strong> - Trigger actions when images are pushed</li>
+<strong>Registry concepts:</strong>
+<li><strong>Repository</strong> - Collection of related images (nginx repository contains various nginx versions)</li>
+<li><strong>Tag</strong> - Version or variant identifier (latest, v1.0, alpine)</li>
+<li><strong>Manifest</strong> - Metadata about image layers and configuration</li>
+<li><strong>Digest</strong> - Immutable identifier for specific image version (sha256:abc123...)</li>
+<strong>Common commands:</strong>
+<pre><code><h2>Registry authentication</h2>
+docker login                                 # Login to Docker Hub
+docker login registry.company.com           # Login to private registry
+docker logout                              # Logout from registry
+<h2>Image operations</h2>
+docker pull nginx:1.21                      # Pull specific image version
+docker pull nginx                           # Pull latest version
+docker push myapp:v1.0                      # Push image to registry
+docker search nginx                         # Search Docker Hub
+<h2>Image naming and tagging</h2>
+docker tag myapp:v1.0 myregistry.com/myapp:v1.0     # Tag for different registry
+docker tag myapp:v1.0 myapp:latest          # Add additional tag
+<h2>Registry inspection</h2>
+docker inspect nginx:1.21                   # View image details
+docker manifest inspect nginx:1.21          # View manifest (if supported)</code></pre>
+<strong>Private registry setup (simple):</strong>
+<pre><code><h2>Run local registry</h2>
+docker run -d -p 5000:5000 --name registry registry:2
+<h2>Tag and push to local registry</h2>
+docker tag myapp:v1.0 localhost:5000/myapp:v1.0
+docker push localhost:5000/myapp:v1.0
+<h2>Pull from local registry</h2>
+docker pull localhost:5000/myapp:v1.0</code></pre>
+<strong>Registry security:</strong>
+<li><strong>Authentication</strong> - Username/password, tokens, certificates</li>
+<li><strong>Authorization</strong> - Role-based access control (RBAC)</li>
+<li><strong>Image scanning</strong> - Vulnerability detection in images</li>
+<li><strong>Content trust</strong> - Digital signing of images</li>
+<li><strong>Network security</strong> - TLS encryption, private networks</li>
+<strong>CI/CD integration:</strong>
+<li><strong>Automated builds</strong> - Trigger builds on code changes</li>
+<li><strong>Image promotion</strong> - Move images through environments (dev → staging → prod)</li>
+<li><strong>Deployment triggers</strong> - Automatically deploy when new images are pushed</li>
+<li><strong>Security scanning</strong> - Scan images before deployment</li></ul>
+<strong>When you'll use it:</strong> Every Docker workflow involves registries - pulling base images, pushing custom images, managing image versions, and distributing images for deployment across environments.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
