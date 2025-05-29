@@ -65,7 +65,437 @@
                 </div>
 
                 <div class="notes-grid" id="notesContainer">
-                    <!-- Notes will be inserted here by Python script -->
+
+    <div class="note-card" data-tags="docker,compose,swarm,orchestration,multi-container" onclick="window.location.href='notes/docker-docker_orchestration.html'">
+        <h3>Docker Orchestration</h3>
+        <div class="note-meta">DevOps (docker) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A tool for defining and running multi-container Docker applications using a YAML file to configure application services, networks, and ...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">docker</span><span class="tag">compose</span><span class="tag">swarm</span><span class="tag">orchestration</span><span class="tag">multi-container</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/docker-docker_commands_guide.html'">
+        <h3>Docker Commands & Troubleshooting</h3>
+        <div class="note-meta">General (docker) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: DevOps Tags: docker, commands, troubleshooting, debugging, best-practices What Docker CLI provides: The primary interface for managing Do...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="docker,containers,images,dockerfile,registry" onclick="window.location.href='notes/docker-docker_fundamentals.html'">
+        <h3>Docker Fundamentals</h3>
+        <div class="note-meta">DevOps (docker) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A lightweight, standalone package that includes everything needed to run an application: code, runtime, system tools, libraries, and se...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">docker</span><span class="tag">containers</span><span class="tag">images</span><span class="tag">dockerfile</span><span class="tag">registry</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="docker,networking,volumes,storage,ports,bind-mounts" onclick="window.location.href='notes/docker-docker_networking_storage.html'">
+        <h3>Docker Networking & Storage</h3>
+        <div class="note-meta">DevOps (docker) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What it is: Docker's networking system that allows containers to communicate with each other and the outside world through various network drivers ...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">docker</span><span class="tag">networking</span><span class="tag">volumes</span><span class="tag">storage</span><span class="tag">ports</span><span class="tag">bind-mounts</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,k8s,networking,service,ingress,networkpolicy,dns" onclick="window.location.href='notes/k8s-k8s_networking.html'">
+        <h3>Kubernetes Networking</h3>
+        <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What it is: Stable network endpoint that provides access to a set of pods, with built-in load balancing and service discovery.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">networking</span><span class="tag">service</span><span class="tag">ingress</span><span class="tag">networkpolicy</span><span class="tag">dns</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-configuration management.html'">
+        <h3>Kubernetes Configuration Management: A Deep Dive</h3>
+        <div class="note-meta">General (k8s) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Before diving into Kubernetes-specific solutions, let's understand the core problem.</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-networking.html'">
+        <h3>Kubernetes Services and Networking: Deep Dive</h3>
+        <div class="note-meta">General (k8s) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>1. [The Fundamental Problem: Why Services Exist](#the-fundamental-problem) 2. [Service Types Deep Dive](#service-types) 3. [Ingress Controllers and Ro...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-multi container pods.html'">
+        <h3>Multi-Container Pods: A Deep Dive</h3>
+        <div class="note-meta">General (k8s) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Before diving into patterns, it's crucial to understand why Kubernetes allows multiple containers in a single pod when the general recommendation i...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-exam modules.html'">
+        <h3>Exam Modules</h3>
+        <div class="note-meta">General (k8s) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Here are the key modules you should study for the Certified Kubernetes Application Developer (CKAD) exam: Understanding deployment strategies (roll...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,k8s,configuration,configmap,secret,serviceaccount,rbac" onclick="window.location.href='notes/k8s-k8s_configuration.html'">
+        <h3>Kubernetes Configuration & Security</h3>
+        <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A Kubernetes object that stores non-confidential configuration data in key-value pairs, allowing you to decouple configuration from app...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">configuration</span><span class="tag">configmap</span><span class="tag">secret</span><span class="tag">serviceaccount</span><span class="tag">rbac</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-state persistence.html'">
+        <h3>State Persistence in Kubernetes: A Deep Dive</h3>
+        <div class="note-meta">General (k8s) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>State persistence is one of the most critical aspects of running production workloads in Kubernetes.</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-k8s core application.html'">
+        <h3>Core Application Lifecycle Management in Kubernetes: A Deep Dive</h3>
+        <div class="note-meta">General (k8s) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Before diving into deployment strategies, it's crucial to understand why Kubernetes was created.</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,k8s,deployment,replicaset,daemonset,job,cronjob" onclick="window.location.href='notes/k8s-k8s_workloads.html'">
+        <h3>Kubernetes Workloads</h3>
+        <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A Kubernetes resource that manages a set of identical pods, providing declarative updates and rollback capabilities for stateless appli...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">deployment</span><span class="tag">replicaset</span><span class="tag">daemonset</span><span class="tag">job</span><span class="tag">cronjob</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,k8s,kubectl,troubleshooting,debugging,monitoring" onclick="window.location.href='notes/k8s-k8s_commands_troubleshooting.html'">
+        <h3>Kubernetes Commands & Troubleshooting</h3>
+        <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What kubectl is: The command-line tool for interacting with Kubernetes clusters, providing a way to deploy applications, inspect and manage cluster...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">kubectl</span><span class="tag">troubleshooting</span><span class="tag">debugging</span><span class="tag">monitoring</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,k8s,storage,volumes,persistentvolume,pvc,storageclass" onclick="window.location.href='notes/k8s-k8s_storage.html'">
+        <h3>Kubernetes Storage</h3>
+        <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A directory accessible to containers in a pod, providing storage that can persist beyond individual container lifecycles and be shared ...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">storage</span><span class="tag">volumes</span><span class="tag">persistentvolume</span><span class="tag">pvc</span><span class="tag">storageclass</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-observability.html'">
+        <h3>Deep Dive: Observability in Container Orchestration</h3>
+        <div class="note-meta">General (k8s) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Observability is the ability to understand the internal state of a system by examining its external outputs.</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-pod design label selectors.html'">
+        <h3>Pod Design Deep Dive: Labels, Selectors, Annotations & Networking</h3>
+        <div class="note-meta">General (k8s) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Labels are key-value pairs attached to Kubernetes objects (pods, services, deployments, etc.</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,k8s,containers,orchestration,core-concepts" onclick="window.location.href='notes/k8s-k8s_core_concepts.html'">
+        <h3>Kubernetes Core Concepts</h3>
+        <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>What it is: The smallest deployable unit in Kubernetes, containing one or more containers that share storage and network resources.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">containers</span><span class="tag">orchestration</span><span class="tag">core-concepts</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/linux-linux_networking_commands.html'">
+        <h3>Linux Networking Commands Guide</h3>
+        <div class="note-meta">General (linux) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: Networking & System Administration Tags: linux, networking, tcp-ip, dns, routing, firewall, diagnostics What this guide covers: Comprehen...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/linux-linux_troubleshooting_guide.html'">
+        <h3>Linux Troubleshooting Guide</h3>
+        <div class="note-meta">General (linux) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: System Administration & Troubleshooting Tags: linux, troubleshooting, debugging, system-recovery, performance, diagnostics What this guid...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/linux-linux_sysadmin_commands.html'">
+        <h3>Linux System Administration Commands Guide</h3>
+        <div class="note-meta">General (linux) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: System Administration & DevOps Tags: linux, system-admin, process-management, file-operations, user-management, monitoring What this guid...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/pentesting-pentest_web_application_guide.html'">
+        <h3>Penetration Testing - Web Application Testing Guide</h3>
+        <div class="note-meta">General (pentesting) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: Penetration Testing - Phase 2 Tags: oscp, htb, web-application, sql-injection, xss, burpsuite, owasp, file-upload What this phase covers:...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/pentesting-pentest_exploitation_guide.html'">
+        <h3>Penetration Testing - Exploitation Frameworks & Manual Exploits Guide</h3>
+        <div class="note-meta">General (pentesting) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: Penetration Testing - Phase 3 Tags: oscp, htb, metasploit, exploitation, payloads, manual-exploits, buffer-overflow What this phase cover...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/pentesting-pentest_reconnaissance_guide.html'">
+        <h3>Penetration Testing - Reconnaissance & Enumeration Guide</h3>
+        <div class="note-meta">General (pentesting) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: Penetration Testing - Phase 1 Tags: oscp, htb, reconnaissance, enumeration, nmap, discovery, information-gathering What this phase covers...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/pentesting-pentest_post_exploitation_guide.html'">
+        <h3>Penetration Testing - Post-Exploitation & Privilege Escalation Guide</h3>
+        <div class="note-meta">General (pentesting) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: Penetration Testing - Phase 4 Tags: oscp, htb, privilege-escalation, post-exploitation, linux-privesc, windows-privesc, persistence What ...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/pentesting-pentest_reverse_shells_guide.html'">
+        <h3>Penetration Testing - Reverse Shells & Payload Generation Guide</h3>
+        <div class="note-meta">General (pentesting) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: Penetration Testing - Phase 7 Tags: oscp, htb, reverse-shells, payloads, msfvenom, shell-stabilization, persistence, evasion What this ph...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/pentesting-pentest_active_directory_guide.html'">
+        <h3>Penetration Testing - Active Directory Attacks Guide</h3>
+        <div class="note-meta">General (pentesting) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: Penetration Testing - Phase 5 Tags: oscp, htb, active-directory, kerberoasting, bloodhound, golden-ticket, lateral-movement, domain-domin...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/pentesting-pentest_network_pivoting_guide.html'">
+        <h3>Penetration Testing - Network Pivoting & Lateral Movement Guide</h3>
+        <div class="note-meta">General (pentesting) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Category: Penetration Testing - Phase 6 Tags: oscp, htb, pivoting, lateral-movement, tunneling, proxychains, port-forwarding, chisel What this phas...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,methodologies,agile,devops,practices" onclick="window.location.href='notes/glossary-methodologies_glossary.html'">
+        <h3>Methodologies & Practices Glossary</h3>
+        <div class="note-meta">General (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: Set of principles and practices for software development that emphasizes collaboration, flexibility, and rapid iteration.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">methodologies</span><span class="tag">agile</span><span class="tag">devops</span><span class="tag">practices</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,performance,optimization,caching,scalability" onclick="window.location.href='notes/glossary-performance_glossary.html'">
+        <h3>Performance & Optimization Glossary</h3>
+        <div class="note-meta">Programming (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: Temporary storage that saves frequently accessed data for faster retrieval.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">performance</span><span class="tag">optimization</span><span class="tag">caching</span><span class="tag">scalability</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,development,programming,terminology" onclick="window.location.href='notes/glossary-development_terms_glossary.html'">
+        <h3>Development Terms Glossary</h3>
+        <div class="note-meta">Programming (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A set of rules and protocols that allows different software applications to communicate with each other.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">development</span><span class="tag">programming</span><span class="tag">terminology</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,security,cybersecurity,authentication,encryption" onclick="window.location.href='notes/glossary-security_glossary.html'">
+        <h3>Security Glossary</h3>
+        <div class="note-meta">Security (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: Process of verifying the identity of a user, device, or system trying to access a resource.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">security</span><span class="tag">cybersecurity</span><span class="tag">authentication</span><span class="tag">encryption</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="glossary,infrastructure,networking,servers,cloud" onclick="window.location.href='notes/glossary-infrastructure_glossary.html'">
+        <h3>Infrastructure & Networking Glossary</h3>
+        <div class="note-meta">DevOps (glossary) • May 28, 2025</div>
+        <div class="note-preview">
+            <p>What it is: A computer or software program that provides services, data, or resources to other computers (clients) over a network.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">glossary</span><span class="tag">infrastructure</span><span class="tag">networking</span><span class="tag">servers</span><span class="tag">cloud</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="marketing,sales,digital-marketing,customer-acquisition,branding" onclick="window.location.href='notes/vocabulary-marketing_sales_vocab.html'">
+        <h3>Marketing & Sales Vocabulary Guide</h3>
+        <div class="note-meta">Marketing & Sales (vocabulary) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Modern marketing approaches leveraging digital channels and data.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">marketing</span><span class="tag">sales</span><span class="tag">digital-marketing</span><span class="tag">customer-acquisition</span><span class="tag">branding</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="strategy,operations,business,planning,competitive-analysis" onclick="window.location.href='notes/vocabulary-business_strategy_vocab.html'">
+        <h3>Business Strategy & Operations Vocabulary Guide</h3>
+        <div class="note-meta">Business Strategy (vocabulary) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Core frameworks and concepts for business strategy development.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">strategy</span><span class="tag">operations</span><span class="tag">business</span><span class="tag">planning</span><span class="tag">competitive-analysis</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="corporate,business,terminology,communication" onclick="window.location.href='notes/vocabulary-generic_corporate_vocab.html'">
+        <h3>Generic Corporate Vocabulary Guide</h3>
+        <div class="note-meta">Business Communication (vocabulary) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Essential vocabulary for understanding organizational hierarchy and management concepts.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">corporate</span><span class="tag">business</span><span class="tag">terminology</span><span class="tag">communication</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="finance,accounting,financial-analysis,budgeting,investment" onclick="window.location.href='notes/vocabulary-finance_accounting_vocab.html'">
+        <h3>Finance & Accounting Vocabulary Guide</h3>
+        <div class="note-meta">Finance & Accounting (vocabulary) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Core documents and concepts for understanding company financial health.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">finance</span><span class="tag">accounting</span><span class="tag">financial-analysis</span><span class="tag">budgeting</span><span class="tag">investment</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="it,software,development,technology,programming" onclick="window.location.href='notes/vocabulary-it_software_vocab.html'">
+        <h3>IT & Software Development Vocabulary Guide</h3>
+        <div class="note-meta">Technology (vocabulary) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Understanding the complete process of software creation and maintenance.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">IT</span><span class="tag">software</span><span class="tag">development</span><span class="tag">technology</span><span class="tag">programming</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="docker,containers,devops,security" onclick="window.location.href='notes/starting-point-docker-best-practices.html'">
+        <h3>Docker Best Practices</h3>
+        <div class="note-meta">DevOps (starting-point) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Create non-root user in Dockerfile Use USER directive Set proper file permissions Avoid 'latest' tag in production Pin to specific versions Use dig...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">docker</span><span class="tag">containers</span><span class="tag">devops</span><span class="tag">security</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="spring boot,microservices,architecture,java" onclick="window.location.href='notes/starting-point-spring-microservices-patterns.html'">
+        <h3>Java Spring Boot - Microservices Patterns</h3>
+        <div class="note-meta">Programming (starting-point) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Prevents cascading failures in distributed systems States: Closed, Open, Half-Open Implementation: Use Hystrix or Resilience4j Configuration: Failu...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">spring boot</span><span class="tag">microservices</span><span class="tag">architecture</span><span class="tag">java</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="security,networking,comptia,vpn,firewalls" onclick="window.location.href='notes/starting-point-security-network-fundamentals.html'">
+        <h3>CompTIA Security+ - Network Security</h3>
+        <div class="note-meta">Security (starting-point) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>ESP (Encapsulating Security Payload) - provides confidentiality AH (Authentication Header) - provides integrity Tunnel mode - entire IP packet encr...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">security</span><span class="tag">networking</span><span class="tag">comptia</span><span class="tag">vpn</span><span class="tag">firewalls</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,networking,cni,containers" onclick="window.location.href='notes/starting-point-kubernetes-networking.html'">
+        <h3>Kubernetes Networking Deep Dive</h3>
+        <div class="note-meta">DevOps (starting-point) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>Each pod gets its own IP address Pods can communicate directly without NAT CNI plugins handle network implementation Flat network space across all ...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">networking</span><span class="tag">cni</span><span class="tag">containers</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="security,cryptography,encryption" onclick="window.location.href='notes/starting-point-security.html'">
+        <h3>CompTIA Security+ - Cryptography</h3>
+        <div class="note-meta">Security (starting-point) • May 27, 2025</div>
+        <div class="note-preview">
+            <p>AES - Advanced Encryption Standard DES - Data Encryption Standard (deprecated) RSA - Most common public key algorithm ECC - Elliptic Curve Cryptogr...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">security</span><span class="tag">cryptography</span><span class="tag">encryption</span>
+        </div>
+    </div>
                 </div>
             </div>
         </div>

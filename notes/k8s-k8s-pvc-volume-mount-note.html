@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding PersistentVolumeClaims (PVC) in Kubernetes - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Understanding PersistentVolumeClaims (PVC) in Kubernetes</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 29, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">storage</span><span class="tag">pvc</span><span class="tag">persistent-volumes</span><span class="tag">containers</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Understanding PersistentVolumeClaims (PVC) in Kubernetes</h2>
+<h3>Main Topic 1</h3>
+PersistentVolumeClaims (PVCs) are how pods request and use persistent storage in Kubernetes. PVCs abstract the details of the underlying storage, enabling decoupled, dynamic provisioning.
+<h4>Subtopic A: Key Components</h4>
+<ul><li><strong>PersistentVolume (PV)</strong> – A piece of storage in the cluster provisioned by an admin or dynamically.</li>
+<li><strong>PersistentVolumeClaim (PVC)</strong> – A request for storage by a user/pod.</li>
+  - PVCs define how much storage is needed and the access mode.
+  - Kubernetes matches the claim with a suitable PV.
+<li><strong>Mounting the Volume</strong> – Once claimed, the volume can be mounted into a container using <code>volumeMounts</code>.</li>
+<h4>Subtopic B: Why Use PVCs?</h4>
+<li><strong>Data Persistence</strong> – Data survives pod restarts or rescheduling.</li>
+<li><strong>Separation of Concerns</strong> – Devs request storage without needing to know where it comes from.</li>
+<li><strong>Managed Storage</strong> – Cloud volumes, NFS, and other backends are supported via PVs.</li>
+<h3>Main Topic 2</h3>
+<h4>In Context</h4>
+You declare the volume in your pod spec like this:
+<pre><code>volumes:
+  - name: my-volume
+    persistentVolumeClaim:
+      claimName: my-pvc</code></pre>
+<p>And then mount it like this:</p>
+<pre><code>volumeMounts:
+  - name: my-volume
+    mountPath: /app/data</code></pre>
+<p>This means:
+<li>Kubernetes will look for a <strong>PersistentVolumeClaim named <code>my-pvc</code></strong></li>
+<li>It will mount that volume inside the container at <strong><code>/app/data</code></strong></li></p>
+<h4>Code Example (if applicable)</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+    - name: my-container
+      image: nginx
+      volumeMounts:
+        - name: my-volume
+          mountPath: /app/data
+  volumes:
+    - name: my-volume
+      persistentVolumeClaim:
+        claimName: my-pvc</code></pre>
+<h4>Commands (if applicable)</h4>
+<pre><code><h2>Create a PVC</h2>
+kubectl apply -f my-pvc.yaml
+<h2>Check PVC status</h2>
+kubectl get pvc
+<h2>Describe the bound volume</h2>
+kubectl describe pvc my-pvc</code></pre>
+<h3>Key Concepts Summary</h3>
+<li><strong>PV (Persistent Volume)</strong> – Cluster-managed storage resource</li>
+<li><strong>PVC (Persistent Volume Claim)</strong> – User request for PV</li>
+<li><strong>Volume Mount</strong> – Path where the claimed volume is made available to the container</li>
+<h3>Best Practices / Tips</h3>
+1. <strong>Use PVCs over hostPath</strong> – Portability and safety in multi-node clusters
+2. <strong>Set storageClass in PVC</strong> – For dynamic provisioning
+3. <strong>Monitor PVC status</strong> – Ensure it's <code>Bound</code> before using it
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: PVC Stuck in Pending</h4>
+<li><strong>Symptom:</strong> PVC status remains <code>Pending</code></li>
+<li><strong>Cause:</strong> No available PV matches the request</li>
+<li><strong>Solution:</strong> Create a PV manually or fix the <code>storageClass</code> and size</li>
+<h4>Problem 2: Data Not Persisting After Pod Restart</h4>
+<li><strong>Symptom:</strong> Data is lost on pod restart</li>
+<li><strong>Cause:</strong> <code>emptyDir</code> volume was used instead of PVC</li>
+<li><strong>Solution:</strong> Ensure <code>persistentVolumeClaim</code> is specified in volume definition</li>
+<h3>References / Further Reading</h3>
+<li>https://kubernetes.io/docs/concepts/storage/persistent-volumes/</li>
+<li>https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/</li>
+<li>https://www.mirantis.com/blog/introduction-to-kubernetes-persistent-volumes/</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
