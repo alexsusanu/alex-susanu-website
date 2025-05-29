@@ -1234,7 +1234,42 @@ Documentation requirement: Maintain timeline of escalation targets and response 
                 });
             });
         </script>
-        
+       
+       <div class="severity-scale">
+            <div class="severity-title">Application Support Engineer Summary</div>
+            <div class="severity-levels" style="grid-template-columns: 1fr 1fr;">
+                <div class="severity-item sev1">
+                    <strong>FIRST 1-2 HOURS (Active Response)</strong><br><br>
+                    <strong>Immediate Actions (0-30 min):</strong><br>
+                    • Acknowledge & Get Help - Message senior engineers immediately<br>
+                    • Execute Safe Runbook Steps - Follow procedures, escalate if unclear<br>
+                    • Be Eyes and Ears - Monitor dashboards, report changes to seniors<br>
+                    • Communication Hub - Update stakeholders, maintain timeline<br><br>
+                    
+                    <strong>Actual Role:</strong><br>
+                    • Information Gathering - Logs, monitoring, user reports<br>
+                    • Safe Config Changes - Timeouts, feature flags, cache clearing<br>
+                    • Stakeholder Management - Customer support, status page updates<br>
+                    • Documentation - Timeline, decisions, what was tried<br>
+                    • Coordination Support - Bridge calls, incident channels<br><br>
+                    
+                    <strong>What You DON'T Do:</strong><br>
+                    • Database restarts, deployments, infrastructure changes<br>
+                    • Complex troubleshooting alone - escalate quickly
+                </div>
+                <div class="severity-item sev2">
+                    <strong>POST-MORTEM (24-48 Hours Later)</strong><br><br>
+                    • <strong>Provide Detailed Timeline</strong> - You have the best notes of what happened when<br><br>
+                    • <strong>User Impact Analysis</strong> - You understand customer experience better than infrastructure teams<br><br>
+                    • <strong>Process Improvements</strong> - Suggest communication, documentation, escalation improvements<br><br>
+                    • <strong>Runbook Updates</strong> - Help update procedures based on what actually worked<br><br>
+                    
+                    <strong>Reality Check:</strong><br>
+                    You're the coordination and communication expert who enables senior engineers to focus on technical fixes. Incidents fail when communication breaks down, not just when technology breaks.
+                </div>
+            </div>
+        </div>
+       
         <div class="severity-scale">
             <div class="severity-title">Response Scale by Severity</div>
             <div class="severity-levels">
