@@ -1,0 +1,537 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #2c3e50;
+    background: #f8f9fa;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    border-radius: 0;
+}
+
+/* HEADER STYLES */
+.header {
+    background-image: url('../background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+    padding: 50px 40px;
+    text-align: center;
+    position: relative;
+    border-bottom: 4px solid #5a67d8;
+}
+
+/* Dark overlay for text readability */
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 100%);
+    z-index: 1;
+}
+
+.header > * {
+    position: relative;
+    z-index: 2;
+}
+
+.header h1 {
+    font-size: 3em;
+    margin-bottom: 15px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.header .subtitle {
+    font-size: 1.3em;
+    opacity: 0.95;
+    font-weight: 300;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.contact-info {
+    font-size: 1.1em;
+    font-weight: 400;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.contact-info a {
+    color: white;
+    text-decoration: none;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid transparent;
+}
+
+.contact-info a:hover {
+    opacity: 1;
+    border-bottom: 1px solid white;
+}
+
+/* NAVIGATION STYLES */
+.nav {
+    background: white;
+    padding: 0;
+    text-align: center;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    padding: 20px 30px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.nav-btn:hover {
+    background: #f8fafc;
+    color: #475569;
+    border-bottom-color: #cbd5e1;
+}
+
+.nav-btn.active {
+    background: white;
+    color: #667eea;
+    border-bottom-color: #667eea;
+}
+
+/* CONTENT STYLES */
+.content {
+    padding: 50px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.greeting {
+    font-size: 1.4em;
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+.section-title {
+    color: #2d3748;
+    font-size: 1.8em;
+    font-weight: 700;
+    margin: 40px 0 20px 0;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+.section-title:first-child {
+    margin-top: 0;
+}
+
+.job-title {
+    font-weight: 700;
+    color: #2d3748;
+    font-size: 1.2em;
+    margin: 30px 0 8px 0;
+}
+
+.company-info {
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 15px;
+    font-size: 1.05em;
+}
+
+.role-subtitle {
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 12px;
+    font-size: 1.1em;
+}
+
+ul {
+    margin: 12px 0 20px 0;
+    padding-left: 25px;
+}
+
+li {
+    margin-bottom: 8px;
+    text-align: justify;
+    line-height: 1.7;
+}
+
+.nested-list {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.nested-list li {
+    margin-bottom: 5px;
+}
+
+p {
+    margin-bottom: 20px;
+    text-align: justify;
+    font-size: 1.1em;
+    line-height: 1.8;
+    color: #374151;
+}
+
+.highlight {
+    background: linear-gradient(120deg, #a855f7 0%, #3b82f6 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding: 2px 4px;
+    font-weight: 600;
+}
+
+.signature {
+    margin-top: 40px;
+    text-align: right;
+    font-size: 1.2em;
+}
+
+.signature .name {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 1.3em;
+}
+
+/* KNOWLEDGE BASE STYLES */
+.search-container {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 600px;
+    padding: 15px 25px;
+    font-size: 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+}
+
+.filter-tags {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.tag-btn {
+    background: white;
+    border: 2px solid #e2e8f0;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tag-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tag-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.note-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.note-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.note-card:hover {
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+    transform: translateY(-5px);
+    border-color: #cbd5e1;
+}
+
+.note-card:hover::before {
+    transform: scaleX(1);
+}
+
+.note-card h3 {
+    color: #2d3748;
+    margin-bottom: 12px;
+    font-size: 1.3em;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.note-meta {
+    color: #64748b;
+    font-size: 0.9em;
+    margin-bottom: 18px;
+    font-weight: 500;
+}
+
+.note-preview {
+    color: #4a5568;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-size: 1.05em;
+}
+
+.note-content pre {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    margin: 15px 0;
+    border: 1px solid #e2e8f0;
+}
+
+.note-content code {
+    background: #f1f5f9;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.note-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* FOOTER STYLES */
+.footer {
+    background: #f8fafc;
+    padding: 30px 40px;
+    text-align: center;
+    color: #64748b;
+    border-top: 1px solid #e2e8f0;
+    font-weight: 500;
+}
+
+.print-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.print-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+}
+
+@media print {
+    .nav, .print-btn, .footer { display: none; }
+    .container { box-shadow: none; }
+    body { background: white; }
+    .section { display: block !important; }
+}
+
+/* Dark mode styles - triggered by .dark class on body */
+body.dark {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+body.dark .header {
+    background-image: url('../background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+body.dark .header::before {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.6) 100%);
+}
+
+body.dark .container {
+    background: #1e293b;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+body.dark .nav {
+    background: #1e293b;
+    border-bottom-color: #334155;
+}
+
+body.dark .nav-btn {
+    color: #94a3b8;
+}
+
+body.dark .nav-btn:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+body.dark .nav-btn.active {
+    color: #667eea;
+    background: #1e293b;
+}
+
+body.dark .section-title {
+    color: #e2e8f0;
+}
+
+body.dark .job-title {
+    color: #e2e8f0;
+}
+
+body.dark .company-info {
+    color: #94a3b8;
+}
+
+body.dark p {
+    color: #cbd5e1;
+}
+
+body.dark .note-card {
+    background: #334155;
+    border-color: #475569;
+}
+
+body.dark .note-card h3 {
+    color: #e2e8f0;
+}
+
+body.dark .note-meta {
+    color: #94a3b8;
+}
+
+body.dark .note-preview {
+    color: #cbd5e1;
+}
+
+body.dark .search-input {
+    background: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark .search-input:focus {
+    border-color: #667eea;
+}
+
+body.dark .tag-btn {
+    background: #334155;
+    border-color: #475569;
+    color: #94a3b8;
+}
+
+body.dark .tag-btn:hover {
+    background: #475569;
+    border-color: #64748b;
+}
+
+body.dark .footer {
+    background: #1e293b;
+    border-top-color: #334155;
+    color: #94a3b8;
+}

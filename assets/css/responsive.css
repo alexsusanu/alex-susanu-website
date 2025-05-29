@@ -1,0 +1,147 @@
+@media (max-width: 768px) {
+    .content { 
+        padding: 30px 20px; 
+    }
+    
+    .header { 
+        padding: 40px 20px; 
+    }
+    
+    .header h1 { 
+        font-size: 2.2em; 
+    }
+    
+    .header .subtitle {
+        font-size: 1.1em;
+    }
+    
+    .contact-info {
+        font-size: 1em;
+    }
+    
+    .nav-btn { 
+        padding: 15px 20px; 
+        font-size: 14px; 
+    }
+    
+    .notes-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .note-card {
+        padding: 20px;
+    }
+    
+    .filter-tags {
+        gap: 8px;
+    }
+    
+    .tag-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    
+    .search-input {
+        font-size: 16px;
+        padding: 12px 20px;
+        max-width: 100%;
+    }
+    
+    .section-title {
+        font-size: 1.5em;
+    }
+    
+    .job-title {
+        font-size: 1.1em;
+    }
+    
+    .greeting {
+        font-size: 1.2em;
+    }
+    
+    p {
+        font-size: 1.05em;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 30px 15px;
+    }
+    
+    .header h1 {
+        font-size: 1.8em;
+    }
+    
+    .header .subtitle {
+        font-size: 1em;
+    }
+    
+    .contact-info {
+        font-size: 0.9em;
+        line-height: 1.8;
+    }
+    
+    .nav-btn {
+        padding: 12px 15px;
+        font-size: 13px;
+    }
+    
+    .content {
+        padding: 20px 15px;
+    }
+    
+    .note-card {
+        padding: 18px;
+    }
+    
+    .note-card h3 {
+        font-size: 1.2em;
+    }
+    
+    .filter-tags {
+        gap: 6px;
+    }
+    
+    .tag-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .search-input {
+        padding: 10px 18px;
+        font-size: 16px;
+    }
+    
+    .print-btn {
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+    
+    .section-title {
+        font-size: 1.3em;
+    }
+    
+    .job-title {
+        font-size: 1.05em;
+    }
+    
+    .greeting {
+        font-size: 1.1em;
+    }
+    
+    p {
+        font-size: 1em;
+    }
+    
+    .signature {
+        font-size: 1.1em;
+    }
+    
+    .signature .name {
+        font-size: 1.2em;
+    }
+}

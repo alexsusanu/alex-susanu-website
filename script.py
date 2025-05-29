@@ -315,63 +315,31 @@ def generate_note_card_html(note_data):
         </div>
     </div>'''
 
-def update_index_html(notes_html):
-    """Update index.html with new note cards"""
+# Add this function to your existing Python script
+
+def update_index_html_clean(notes_html):
+    """Update the clean index.html with new note cards"""
     with open('index.html', 'r', encoding='utf-8') as f:
         html_content = f.read()
     
-    # Find the notes container
+    # Find the notes container - much simpler now!
     start_marker = '<div class="notes-grid" id="notesContainer">'
+    end_marker = '</div>'
     
     start_index = html_content.find(start_marker)
     if start_index == -1:
         print("Error: Could not find notes-grid container in index.html")
         return False
     
-    # Find the end of the notes section
+    # Find the closing div for notesContainer
     search_start = start_index + len(start_marker)
-    
-    patterns_to_try = [
-        '</div>\n                \n                <!-- Note Full View Modal -->',
-        '</div>\n                \n                <div class="note-modal"',
-        '</div>\n            </div>\n        \n        <div class="footer">',
-        '</div>\n            </div>',
-    ]
-    
-    end_index = -1
-    end_marker = ""
-    
-    for pattern in patterns_to_try:
-        end_index = html_content.find(pattern, search_start)
-        if end_index != -1:
-            end_marker = pattern
-            break
+    end_index = html_content.find(end_marker, search_start)
     
     if end_index == -1:
-        remaining_html = html_content[search_start:]
-        footer_match = remaining_html.find('<div class="footer">')
-        modal_match = remaining_html.find('<!-- Note Full View Modal -->')
-        
-        if modal_match != -1:
-            end_index = search_start + modal_match
-            temp_html = html_content[:end_index]
-            last_div = temp_html.rfind('</div>')
-            if last_div != -1:
-                end_index = last_div
-            end_marker = '</div>'
-        elif footer_match != -1:
-            end_index = search_start + footer_match
-            temp_html = html_content[:end_index]
-            content_close = temp_html.rfind('</div>\n        </div>')
-            if content_close != -1:
-                end_index = content_close
-            end_marker = '</div>'
-        else:
-            print("Error: Could not find end of notes section")
-            return False
+        print("Error: Could not find end of notes container")
+        return False
     
-    print(f"Found notes container from position {start_index} to {end_index}")
-    
+    # Replace the content between the markers
     new_content = (
         html_content[:start_index + len(start_marker)] +
         '\n' + notes_html + '\n                ' +
@@ -438,7 +406,7 @@ def main():
     notes_cards_html = ''.join([generate_note_card_html(note) for note in all_notes])
     
     # Update index.html
-    if update_index_html(notes_cards_html):
+    if update_index_html_clean(notes_cards_html):
         print(f"✅ Successfully created {len(all_notes)} separate note pages!")
         print(f"✅ Updated index.html with note cards")
         print("📝 Original index.html backed up as index.html.backup")
