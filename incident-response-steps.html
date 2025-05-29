@@ -1465,6 +1465,89 @@ Documentation requirement: Maintain timeline of escalation targets and response 
                 </div>
             </div>
         </div>
+
+        <!--------------------------SEV DIFF begin-------------->
+
+        <div class="severity-scale">
+            <div class="severity-title">⚠️ General Severity Levels</div>
+            <div style="color: #feca57; font-size: 1.1em; margin-bottom: 20px; text-align: center;">(Typical 4-tier system)</div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.1);">
+                            <th style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Level</th>
+                            <th style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Name</th>
+                            <th style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color: white;">
+                        <tr style="background: rgba(255, 107, 107, 0.2);">
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Sev0 / Critical</td>
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Critical Incident</td>
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2);">Total outage, massive business/customer impact (e.g. payments down, data loss, security breach). Requires <strong>all-hands, instant escalation</strong>.</td>
+                        </tr>
+                        <tr style="background: rgba(254, 202, 87, 0.2);">
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Sev1</td>
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">High Severity</td>
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2);">Major degradation (e.g. login broken, key features down for many users). Needs <strong>immediate response</strong>, but not <em>necessarily</em> company-wide.</td>
+                        </tr>
+                        <tr style="background: rgba(72, 219, 251, 0.2);">
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Sev2</td>
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Medium</td>
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2);">Partial outage, degraded performance, workaround possible</td>
+                        </tr>
+                        <tr style="background: rgba(29, 209, 161, 0.2);">
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Sev3</td>
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Low</td>
+                            <td style="padding: 12px; border: 1px solid rgba(255,255,255,0.2);">Minor issue, bug, or cosmetic problem</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px;">
+                <div style="color: #4ecdc4; font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">🔍 So, what's the difference?</div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Aspect</th>
+                            <th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Sev1</th>
+                            <th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #4ecdc4; font-weight: bold;">Critical / Sev0</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color: white;">
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Scope</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Major issue, but some services may still work</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);"><strong>Total outage</strong> or massive breach</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Escalation</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">May involve a few engineers or rotate on-call</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);"><strong>Everyone gets paged immediately</strong> (IC, SRE, exec)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Urgency</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Urgent but not always fire-alarm level</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Drop everything and respond immediately</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Business Risk</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">High</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);"><strong>Very High / Existential</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Example</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Users can't log in</td>
+                            <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Database is corrupted, customer data leaked, core API gone</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!---------------SEV DIFF END------------------>
         
         <div class="severity-scale" style="margin-top: 40px;">
             <div class="severity-title">Progressive Learning Framework for Application Support Engineers</div>
