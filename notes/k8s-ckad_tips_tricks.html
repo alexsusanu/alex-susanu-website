@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKAD Exam Tips & Tricks - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKAD Exam Tips & Tricks</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes Certification (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">ckad</span><span class="tag">kubernetes</span><span class="tag">exam</span><span class="tag">kubectl</span><span class="tag">certification</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>CKAD Exam Tips & Tricks</h2>
+<h3>Essential kubectl run Variations</h3>
+<h4>Resource Type Control</h4>
+<pre><code><h2>Create POD directly (most common for CKAD)</h2>
+kubectl run nginx --image=nginx --restart=Never
+<h2>USE WHEN: Question asks for "pod", "container", or single instance</h2>
+<h2>Create DEPLOYMENT (default behavior)</h2>
+kubectl run nginx --image=nginx --restart=Always
+<h2>USE WHEN: Question asks for "deployment", "scale", or multiple replicas</h2>
+<h2>Create JOB (run once, exit)</h2>
+kubectl run pi --image=perl --restart=OnFailure -- perl -Mbignum=bpi -wle 'print bpi(2000)'
+<h2>USE WHEN: Question asks for "job", "batch processing", or "run once"</h2>
+<h2>Create CRONJOB</h2>
+kubectl create cronjob busybox --image=busybox --schedule="<em>/1 </em> <em> </em> *" -- /bin/sh -c 'echo hello'
+<h2>USE WHEN: Question asks for "scheduled", "cron", or "periodic"</h2></code></pre>
+<h4>YAML Generation (CRITICAL for Speed)</h4>
+<pre><code><h2>Generate YAML without creating resource</h2>
+kubectl run nginx --image=nginx --restart=Never --dry-run=client -o yaml > pod.yaml
+<h2>USE WHEN: Need to modify YAML before creating (add volumes, env vars, etc.)</h2>
+<h2>Create and save YAML simultaneously  </h2>
+kubectl run nginx --image=nginx --restart=Never -o yaml | tee pod.yaml | kubectl apply -f -
+<h2>USE WHEN: Want both the resource created AND YAML saved</h2>
+<h2>Quick YAML inspection</h2>
+kubectl run nginx --image=nginx --restart=Never --dry-run=client -o yaml
+<h2>USE WHEN: Just want to see what YAML would be generated</h2></code></pre>
+<h3>Time-Saving kubectl Shortcuts</h3>
+<h4>Resource Creation Shortcuts</h4>
+<pre><code><h2>Expose pod with service in one command</h2>
+kubectl run nginx --image=nginx --restart=Never --port=80 --expose
+<h2>Creates pod AND ClusterIP service simultaneously</h2>
+<h2>USE WHEN: Question asks to "expose a pod"</h2>
+<h2>Create with resource limits</h2>
+kubectl run nginx --image=nginx --restart=Never --requests=cpu=100m,memory=128Mi --limits=cpu=200m,memory=256Mi
+<h2>USE WHEN: Question specifies resource requirements</h2>
+<h2>Create with environment variables</h2>
+kubectl run nginx --image=nginx --restart=Never --env="VAR1=value1" --env="VAR2=value2"
+<h2>USE WHEN: Question asks for environment variables</h2>
+<h2>Create with labels</h2>
+kubectl run nginx --image=nginx --restart=Never --labels="app=web,tier=frontend"
+<h2>USE WHEN: Question asks for specific labels</h2></code></pre>
+<h4>Quick Resource Management</h4>
+<pre><code><h2>Scale deployments quickly</h2>
+kubectl scale deployment nginx --replicas=3
+<h2>USE WHEN: Question asks to scale up/down</h2>
+<h2>Quick resource deletion</h2>
+kubectl delete pod nginx --force --grace-period=0
+<h2>USE WHEN: Pod is stuck terminating (saves time in exam)</h2>
+<h2>Delete multiple resources</h2>
+kubectl delete pods --all
+kubectl delete pods -l app=nginx
+<h2>USE WHEN: Need to clean up quickly</h2></code></pre>
+<h3>Essential YAML Patterns</h3>
+<h4>Multi-Container Pod Template</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-container
+spec:
+  containers:
+  - name: main-app
+    image: nginx
+  - name: sidecar
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo hello; sleep 10; done"]</code></pre>
+<strong>USE WHEN:</strong> Question asks for sidecar, logging, or monitoring containers
+<h4>ConfigMap Consumption Patterns</h4>
+<pre><code><h2>Create ConfigMap from literal values</h2>
+kubectl create configmap app-config --from-literal=key1=value1 --from-literal=key2=value2
+<h2>Create ConfigMap from file</h2>
+kubectl create configmap app-config --from-file=config.properties
+<h2>Use in pod as environment variables</h2>
+envFrom:
+<ul><li>configMapRef:</li>
+    name: app-config
+<h2>Use in pod as volume mount</h2>
+volumes:
+<li>name: config-volume</li>
+  configMap:
+    name: app-config
+volumeMounts:
+<li>name: config-volume</li>
+  mountPath: /etc/config</code></pre>
+<strong>USE WHEN:</strong> Question involves configuration data, properties files, or environment variables
+<h4>Secret Patterns</h4>
+<pre><code><h2>Create secret from literal</h2>
+kubectl create secret generic db-secret --from-literal=username=admin --from-literal=password=secret123
+<h2>Use secret as environment variables</h2>
+envFrom:
+<li>secretRef:</li>
+    name: db-secret
+<h2>Use secret as volume (recommended for sensitive data)</h2>
+volumes:
+<li>name: secret-volume</li>
+  secret:
+    secretName: db-secret
+volumeMounts:
+<li>name: secret-volume</li>
+  mountPath: /etc/secrets
+  readOnly: true</code></pre>
+<strong>USE WHEN:</strong> Question involves passwords, API keys, certificates, or sensitive data
+<h3>Debugging & Troubleshooting Commands</h3>
+<h4>Quick Debugging</h4>
+<pre><code><h2>Get pod details with events</h2>
+kubectl describe pod nginx
+<h2>USE WHEN: Pod not starting, crashlooping, or behaving unexpectedly</h2>
+<h2>Check logs</h2>
+kubectl logs nginx
+kubectl logs nginx -c container-name  # For multi-container pods
+kubectl logs nginx --previous         # Previous container instance
+<h2>USE WHEN: Need to see application output or errors</h2>
+<h2>Execute commands in running pods</h2>
+kubectl exec nginx -- ls /etc
+kubectl exec -it nginx -- /bin/bash
+<h2>USE WHEN: Need to inspect pod filesystem or run commands</h2>
+<h2>Port forwarding for testing</h2>
+kubectl port-forward pod/nginx 8080:80
+<h2>USE WHEN: Need to test pod connectivity locally</h2></code></pre>
+<h4>Resource Inspection</h4>
+<pre><code><h2>Wide output for more details</h2>
+kubectl get pods -o wide
+<h2>Shows node placement, IP addresses</h2>
+<h2>Custom output columns</h2>
+kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName
+<h2>USE WHEN: Need specific information formatted nicely</h2>
+<h2>JSON path for complex queries</h2>
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+<h2>USE WHEN: Need to extract specific values programmatically</h2></code></pre>
+<h3>Persistent Storage Quick Patterns</h3>
+<h4>PVC Creation</h4>
+<pre><code><h2>Quick PVC creation</h2>
+kubectl create -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+EOF</code></pre>
+<h4>Volume Mount in Pod</h4>
+<pre><code>spec:
+  containers:
+  - name: app
+    image: nginx
+    volumeMounts:
+    - name: data-volume
+      mountPath: /data
+  volumes:
+  - name: data-volume
+    persistentVolumeClaim:
+      claimName: my-pvc</code></pre>
+<strong>USE WHEN:</strong> Question asks for persistent storage, data volumes, or stateful applications
+<h3>Security Context Patterns</h3>
+<h4>Pod Security Context</h4>
+<pre><code>spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  containers:
+  - name: app
+    image: nginx
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      capabilities:
+        drop:
+        - ALL</code></pre>
+<strong>USE WHEN:</strong> Question mentions security, non-root users, or privilege restrictions
+<h3>Service Creation Patterns</h3>
+<h4>Expose Deployment/Pod</h4>
+<pre><code><h2>ClusterIP (internal access only)</h2>
+kubectl expose pod nginx --port=80 --target-port=80
+kubectl expose deployment nginx --port=80 --target-port=80
+<h2>NodePort (external access via node IP)</h2>
+kubectl expose pod nginx --port=80 --target-port=80 --type=NodePort
+<h2>LoadBalancer (cloud provider external LB)</h2>
+kubectl expose deployment nginx --port=80 --target-port=80 --type=LoadBalancer</code></pre>
+<strong>USE WHEN:</strong> Question asks to "expose" a pod/deployment or mentions service types
+<h3>Job and CronJob Patterns</h3>
+<h4>Job Template</h4>
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pi-calculation
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: pi
+        image: perl
+        command: ["perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"]</code></pre>
+<h4>CronJob Template</h4>
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  schedule: "<em>/1 </em> <em> </em> *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: hello
+            image: busybox
+            command: ["/bin/sh", "-c", "echo hello && date"]</code></pre>
+<strong>USE WHEN:</strong> Question asks for batch processing, scheduled tasks, or periodic jobs
+<h3>Resource Limits and Requests</h3>
+<h4>Essential Pattern</h4>
+<pre><code>spec:
+  containers:
+  - name: app
+    image: nginx
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"</code></pre>
+<strong>USE WHEN:</strong> Question mentions resource management, quotas, or performance requirements
+<h3>Common CKAD Anti-Patterns (What NOT to do)</h3>
+<h4>Don't Use These in Exam</h4>
+<pre><code><h2>DON'T: Edit live resources when you can recreate</h2>
+kubectl edit pod nginx  # Use delete + recreate instead
+<h2>DON'T: Use long resource names  </h2>
+kubectl get persistentvolumeclaims  # Use: kubectl get pvc
+<h2>DON'T: Forget --restart=Never for pods</h2>
+kubectl run nginx --image=nginx  # Creates deployment, not pod!
+<h2>DON'T: Manually type long YAML</h2>
+<h2>DO: Use kubectl create/run with --dry-run=client -o yaml</h2></code></pre>
+<h3>Time Management Tips</h3>
+<h4>Speed Techniques</h4>
+1. <strong>Set aliases immediately:</strong>
+   <code>`</code>bash
+   alias k=kubectl
+   alias kgp='kubectl get pods'
+   alias kgs='kubectl get svc'
+   <code>`</code>
+<p>2. <strong>Use kubectl completion:</strong>
+   <code>`</code>bash
+   source <(kubectl completion bash)
+   <code>`</code></p>
+<p>3. <strong>Master --dry-run + -o yaml workflow:</strong>
+   - Generate → Edit → Apply
+   - Faster than writing YAML from scratch</p>
+<p>4. <strong>Use vim shortcuts for YAML editing:</strong>
+   <code>`</code>vim
+   :set number          " Show line numbers
+   :set expandtab       " Use spaces instead of tabs
+   :set shiftwidth=2    " 2-space indentation
+   <code>`</code></p>
+<p>5. <strong>Learn to read error messages:</strong>
+   - API version mismatches
+   - Indentation errors
+   - Missing required fields</p>
+<h3>Common Question Patterns</h3>
+<h4>Pod Questions</h4>
+<li>"Create a pod" → <code>--restart=Never</code></li>
+<li>"Create a deployment" → Default or <code>--restart=Always</code></li>
+<li>"Scale" → Always deployment/replicaset</li>
+<li>"Expose" → Service creation</li>
+<h4>Configuration Questions  </h4>
+<li>"Environment variables" → ConfigMap or Secret</li>
+<li>"Configuration file" → ConfigMap as volume</li>
+<li>"Sensitive data" → Secret as volume</li>
+<li>"Command/args" → command/args in container spec</li>
+<h4>Storage Questions</h4>
+<li>"Persistent" → PVC + volume mount</li>
+<li>"Shared volume" → emptyDir between containers</li>
+<li>"Host directory" → hostPath volume</li>
+<h4>Security Questions</h4>
+<li>"Non-root user" → securityContext.runAsUser</li>
+<li>"Read-only filesystem" → securityContext.readOnlyRootFilesystem</li>
+<li>"Drop capabilities" → securityContext.capabilities.drop</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

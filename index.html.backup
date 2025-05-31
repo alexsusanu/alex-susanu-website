@@ -226,6 +226,36 @@
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">networking</span><span class="tag">service</span><span class="tag">ingress</span><span class="tag">networkpolicy</span><span class="tag">dns</span>
         </div>
     </div>
+    <div class="note-card" data-tags="ckad,kubectl,kubernetes,devops" onclick="window.location.href='notes/k8s-ckad_commands_guide.html'">
+        <h3>CKAD Essential kubectl Commands Study Guide</h3>
+        <div class="note-meta">Kubernetes (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>The foundation of CKAD exam success lies in mastering pod creation, configuration management, and basic troubleshooting.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">CKAD</span><span class="tag">kubectl</span><span class="tag">Kubernetes</span><span class="tag">DevOps</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,security,rbac,pod-security,secrets,admission-controllers,network-policies" onclick="window.location.href='notes/k8s-k8s_security_guide.html'">
+        <h3>Kubernetes Security: Complete Deep Technical Guide</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Kubernetes security is built on multiple layers of defense - no single security mechanism protects everything.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">security</span><span class="tag">rbac</span><span class="tag">pod-security</span><span class="tag">secrets</span><span class="tag">admission-controllers</span><span class="tag">network-policies</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,networking,cni,pod-networking,cluster-networking,network-policies,ingress,dns" onclick="window.location.href='notes/k8s-k8s_networking_guide.html'">
+        <h3>Kubernetes Networking: Complete Deep Technical Guide</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Kubernetes networking is fundamentally different from traditional server networking.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">networking</span><span class="tag">cni</span><span class="tag">pod-networking</span><span class="tag">cluster-networking</span><span class="tag">network-policies</span><span class="tag">ingress</span><span class="tag">dns</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-configuration management.html'">
         <h3>Kubernetes Configuration Management: A Deep Dive</h3>
         <div class="note-meta">General (k8s) • May 27, 2025</div>
@@ -234,6 +264,16 @@
         </div>
         <div class="note-tags">
             
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,pods,multi-container,sidecar,init-containers,shared-volumes,networking" onclick="window.location.href='notes/k8s-multi_container_pods_guide.html'">
+        <h3>Multi-Container Pods: Complete Deep Technical Guide</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>A multi-container pod is a single Kubernetes pod that contains more than one container.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">pods</span><span class="tag">multi-container</span><span class="tag">sidecar</span><span class="tag">init-containers</span><span class="tag">shared-volumes</span><span class="tag">networking</span>
         </div>
     </div>
     <div class="note-card" data-tags="secrets,security,base64,config,env" onclick="window.location.href='notes/k8s-secrets.html'">
@@ -254,6 +294,16 @@
         </div>
         <div class="note-tags">
             
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,storage,persistent-volumes,pvc,storage-classes,statefulsets,volumes" onclick="window.location.href='notes/k8s-k8s_storage_guide.html'">
+        <h3>Kubernetes Storage: Complete Deep Technical Guide</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Kubernetes storage solves the fundamental problem that containers are ephemeral - when a container restarts, all data inside it is lost.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">storage</span><span class="tag">persistent-volumes</span><span class="tag">pvc</span><span class="tag">storage-classes</span><span class="tag">statefulsets</span><span class="tag">volumes</span>
         </div>
     </div>
     <div class="note-card" data-tags="kubernetes,storage,pvc,persistent-volumes,containers" onclick="window.location.href='notes/k8s-k8s-pvc-volume-mount-note.html'">
@@ -296,6 +346,16 @@
             
         </div>
     </div>
+    <div class="note-card" data-tags="kubernetes,observability,monitoring,logging,metrics,tracing,prometheus,grafana,jaeger" onclick="window.location.href='notes/k8s-k8s_observability_guide.html'">
+        <h3>Kubernetes Observability & Monitoring: Complete Deep Technical Guide</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Observability is the ability to understand what's happening inside your Kubernetes cluster and applications by examining their external outputs.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">observability</span><span class="tag">monitoring</span><span class="tag">logging</span><span class="tag">metrics</span><span class="tag">tracing</span><span class="tag">prometheus</span><span class="tag">grafana</span><span class="tag">jaeger</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="kubernetes,k8s,configuration,configmap,secret,serviceaccount,rbac" onclick="window.location.href='notes/k8s-k8s_configuration.html'">
         <h3>Kubernetes Configuration & Security</h3>
         <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
@@ -304,6 +364,36 @@
         </div>
         <div class="note-tags">
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">configuration</span><span class="tag">configmap</span><span class="tag">secret</span><span class="tag">serviceaccount</span><span class="tag">rbac</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="annotations,kubernetes,observability,tooling,devops,metadata" onclick="window.location.href='notes/k8s-kubernetes-annotations-hidden-power.html'">
+        <h3>Kubernetes Annotations – Hidden Power in Metadata</h3>
+        <div class="note-meta">Kubernetes (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Annotations in Kubernetes are key-value pairs that attach arbitrary, non-identifying metadata to objects.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">annotations</span><span class="tag">kubernetes</span><span class="tag">observability</span><span class="tag">tooling</span><span class="tag">DevOps</span><span class="tag">metadata</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,cluster-internals,control-plane,api-server,etcd,kubelet,scheduler,controllers" onclick="window.location.href='notes/k8s-k8s_cluster_internals_guide.html'">
+        <h3>Kubernetes Cluster Internals: Complete Deep Technical Guide</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Understanding Kubernetes cluster internals is crucial for troubleshooting, performance optimization, and designing robust systems.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">cluster-internals</span><span class="tag">control-plane</span><span class="tag">api-server</span><span class="tag">etcd</span><span class="tag">kubelet</span><span class="tag">scheduler</span><span class="tag">controllers</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,deployments,statefulsets,daemonsets,jobs,cronjobs,hpa,controllers" onclick="window.location.href='notes/k8s-k8s_workload_controllers_guide.html'">
+        <h3>Kubernetes Workload Controllers: Complete Deep Technical Guide</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Kubernetes workload controllers are the "managers" that ensure your applications run correctly.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">deployments</span><span class="tag">statefulsets</span><span class="tag">daemonsets</span><span class="tag">jobs</span><span class="tag">cronjobs</span><span class="tag">hpa</span><span class="tag">controllers</span>
         </div>
     </div>
     <div class="note-card" data-tags="sidecar,microservices,pod-design,kubernetes,containers,architecture" onclick="window.location.href='notes/k8s-shared-pod-microservices-vs-sidecar.html'">
@@ -376,6 +466,16 @@
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">kubectl</span><span class="tag">troubleshooting</span><span class="tag">debugging</span><span class="tag">monitoring</span>
         </div>
     </div>
+    <div class="note-card" data-tags="kubernetes,configmaps,secrets,environment-variables,helm,configuration,hot-reloading" onclick="window.location.href='notes/k8s-k8s_config_management_guide.html'">
+        <h3>Kubernetes Configuration Management: Complete Deep Technical Guide</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Configuration management in Kubernetes is about separating application code from configuration data.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">configmaps</span><span class="tag">secrets</span><span class="tag">environment-variables</span><span class="tag">helm</span><span class="tag">configuration</span><span class="tag">hot-reloading</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="kubernetes,k8s,storage,volumes,persistentvolume,pvc,storageclass" onclick="window.location.href='notes/k8s-k8s_storage.html'">
         <h3>Kubernetes Storage</h3>
         <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
@@ -424,6 +524,16 @@
         </div>
         <div class="note-tags">
             
+        </div>
+    </div>
+    <div class="note-card" data-tags="kubernetes,services,networking,virtual-ip,endpoints,load-balancing" onclick="window.location.href='notes/k8s-k8s_services_complete.html'">
+        <h3>Kubernetes Services: Deep Technical Explanations with Istio and Helm</h3>
+        <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>Kubernetes Services provide stable network endpoints for accessing pods.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">services</span><span class="tag">networking</span><span class="tag">virtual-ip</span><span class="tag">endpoints</span><span class="tag">load-balancing</span>
         </div>
     </div>
     <div class="note-card" data-tags="kubernetes,k8s,containers,orchestration,core-concepts" onclick="window.location.href='notes/k8s-k8s_core_concepts.html'">
