@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Workload Controllers: Complete Deep Technical Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Workload Controllers: Complete Deep Technical Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">deployments</span><span class="tag">statefulsets</span><span class="tag">daemonsets</span><span class="tag">jobs</span><span class="tag">cronjobs</span><span class="tag">hpa</span><span class="tag">controllers</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Workload Controllers: Complete Deep Technical Guide</h2>
+<h3>Introduction to Workload Controllers</h3>
+<p>Kubernetes <strong>workload controllers</strong> are the "managers" that ensure your applications run correctly. Instead of creating pods directly, you create controllers that manage pods for you, ensuring they stay healthy, scale appropriately, and recover from failures.</p>
+<h4>Why Controllers Exist</h4>
+<strong>The Problem with Raw Pods:</strong>
+<pre><code><h2>Creating a pod directly</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-app
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+<h2>Problems:</h2>
+<h2>1. Pod dies → Gone forever (no restart)</h2>
+<h2>2. Node fails → Pod lost permanently  </h2>
+<h2>3. Need multiple replicas → Create each pod manually</h2>
+<h2>4. Updates → Delete and recreate manually</h2>
+<h2>5. No rollback capability</h2></code></pre>
+<strong>The Controller Solution:</strong>
+<pre><code><h2>Creating a Deployment (controller)</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest
+<h2>Benefits:</h2>
+<h2>1. Pod dies → Automatically replaced</h2>
+<h2>2. Node fails → Pods rescheduled to healthy nodes</h2>
+<h2>3. Want more replicas → Change replicas field</h2>
+<h2>4. Updates → Rolling update automatically</h2>
+<h2>5. Rollback → Built-in revision history</h2></code></pre>
+<h4>Controller Pattern</h4>
+<strong>How Controllers Work:</strong>
+<pre><code>Desired State (in spec) → Controller watches → Current State → Actions to reconcile
+                           ↓
+                   Compare desired vs actual
+                           ↓
+                   Take corrective actions</code></pre>
+<strong>Controller Loop (Reconciliation):</strong>
+1. <strong>Read desired state</strong> - What you want (from spec)
+2. <strong>Read current state</strong> - What actually exists (from cluster)
+3. <strong>Compare states</strong> - Are they the same?
+4. <strong>Take actions</strong> - Create, update, or delete resources to match desired state
+5. <strong>Repeat</strong> - Continuously monitor and adjust
+<h4>Types of Workload Controllers</h4>
+<strong>Stateless Applications:</strong>
+<ul><li><strong>Deployment</strong> - Standard stateless applications (web servers, APIs)</li>
+<li><strong>ReplicaSet</strong> - Lower-level replica management (usually managed by Deployment)</li>
+<strong>Stateful Applications:</strong>
+<li><strong>StatefulSet</strong> - Applications needing stable identity (databases, clustered apps)</li>
+<strong>Node-Level Services:</strong>
+<li><strong>DaemonSet</strong> - One pod per node (monitoring agents, log collectors)</li>
+<strong>Batch Processing:</strong>
+<li><strong>Job</strong> - Run-to-completion tasks (data processing, backups)</li>
+<li><strong>CronJob</strong> - Scheduled tasks (periodic backups, reports)</li>
+<strong>Auto-scaling:</strong>
+<li><strong>HorizontalPodAutoscaler (HPA)</strong> - Scale pods based on metrics</li>
+<li><strong>VerticalPodAutoscaler (VPA)</strong> - Adjust pod resource requests/limits</li>
+<h3>Deployments Deep Dive</h3>
+<h4>What Deployments Actually Do</h4>
+<p>A <strong>Deployment</strong> manages ReplicaSets, which in turn manage Pods. This creates a hierarchy that enables powerful features like rolling updates and rollbacks.</p>
+<strong>Deployment Hierarchy:</strong>
+<pre><code>Deployment
+└── ReplicaSet (current version)
+    ├── Pod 1
+    ├── Pod 2
+    └── Pod 3
+└── ReplicaSet (old version, scaled to 0)
+    └── (no pods, kept for rollback)</code></pre>
+<strong>Why the Extra Layer (ReplicaSet)?</strong>
+<li><strong>Rolling Updates</strong> - Create new ReplicaSet with new version, gradually scale down old one</li>
+<li><strong>Rollback Capability</strong> - Keep old ReplicaSets around for quick rollbacks</li>
+<li><strong>Update Strategies</strong> - Control how updates happen (rolling, recreate)</li>
+<h4>Deployment Strategies</h4>
+<p>#### Rolling Update Strategy (Default)
+<strong>How Rolling Updates Work:</strong>
+1. <strong>Create new ReplicaSet</strong> with updated pod template
+2. <strong>Scale up new ReplicaSet</strong> gradually (add new pods)
+3. <strong>Scale down old ReplicaSet</strong> gradually (remove old pods)
+4. <strong>Repeat</strong> until all pods are new version</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 6
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%    # Max 25% of pods can be unavailable (1-2 pods)
+      maxSurge: 25%          # Max 25% extra pods during update (1-2 extra pods)
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.20
+        ports:
+        - containerPort: 80</code></pre>
+<strong>Rolling Update Process with 6 replicas:</strong>
+<pre><code>Step 1: 6 old pods running
+Step 2: Create 1 new pod (maxSurge=25% = 1.5, rounded down to 1)
+        → 6 old + 1 new = 7 total pods
+Step 3: Delete 1 old pod (maxUnavailable=25% = 1.5, rounded down to 1)
+        → 5 old + 1 new = 6 total pods
+Step 4: Create 1 new pod
+        → 5 old + 2 new = 7 total pods
+Step 5: Delete 1 old pod
+        → 4 old + 2 new = 6 total pods
+...continue until all pods are new version</code></pre>
+<p>#### Recreate Strategy
+<strong>How Recreate Works:</strong>
+1. <strong>Scale down old ReplicaSet</strong> to 0 (delete all old pods)
+2. <strong>Wait</strong> for all old pods to terminate
+3. <strong>Scale up new ReplicaSet</strong> to desired replicas</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  # All-or-nothing update
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+      - name: db
+        image: postgres:13
+        # Database can't have multiple versions running simultaneously</code></pre>
+<strong>When to use Recreate:</strong>
+<li>Applications that can't run multiple versions simultaneously</li>
+<li>Applications using ReadWriteOnce volumes (only one pod can mount)</li>
+<li>Applications with complex state that needs clean shutdown</li>
+<h4>Advanced Deployment Configuration</h4>
+<p>#### Complete Production Deployment
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: production-web-app
+  namespace: production
+  labels:
+    app: web-app
+    version: v2.1.0
+    environment: production
+spec:
+  replicas: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 2      # Absolute number instead of percentage
+      maxSurge: 3           # Can temporarily have 13 pods during update
+  selector:
+    matchLabels:
+      app: web-app
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: web-app
+        version: v2.1.0
+        environment: production
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Pod-level configuration
+      restartPolicy: Always
+      serviceAccountName: web-app-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      
+      # Init containers for setup
+      initContainers:
+      - name: migration
+        image: myapp/migrator:v2.1.0
+        command: ["./migrate", "up"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: url
+      
+      containers:
+      - name: web-app
+        image: myapp/web:v2.1.0
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: url
+        
+        envFrom:
+        - configMapRef:
+            name: web-app-config
+        
+        # Resource management
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30  # Allow 150 seconds for startup
+        
+        # Volume mounts
+        volumeMounts:
+        - name: app-logs
+          mountPath: /var/log/app
+        - name: tmp-volume
+          mountPath: /tmp
+        
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+      
+      # Volumes
+      volumes:
+      - name: app-logs
+        emptyDir: {}
+      - name: tmp-volume
+        emptyDir: {}
+      
+      # Scheduling preferences
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: web-app
+              topologyKey: kubernetes.io/hostname
+      
+      # Tolerations for node taints
+      tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "web-servers"
+        effect: "NoSchedule"
+      
+      # Node selection
+      nodeSelector:
+        node-type: "web-servers"
+      
+      # Graceful shutdown
+      terminationGracePeriodSeconds: 60
+      
+      # Image pull secrets
+      imagePullSecrets:
+      - name: docker-registry-secret</code></pre></p>
+<h4>Deployment Updates and Rollbacks</h4>
+<p>#### Triggering Updates
+<pre><code><h2>Update image version</h2>
+kubectl set image deployment/web-app web=nginx:1.21</p>
+<h2>Update environment variable</h2>
+kubectl patch deployment web-app -p='{"spec":{"template":{"spec":{"containers":[{"name":"web","env":[{"name":"VERSION","value":"v2.0"}]}]}}}}'
+<h2>Edit deployment directly</h2>
+kubectl edit deployment web-app
+<h2>Apply updated YAML</h2>
+kubectl apply -f deployment.yaml</code></pre>
+<p>#### Monitoring Update Progress
+<pre><code><h2>Watch rollout status</h2>
+kubectl rollout status deployment/web-app</p>
+<h2>Get deployment status</h2>
+kubectl get deployment web-app
+<h2>See rollout history</h2>
+kubectl rollout history deployment/web-app
+<h2>See specific revision details</h2>
+kubectl rollout history deployment/web-app --revision=3</code></pre>
+<p>#### Rollback Operations
+<pre><code><h2>Rollback to previous version</h2>
+kubectl rollout undo deployment/web-app</p>
+<h2>Rollback to specific revision</h2>
+kubectl rollout undo deployment/web-app --to-revision=2
+<h2>Pause rollout (stop in middle of update)</h2>
+kubectl rollout pause deployment/web-app
+<h2>Resume paused rollout</h2>
+kubectl rollout resume deployment/web-app</code></pre>
+<p>#### Revision History Management
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  revisionHistoryLimit: 5  # Keep 5 old ReplicaSets for rollback
+  # Default is 10, set lower to save resources</code></pre></p>
+<h4>Health Checks Deep Dive</h4>
+<p>#### Liveness Probes
+<strong>Purpose:</strong> Detect when container is stuck and needs restart
+<pre><code>livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+    httpHeaders:
+    - name: Custom-Header
+      value: liveness-check
+  initialDelaySeconds: 30    # Wait 30s after container starts
+  periodSeconds: 10          # Check every 10 seconds
+  timeoutSeconds: 5          # 5 second timeout per check
+  failureThreshold: 3        # Restart after 3 failed checks
+  successThreshold: 1        # Consider healthy after 1 success</code></pre></p>
+<strong>Liveness Probe Types:</strong>
+<pre><code><h2>HTTP probe</h2>
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+    scheme: HTTPS
+<h2>TCP probe  </h2>
+livenessProbe:
+  tcpSocket:
+    port: 5432
+<h2>Command probe</h2>
+livenessProbe:
+  exec:
+    command:
+    - cat
+    - /tmp/healthy</code></pre>
+<p>#### Readiness Probes
+<strong>Purpose:</strong> Detect when container is ready to receive traffic
+<pre><code>readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 2        # Remove from service after 2 failures
+  successThreshold: 1        # Add to service after 1 success</code></pre></p>
+<strong>Readiness vs Liveness:</strong>
+<li><strong>Liveness failure</strong> → Container restarts</li>
+<li><strong>Readiness failure</strong> → Pod removed from service endpoints (no traffic)</li>
+<p>#### Startup Probes
+<strong>Purpose:</strong> Handle slow-starting containers that need more time than normal health checks
+<pre><code>startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30       # Allow 150 seconds for startup (30 * 5s)
+<h2>After startup probe succeeds, liveness/readiness probes take over</h2></code></pre></p>
+<strong>Why Startup Probes Matter:</strong>
+<pre><code><h2>Without startup probe - problematic for slow apps</h2>
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 60    # Have to guess how long startup takes
+  periodSeconds: 10
+  failureThreshold: 3
+<h2>If app takes 90 seconds to start, it gets killed at 60+30=90s</h2>
+<h2>With startup probe - handles variable startup times</h2>
+startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 5
+  failureThreshold: 60       # Allow up to 300 seconds for startup
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 10          # Normal health checks after startup
+  failureThreshold: 3</code></pre>
+<h3>StatefulSets Deep Dive</h3>
+<h4>What Makes StatefulSets Different</h4>
+<strong>StatefulSets</strong> provide guarantees that Deployments cannot:
+<li><strong>Stable network identity</strong> - Predictable DNS names</li>
+<li><strong>Stable storage identity</strong> - Persistent volumes that follow the pod</li>
+<li><strong>Ordered deployment and scaling</strong> - Pods start and stop in sequence</li>
+<li><strong>Ordered rolling updates</strong> - Updates happen one pod at a time</li>
+<h4>StatefulSet Identity</h4>
+<p>#### Predictable Pod Names
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web-cluster
+spec:
+  serviceName: web-cluster
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: nginx:latest</p>
+<h2>Creates pods with predictable names:</h2>
+<h2>web-cluster-0, web-cluster-1, web-cluster-2</h2></code></pre>
+<p>#### Stable DNS Names
+<pre><code><h2>Headless service for StatefulSet</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-cluster
+spec:
+  clusterIP: None  # Headless service
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80</p>
+<h2>Each pod gets stable DNS name:</h2>
+<h2>web-cluster-0.web-cluster.namespace.svc.cluster.local</h2>
+<h2>web-cluster-1.web-cluster.namespace.svc.cluster.local</h2>
+<h2>web-cluster-2.web-cluster.namespace.svc.cluster.local</h2></code></pre>
+<h4>StatefulSet Storage</h4>
+<p>#### Persistent Volume Claims per Pod
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: database-cluster
+spec:
+  serviceName: database-cluster
+  replicas: 3
+  volumeClaimTemplates:
+  - metadata:
+      name: data-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: fast-ssd
+  template:
+    spec:
+      containers:
+      - name: database
+        image: postgres:14
+        volumeMounts:
+        - name: data-volume
+          mountPath: /var/lib/postgresql/data</p>
+<h2>Creates separate PVCs:</h2>
+<h2>data-volume-database-cluster-0</h2>
+<h2>data-volume-database-cluster-1  </h2>
+<h2>data-volume-database-cluster-2</h2></code></pre>
+<p>#### Storage Persistence Across Pod Restarts
+<pre><code><h2>If database-cluster-1 pod is deleted</h2>
+kubectl delete pod database-cluster-1</p>
+<h2>New database-cluster-1 pod is created</h2>
+<h2>It automatically gets the SAME PVC: data-volume-database-cluster-1</h2>
+<h2>All data is preserved!</h2></code></pre>
+<h4>Ordered Operations</h4>
+<p>#### Sequential Startup
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ordered-app
+spec:
+  serviceName: ordered-app
+  replicas: 5
+  podManagementPolicy: OrderedReady  # Default behavior
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest</p>
+<h2>Startup sequence:</h2>
+<h2>1. ordered-app-0 starts and becomes Ready</h2>
+<h2>2. ordered-app-1 starts and becomes Ready  </h2>
+<h2>3. ordered-app-2 starts and becomes Ready</h2>
+<h2>4. ordered-app-3 starts and becomes Ready</h2>
+<h2>5. ordered-app-4 starts and becomes Ready</h2></code></pre>
+<p>#### Parallel Startup (Alternative)
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: parallel-app
+spec:
+  serviceName: parallel-app
+  replicas: 5
+  podManagementPolicy: Parallel  # All pods start simultaneously
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest</p>
+<h2>All pods start at the same time, but still get stable names</h2></code></pre>
+<h4>Real-World StatefulSet Examples</h4>
+<p>#### PostgreSQL Primary-Replica Cluster
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-cluster
+  namespace: database
+spec:
+  serviceName: postgres-cluster
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 200Gi
+      storageClassName: high-iops-ssd
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14
+        env:
+        - name: POSTGRES_DB
+          value: myapp
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+        # Configuration based on pod ordinal
+        command:
+        - bash
+        - -c
+        - |
+          set -e
+          
+          # postgres-cluster-0 is always the primary
+          if [[ $POD_NAME == *"-0" ]]; then
+            echo "Starting as PRIMARY"
+            exec postgres \
+              -c wal_level=replica \
+              -c max_wal_senders=3 \
+              -c max_replication_slots=3 \
+              -c hot_standby=on
+          else
+            echo "Starting as REPLICA"
+            
+            # Wait for primary to be ready
+            until pg_isready -h postgres-cluster-0.postgres-cluster; do
+              echo "Waiting for primary..."
+              sleep 2
+            done
+            
+            # Create replica from primary if data directory is empty
+            if [ ! -f "$PGDATA/PG_VERSION" ]; then
+              echo "Creating replica from primary"
+              pg_basebackup \
+                -h postgres-cluster-0.postgres-cluster \
+                -D "$PGDATA" \
+                -U postgres \
+                -v -P -W
+              
+              # Configure as standby
+              echo "standby_mode = 'on'" >> "$PGDATA/recovery.conf"
+              echo "primary_conninfo = 'host=postgres-cluster-0.postgres-cluster port=5432 user=postgres'" >> "$PGDATA/recovery.conf"
+            fi
+            
+            exec postgres -c hot_standby=on
+          fi
+        
+        ports:
+        - containerPort: 5432
+          name: postgres
+        
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 1000m
+          limits:
+            memory: 4Gi
+            cpu: 2000m</code></pre></p>
+<p>#### Elasticsearch Cluster
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: search
+spec:
+  serviceName: elasticsearch
+  replicas: 3
+  selector:
+    matchLabels:
+      app: elasticsearch
+  volumeClaimTemplates:
+  - metadata:
+      name: elasticsearch-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 500Gi
+      storageClassName: nvme-ssd
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      initContainers:
+      - name: init-sysctl
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          sysctl -w vm.max_map_count=262144
+          echo 'vm.max_map_count=262144' >> /etc/sysctl.conf
+        securityContext:
+          privileged: true
+      
+      containers:
+      - name: elasticsearch
+        image: elasticsearch:8.5.0
+        env:
+        - name: cluster.name
+          value: "elasticsearch-cluster"
+        - name: node.name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: discovery.seed_hosts
+          value: "elasticsearch-0.elasticsearch,elasticsearch-1.elasticsearch,elasticsearch-2.elasticsearch"
+        - name: cluster.initial_master_nodes
+          value: "elasticsearch-0,elasticsearch-1,elasticsearch-2"
+        - name: ES_JAVA_OPTS
+          value: "-Xms4g -Xmx4g"
+        - name: xpack.security.enabled
+          value: "false"
+        - name: xpack.monitoring.collection.enabled
+          value: "true"
+        
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: transport
+        
+        volumeMounts:
+        - name: elasticsearch-data
+          mountPath: /usr/share/elasticsearch/data
+        
+        resources:
+          requests:
+            memory: 8Gi
+            cpu: 2000m
+          limits:
+            memory: 8Gi
+            cpu: 4000m
+        
+        readinessProbe:
+          httpGet:
+            path: /_cluster/health?local=true
+            port: 9200
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        livenessProbe:
+          httpGet:
+            path: /_cluster/health?local=true
+            port: 9200
+          initialDelaySeconds: 90
+          periodSeconds: 30</code></pre></p>
+<h4>StatefulSet Scaling</h4>
+<p>#### Scaling Up
+<pre><code><h2>Scale from 3 to 5 replicas</h2>
+kubectl scale statefulset elasticsearch --replicas=5</p>
+<h2>Scaling process:</h2>
+<h2>1. elasticsearch-3 created and waits to become Ready</h2>
+<h2>2. elasticsearch-4 created and waits to become Ready</h2>
+<h2>3. New pods join cluster automatically via discovery.seed_hosts</h2></code></pre>
+<p>#### Scaling Down
+<pre><code><h2>Scale from 5 to 3 replicas</h2>
+kubectl scale statefulset elasticsearch --replicas=3</p>
+<h2>Scaling process:</h2>
+<h2>1. elasticsearch-4 deleted (highest ordinal first)</h2>
+<h2>2. Wait for elasticsearch-4 to terminate completely</h2>
+<h2>3. elasticsearch-3 deleted</h2>
+<h2>4. PVCs remain (data preserved for potential scale-up)</h2></code></pre>
+<strong>Important:</strong> StatefulSets scale down in reverse order (highest ordinal first) to maintain consistency.
+<h3>DaemonSets Deep Dive</h3>
+<h4>What DaemonSets Do</h4>
+<strong>DaemonSets</strong> ensure that exactly one pod runs on every (or selected) node in the cluster. As nodes are added or removed, DaemonSet pods are automatically created or cleaned up.
+<strong>Use Cases:</strong>
+<li><strong>Node monitoring agents</strong> - Prometheus node exporter, Datadog agent</li>
+<li><strong>Log collection</strong> - Fluentd, Fluent Bit, Filebeat</li>
+<li><strong>Network plugins</strong> - CNI plugins, kube-proxy</li>
+<li><strong>Storage daemons</strong> - Ceph, GlusterFS agents</li>
+<li><strong>Security scanning</strong> - Vulnerability scanners, compliance checkers</li>
+<h4>DaemonSet Behavior</h4>
+<p>#### Automatic Pod Placement
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: monitoring-agent
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: monitoring-agent
+  template:
+    metadata:
+      labels:
+        app: monitoring-agent
+    spec:
+      containers:
+      - name: agent
+        image: monitoring-agent:latest</p>
+<h2>Result: One pod per node</h2>
+<h2>Node1 → monitoring-agent-abc123</h2>
+<h2>Node2 → monitoring-agent-def456  </h2>
+<h2>Node3 → monitoring-agent-ghi789</h2></code></pre>
+<p>#### Node Addition/Removal
+<pre><code><h2>When new node joins cluster:</h2>
+<h2>1. DaemonSet controller detects new node</h2>
+<h2>2. Creates new pod on that node automatically</h2></p>
+<h2>When node is removed:</h2>
+<h2>1. Pod on that node is deleted</h2>
+<h2>2. No replacement created (node doesn't exist)</h2></code></pre>
+<h4>Node Selection</h4>
+<p>#### NodeSelector
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: gpu-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: gpu-monitoring
+  template:
+    metadata:
+      labels:
+        app: gpu-monitoring
+    spec:
+      nodeSelector:
+        hardware: gpu-nodes  # Only run on nodes with this label
+      containers:
+      - name: gpu-monitor
+        image: gpu-monitor:latest</code></pre></p>
+<p>#### Node Affinity (More Advanced)
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector
+spec:
+  selector:
+    matchLabels:
+      app: log-collector
+  template:
+    metadata:
+      labels:
+        app: log-collector
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+              - key: node-type
+                operator: NotIn
+                values:
+                - windows-nodes
+      containers:
+      - name: log-collector
+        image: fluent-bit:latest</code></pre></p>
+<p>#### Tolerations for Tainted Nodes
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-problem-detector
+spec:
+  selector:
+    matchLabels:
+      app: node-problem-detector
+  template:
+    metadata:
+      labels:
+        app: node-problem-detector
+    spec:
+      tolerations:
+      # Run on master nodes despite taints
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+        operator: Exists
+      # Run on nodes with custom taints
+      - key: dedicated
+        operator: Equal
+        value: monitoring
+        effect: NoSchedule
+      containers:
+      - name: node-problem-detector
+        image: k8s.gcr.io/node-problem-detector:v0.8.10</code></pre></p>
+<h4>Real-World DaemonSet Examples</h4>
+<p>#### Log Collection with Fluent Bit
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: kube-system
+  labels:
+    app: fluent-bit
+spec:
+  selector:
+    matchLabels:
+      app: fluent-bit
+  template:
+    metadata:
+      labels:
+        app: fluent-bit
+    spec:
+      serviceAccountName: fluent-bit
+      hostNetwork: true  # Use host networking for log collection
+      dnsPolicy: ClusterFirstWithHostNet
+      
+      tolerations:
+      # Run on all nodes including masters
+      - operator: Exists
+        effect: NoSchedule
+      
+      containers:
+      - name: fluent-bit
+        image: fluent/fluent-bit:2.0.8
+        ports:
+        - containerPort: 2020
+          name: metrics
+        
+        env:
+        - name: FLUENT_ELASTICSEARCH_HOST
+          value: "elasticsearch.logging.svc.cluster.local"
+        - name: FLUENT_ELASTICSEARCH_PORT
+          value: "9200"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        
+        volumeMounts:
+        # Access node's log files
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: fluent-bit-config
+          mountPath: /fluent-bit/etc
+        
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 50m
+          limits:
+            memory: 128Mi
+            cpu: 100m
+      
+      volumes:
+      # Host paths for log access
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: fluent-bit-config
+        configMap:
+          name: fluent-bit-config</code></pre></p>
+<p>#### Node Monitoring with Prometheus Node Exporter
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9100"
+        prometheus.io/path: "/metrics"
+    spec:
+      hostNetwork: true   # Use host networking
+      hostPID: true      # Access host process information
+      
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534  # nobody user
+      
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter:v1.5.0
+        args:
+        - '--path.rootfs=/host'
+        - '--path.procfs=/host/proc'
+        - '--path.sysfs=/host/sys'
+        - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)'
+        
+        ports:
+        - containerPort: 9100
+          hostPort: 9100  # Expose on host port
+          name: metrics
+        
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        - name: root
+          mountPath: /host
+          readOnly: true
+        
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 25m
+          limits:
+            memory: 64Mi
+            cpu: 50m
+      
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: root
+        hostPath:
+          path: /
+      
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule</code></pre></p>
+<p>#### Network Plugin DaemonSet
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: calico-node
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: calico-node
+  template:
+    metadata:
+      labels:
+        k8s-app: calico-node
+    spec:
+      hostNetwork: true
+      serviceAccountName: calico-node
+      
+      tolerations:
+      # Run on all nodes including masters and tainted nodes
+      - operator: Exists
+        effect: NoSchedule
+      - operator: Exists
+        effect: NoExecute
+      
+      initContainers:
+      # Install CNI binaries
+      - name: install-cni
+        image: calico/cni:v3.24.0
+        command: ["/install-cni.sh"]
+        env:
+        - name: CNI_CONF_NAME
+          value: "10-calico.conflist"
+        - name: CNI_NETWORK_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              name: calico-config
+              key: cni_network_config
+        volumeMounts:
+        - mountPath: /host/opt/cni/bin
+          name: cni-bin-dir
+        - mountPath: /host/etc/cni/net.d
+          name: cni-net-dir
+      
+      containers:
+      - name: calico-node
+        image: calico/node:v3.24.0
+        env:
+        - name: DATASTORE_TYPE
+          value: "kubernetes"
+        - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
+          value: "ACCEPT"
+        - name: CALICO_NETWORKING_BACKEND
+          value: "bird"
+        - name: CLUSTER_TYPE
+          value: "k8s,bgp"
+        - name: CALICO_DISABLE_FILE_LOGGING
+          value: "true"
+        - name: FELIX_LOGSEVERITYSCREEN
+          value: "info"
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        
+        securityContext:
+          privileged: true
+        
+        volumeMounts:
+        - mountPath: /lib/modules
+          name: lib-modules
+          readOnly: true
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
+        - mountPath: /var/run/calico
+          name: var-run-calico
+        - mountPath: /var/lib/calico
+          name: var-lib-calico
+        
+        livenessProbe:
+          exec:
+            command:
+            - /bin/calico-node
+            - -felix-live
+          periodSeconds: 10
+          initialDelaySeconds: 10
+          failureThreshold: 6
+        
+        readinessProbe:
+          exec:
+            command:
+            - /bin/calico-node
+            - -felix-ready
+          periodSeconds: 10
+      
+      volumes:
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+      - name: var-run-calico
+        hostPath:
+          path: /var/run/calico
+      - name: var-lib-calico
+        hostPath:
+          path: /var/lib/calico
+      - name: xtables-lock
+        hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+      - name: cni-bin-dir
+        hostPath:
+          path: /opt/cni/bin
+      - name: cni-net-dir
+        hostPath:
+          path: /etc/cni/net.d</code></pre></p>
+<h4>DaemonSet Updates</h4>
+<p>#### Rolling Update Strategy
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: monitoring-agent
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1  # Update one node at a time
+  selector:
+    matchLabels:
+      app: monitoring-agent
+  template:
+    metadata:
+      labels:
+        app: monitoring-agent
+    spec:
+      containers:
+      - name: agent
+        image: monitoring-agent:v2.0.0  # New version</code></pre></p>
+<strong>Rolling Update Process:</strong>
+1. <strong>Select node</strong> - Choose node for update based on maxUnavailable
+2. <strong>Delete old pod</strong> - Remove existing pod from node
+3. <strong>Create new pod</strong> - Start new version on same node
+4. <strong>Wait for ready</strong> - Ensure new pod passes health checks
+5. <strong>Repeat</strong> - Move to next node
+<p>#### OnDelete Strategy
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: critical-agent
+spec:
+  updateStrategy:
+    type: OnDelete  # Manual control over updates
+  template:
+    spec:
+      containers:
+      - name: agent
+        image: critical-agent:v2.0.0</code></pre></p>
+<strong>OnDelete Process:</strong>
+<pre><code><h2>Updates only happen when you manually delete pods</h2>
+kubectl delete pod critical-agent-abc123  # Pod on node1
+<h2>New pod created with updated image</h2>
+<p>kubectl delete pod critical-agent-def456  # Pod on node2  
+<h2>New pod created with updated image</h2></p>
+<h2>Gives you complete control over update timing</h2></code></pre>
+<h3>Jobs and CronJobs Deep Dive</h3>
+<h4>Jobs - Run-to-Completion Tasks</h4>
+<strong>Jobs</strong> run pods to completion and ensure they succeed. Unlike Deployments that keep pods running, Jobs run pods until they finish successfully.
+<p>#### Basic Job
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-processing
+spec:
+  completions: 1           # How many pods must complete successfully
+  parallelism: 1          # How many pods run simultaneously
+  backoffLimit: 3         # Max retries on failure
+  activeDeadlineSeconds: 600  # Job timeout (10 minutes)
+  
+  template:
+    metadata:
+      labels:
+        app: data-processor
+    spec:
+      restartPolicy: Never  # Jobs must use Never or OnFailure
+      containers:
+      - name: processor
+        image: data-processor:latest
+        command: ["python", "process_data.py"]
+        env:
+        - name: INPUT_FILE
+          value: "/data/input.csv"
+        - name: OUTPUT_FILE
+          value: "/data/output.json"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: data-pvc</code></pre></p>
+<p>#### Parallel Processing Job
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-image-resize
+spec:
+  completions: 100        # Process 100 images total
+  parallelism: 10         # Process 10 images at a time
+  backoffLimit: 5
+  
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: image-resizer
+        image: image-processor:latest
+        command: ["./resize-image.sh"]
+        env:
+        - name: JOB_COMPLETION_INDEX
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+        # Script uses JOB_COMPLETION_INDEX to determine which image to process
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi</code></pre></p>
+<p>#### Database Migration Job
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: database-migration-v2-1-0
+  namespace: production
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 2  # Only retry twice for database migrations
+  activeDeadlineSeconds: 1800  # 30 minute timeout
+  
+  template:
+    metadata:
+      labels:
+        app: database-migration
+        version: v2.1.0
+    spec:
+      restartPolicy: Never
+      serviceAccountName: migration-sa
+      
+      initContainers:
+      # Wait for database to be ready
+      - name: wait-for-db
+        image: postgres:14
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h postgres.database.svc.cluster.local -p 5432; do
+            echo "Waiting for database..."
+            sleep 2
+          done
+          echo "Database is ready!"
+      
+      containers:
+      - name: migrate
+        image: myapp/migrator:v2.1.0
+        command: ["./migrate"]
+        args: ["up", "--target=20240101120000"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: url
+        - name: MIGRATION_TIMEOUT
+          value: "1200"  # 20 minutes
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi</code></pre></p>
+<h4>CronJobs - Scheduled Tasks</h4>
+<strong>CronJobs</strong> create Jobs on a schedule, like cron in Unix systems.
+<p>#### Basic CronJob
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-job
+spec:
+  schedule: "0 2 <em> </em> *"  # Daily at 2 AM UTC
+  timezone: "America/New_York"  # Convert to specific timezone
+  concurrencyPolicy: Forbid      # Don't run if previous job still running
+  failedJobsHistoryLimit: 3      # Keep 3 failed jobs for debugging
+  successfulJobsHistoryLimit: 1  # Keep 1 successful job
+  suspend: false                 # Set to true to pause cron job
+  
+  jobTemplate:
+    spec:
+      completions: 1
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600  # 1 hour timeout
+      
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: backup-tool:latest
+            command: ["./backup.sh"]
+            env:
+            - name: BACKUP_TARGET
+              value: "s3://my-backup-bucket/daily/"
+            - name: SOURCE_PATH
+              value: "/data"
+            volumeMounts:
+            - name: data-to-backup
+              mountPath: /data
+              readOnly: true
+          volumes:
+          - name: data-to-backup
+            persistentVolumeClaim:
+              claimName: application-data</code></pre></p>
+<p>#### Advanced CronJob with Multiple Schedules
+<pre><code><h2>Daily database backup</h2>
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup-daily
+spec:
+  schedule: "0 2 <em> </em> *"  # 2 AM daily
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7   # Keep a week of backups
+  failedJobsHistoryLimit: 3
+  
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: backup-sa
+          containers:
+          - name: pg-dump
+            image: postgres:14
+            command:
+            - sh
+            - -c
+            - |
+              TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+              BACKUP_FILE="/backup/daily_backup_${TIMESTAMP}.sql"
+              
+              echo "Starting backup at $(date)"
+              pg_dump -h postgres.database.svc.cluster.local \
+                      -U postgres \
+                      -d myapp \
+                      --no-password \
+                      --compress=9 \
+                      --file=${BACKUP_FILE}
+              
+              echo "Backup completed: ${BACKUP_FILE}"
+              
+              # Upload to S3
+              aws s3 cp ${BACKUP_FILE} s3://my-backup-bucket/database/daily/
+              
+              # Clean up local file
+              rm ${BACKUP_FILE}
+              
+              echo "Backup uploaded and cleaned up at $(date)"
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: secret-access-key
+            volumeMounts:
+            - name: backup-temp
+              mountPath: /backup
+          volumes:
+          - name: backup-temp
+            emptyDir:
+              sizeLimit: 10Gi
+---
+<h2>Weekly full backup with retention cleanup</h2>
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup-weekly
+spec:
+  schedule: "0 1 <em> </em> 0"  # 1 AM every Sunday
+  concurrencyPolicy: Forbid
+  
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: backup-sa
+          containers:
+          - name: full-backup-with-cleanup
+            image: postgres:14
+            command:
+            - sh
+            - -c
+            - |
+              TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+              BACKUP_FILE="/backup/weekly_backup_${TIMESTAMP}.sql"
+              
+              echo "Starting weekly backup at $(date)"
+              
+              # Full backup with all data and schema
+              pg_dump -h postgres.database.svc.cluster.local \
+                      -U postgres \
+                      -d myapp \
+                      --no-password \
+                      --compress=9 \
+                      --clean \
+                      --if-exists \
+                      --file=${BACKUP_FILE}
+              
+              # Upload to S3
+              aws s3 cp ${BACKUP_FILE} s3://my-backup-bucket/database/weekly/
+              
+              # Clean up old backups (keep last 4 weeks)
+              aws s3 ls s3://my-backup-bucket/database/weekly/ | \
+                sort | \
+                head -n -4 | \
+                awk '{print $4}' | \
+                xargs -I {} aws s3 rm s3://my-backup-bucket/database/weekly/{}
+              
+              rm ${BACKUP_FILE}
+              echo "Weekly backup and cleanup completed at $(date)"
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            volumeMounts:
+            - name: backup-temp
+              mountPath: /backup
+          volumes:
+          - name: backup-temp
+            emptyDir:
+              sizeLimit: 20Gi</code></pre></p>
+<p>#### Log Cleanup CronJob
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: log-cleanup
+  namespace: kube-system
+spec:
+  schedule: "0 3 <em> </em> *"  # 3 AM daily
+  concurrencyPolicy: Allow  # Can run multiple cleanup jobs
+  
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          hostNetwork: true  # Access host filesystem
+          
+          tolerations:
+          - operator: Exists  # Run on all nodes
+            effect: NoSchedule
+          
+          containers:
+          - name: log-cleaner
+            image: busybox:1.35
+            command:
+            - sh
+            - -c
+            - |
+              echo "Starting log cleanup on node: $(hostname)"
+              
+              # Clean up old container logs (older than 7 days)
+              find /var/log/containers/ -name "*.log" -mtime +7 -delete
+              
+              # Clean up old pod logs
+              find /var/log/pods/ -name "*.log" -mtime +7 -delete
+              
+              # Clean up old audit logs
+              find /var/log/audit/ -name "*.log" -mtime +30 -delete
+              
+              # Report disk usage
+              echo "Disk usage after cleanup:"
+              df -h /var/log/
+              
+              echo "Log cleanup completed on $(hostname)"
+            
+            volumeMounts:
+            - name: var-log
+              mountPath: /var/log
+            - name: var-log-containers
+              mountPath: /var/log/containers
+            - name: var-log-pods
+              mountPath: /var/log/pods
+          
+          volumes:
+          - name: var-log
+            hostPath:
+              path: /var/log
+          - name: var-log-containers
+            hostPath:
+              path: /var/log/containers
+          - name: var-log-pods
+            hostPath:
+              path: /var/log/pods</code></pre></p>
+<h4>Job Patterns and Best Practices</h4>
+<p>#### Job with Initialization
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-import-with-setup
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      
+      initContainers:
+      # Download data files
+      - name: download-data
+        image: alpine/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          curl -o /shared/data1.csv https://example.com/data1.csv
+          curl -o /shared/data2.csv https://example.com/data2.csv
+          curl -o /shared/schema.sql https://example.com/schema.sql
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+      
+      # Setup database schema
+      - name: setup-schema
+        image: postgres:14
+        command:
+        - sh
+        - -c
+        - |
+          psql -h postgres.database.svc.cluster.local \
+               -U postgres \
+               -d myapp \
+               -f /shared/schema.sql
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: password
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+      
+      containers:
+      # Main processing job
+      - name: import-data
+        image: data-importer:latest
+        command: ["python", "import_data.py"]
+        args: ["--input-dir", "/shared", "--batch-size", "1000"]
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+      
+      volumes:
+      - name: shared-data
+        emptyDir:
+          sizeLimit: 5Gi</code></pre></p>
+<h3>HorizontalPodAutoscaler (HPA) Deep Dive</h3>
+<h4>What HPA Does</h4>
+<strong>HorizontalPodAutoscaler</strong> automatically scales the number of pods in a deployment, replica set, or stateful set based on observed CPU utilization, memory usage, or custom metrics.
+<strong>Scaling Logic:</strong>
+<pre><code>Target Metric Value = (Current Metric Value / Desired Metric Value) × Current Replicas</code></pre>
+<h4>CPU-Based Scaling</h4>
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-app-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app
+  minReplicas: 3              # Minimum pods
+  maxReplicas: 20             # Maximum pods
+  targetCPUUtilizationPercentage: 70  # Target 70% CPU usage
+  
+  behavior:                   # Advanced scaling behavior
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      policies:
+      - type: Percent
+        value: 10             # Scale down max 10% of pods at once
+        periodSeconds: 60     # Every minute
+    scaleUp:
+      stabilizationWindowSeconds: 60   # Wait 1 minute before scaling up
+      policies:
+      - type: Percent
+        value: 50             # Scale up max 50% of pods at once
+        periodSeconds: 60
+      - type: Pods
+        value: 2              # Or add max 2 pods at once
+        periodSeconds: 60</code></pre>
+<strong>CPU Scaling Process:</strong>
+<pre><code><h2>Example scenario:</h2>
+<h2>Current: 5 pods averaging 85% CPU</h2>
+<h2>Target: 70% CPU</h2>
+<h2>Calculation: (85% / 70%) × 5 = 6.07 → Scale up to 6 pods</h2>
+<h2>Next check:</h2>
+<h2>Current: 6 pods averaging 60% CPU  </h2>
+<h2>Target: 70% CPU</h2>
+<h2>Calculation: (60% / 70%) × 6 = 5.14 → Scale down to 5 pods</h2></code></pre>
+<h4>Memory-Based Scaling</h4>
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: memory-intensive-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: memory-app
+  minReplicas: 2
+  maxReplicas: 15
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80  # Target 80% memory usage</code></pre>
+<h4>Multi-Metric Scaling</h4>
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: complex-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  minReplicas: 5
+  maxReplicas: 50
+  metrics:
+  # CPU metric
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Memory metric  
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metric from Prometheus
+  - type: External
+    external:
+      metric:
+        name: http_requests_per_second
+        selector:
+          matchLabels:
+            service: api-server
+      target:
+        type: Value
+        value: "100"  # Scale when > 100 requests/second per pod</code></pre>
+<h4>Custom Metrics Scaling</h4>
+<p>#### Prometheus Adapter Setup
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adapter-config
+  namespace: monitoring
+data:
+  config.yaml: |
+    rules:
+    - seriesQuery: 'http_requests{namespace!="",pod!=""}'
+      resources:
+        overrides:
+          namespace: {resource: "namespace"}
+          pod: {resource: "pod"}
+      name:
+        matches: "^(.*)_total"
+        as: "${1}_per_second"
+      metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[2m])'
+    - seriesQuery: 'queue_length{namespace!="",pod!=""}'
+      resources:
+        overrides:
+          namespace: {resource: "namespace"}
+          pod: {resource: "pod"}
+      name:
+        as: "queue_length"
+      metricsQuery: '<<.Series>>{<<.LabelMatchers>>}'</code></pre></p>
+<p>#### Queue Length Based Scaling
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: queue-processor-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: queue-processor
+  minReplicas: 1
+  maxReplicas: 20
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: queue_length
+      target:
+        type: AverageValue
+        averageValue: "5"  # Target 5 queue items per pod</code></pre></p>
+<h4>HPA Requirements</h4>
+<p>#### Resource Requests Must Be Set
+<pre><code><h2>HPA requires resource requests to calculate utilization</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scalable-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest
+        resources:
+          requests:
+            cpu: 200m      # REQUIRED for CPU-based HPA
+            memory: 256Mi  # REQUIRED for memory-based HPA
+          limits:
+            cpu: 500m
+            memory: 512Mi</code></pre></p>
+<p>#### Metrics Server Required
+<pre><code><h2>Check if metrics server is installed</h2>
+kubectl get deployment metrics-server -n kube-system</p>
+<h2>Install metrics server if missing</h2>
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml</code></pre>
+<h4>HPA Status and Debugging</h4>
+<pre><code><h2>Check HPA status</h2>
+kubectl get hpa
+<h2>Detailed HPA information</h2>
+kubectl describe hpa web-app-hpa
+<h2>Check current metrics</h2>
+kubectl top pods
+<h2>HPA events</h2>
+kubectl get events --field-selector involvedObject.name=web-app-hpa</code></pre>
+<strong>Example HPA Status:</strong>
+<pre><code>$ kubectl get hpa
+NAME          REFERENCE               TARGETS    MINPODS   MAXPODS   REPLICAS   AGE
+web-app-hpa   Deployment/web-app      65%/70%    3         20        8          5m
+<h2>TARGETS shows: current_cpu/target_cpu</h2>
+<h2>65%/70% means current CPU is 65%, target is 70%</h2>
+<h2>Currently running 8 replicas (within 3-20 range)</h2></code></pre>
+<h3>Key Concepts Summary</h3>
+<li><strong>Controllers</strong> - Manage pods to maintain desired state through continuous reconciliation loops</li>
+<li><strong>Deployments</strong> - Stateless applications with rolling updates, rollbacks, and replica management</li>
+<li><strong>ReplicaSets</strong> - Lower-level replica management, usually controlled by Deployments</li>
+<li><strong>StatefulSets</strong> - Stateful applications with stable identity, ordered operations, and persistent storage</li>
+<li><strong>DaemonSets</strong> - One pod per node for system-level services like monitoring and logging</li>
+<li><strong>Jobs</strong> - Run-to-completion tasks with configurable parallelism and retry logic</li>
+<li><strong>CronJobs</strong> - Scheduled tasks using cron syntax with job history management</li>
+<li><strong>HPA</strong> - Automatic horizontal scaling based on CPU, memory, or custom metrics</li>
+<li><strong>Health Probes</strong> - Liveness, readiness, and startup probes for container health monitoring</li>
+<li><strong>Update Strategies</strong> - Rolling updates vs recreate for different application requirements</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Use Deployments for stateless apps</strong> - Don't create ReplicaSets directly
+2. <strong>Set resource requests/limits</strong> - Required for HPA and proper scheduling
+3. <strong>Configure health probes</strong> - Essential for reliable rolling updates and load balancing
+4. <strong>Use StatefulSets for databases</strong> - Provides stable identity and ordered operations
+5. <strong>DaemonSets for node services</strong> - Monitoring, logging, and network plugins
+6. <strong>Jobs for batch processing</strong> - Use appropriate parallelism and retry settings
+7. <strong>CronJob scheduling</strong> - Consider timezone and concurrency policies
+8. <strong>HPA scaling policies</strong> - Configure appropriate min/max replicas and scaling behavior
+9. <strong>Update strategies</strong> - Use rolling updates for zero-downtime deployments
+10. <strong>Monitor controller events</strong> - Watch for scheduling and scaling issues</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Deployment Stuck in Rolling Update</h4>
+<li><strong>Symptom:</strong> New pods create but old pods don't terminate, or update hangs</li>
+<li><strong>Cause:</strong> Readiness probe failures, insufficient resources, or pod disruption budgets</li>
+<li><strong>Solution:</strong> Check pod events, readiness probes, and available resources</li>
+<pre><code><h2>Check rollout status</h2>
+kubectl rollout status deployment/myapp
+<h2>Check pod events</h2>
+kubectl describe pod new-pod-name
+<h2>Check resource availability</h2>
+kubectl describe node node-name
+<h2>Force restart if needed</h2>
+kubectl rollout restart deployment/myapp</code></pre>
+<h4>Problem 2: StatefulSet Pod Stuck in Pending</h4>
+<li><strong>Symptom:</strong> StatefulSet pod won't start, stays in Pending state</li>
+<li><strong>Cause:</strong> PVC provisioning failure, node affinity, or resource constraints</li>
+<li><strong>Solution:</strong> Check PVC status, storage class, and node capacity</li>
+<pre><code><h2>Check PVC status</h2>
+kubectl get pvc
+<h2>Check storage class</h2>
+kubectl describe storageclass fast-ssd
+<h2>Check pod scheduling</h2>
+kubectl describe pod statefulset-pod-0</code></pre>
+<h4>Problem 3: DaemonSet Pod Not on All Nodes</h4>
+<li><strong>Symptom:</strong> DaemonSet missing from some nodes</li>
+<li><strong>Cause:</strong> Node taints, node selectors, or resource constraints</li>
+<li><strong>Solution:</strong> Check node taints, tolerations, and resource availability</li>
+<pre><code><h2>Check node taints</h2>
+kubectl describe node node-name | grep Taints
+<h2>Check DaemonSet tolerations</h2>
+kubectl describe daemonset monitoring-agent
+<h2>Check if nodes match selectors</h2>
+kubectl get nodes --show-labels</code></pre>
+<h4>Problem 4: Job Never Completes</h4>
+<li><strong>Symptom:</strong> Job pods keep restarting or failing</li>
+<li><strong>Cause:</strong> Application errors, resource limits, or incorrect restart policy</li>
+<li><strong>Solution:</strong> Check pod logs, resource usage, and job configuration</li>
+<pre><code><h2>Check job status</h2>
+kubectl describe job batch-processing
+<h2>Check pod logs</h2>
+kubectl logs job-pod-name
+<h2>Check completed/failed pods</h2>
+kubectl get pods --show-all</code></pre>
+<h4>Problem 5: HPA Not Scaling</h4>
+<li><strong>Symptom:</strong> HPA shows metrics but doesn't scale pods</li>
+<li><strong>Cause:</strong> Missing resource requests, metrics server issues, or scaling policies</li>
+<li><strong>Solution:</strong> Verify resource requests, metrics server, and HPA configuration</li>
+<pre><code><h2>Check HPA status</h2>
+kubectl describe hpa myapp-hpa
+<h2>Check metrics server</h2>
+kubectl top pods
+<h2>Check resource requests in deployment</h2>
+kubectl describe deployment myapp</code></pre>
+<h3>References / Further Reading</h3>
+<li>[Kubernetes Workloads Documentation](https://kubernetes.io/docs/concepts/workloads/)</li>
+<li>[Deployments Guide](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)</li>
+<li>[StatefulSets Documentation](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)</li>
+<li>[DaemonSets Guide](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)</li>
+<li>[Jobs Documentation](https://kubernetes.io/docs/concepts/workloads/controllers/job/)</li>
+<li>[CronJobs Guide](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/)</li>
+<li>[HPA Documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)</li>
+<li>[Pod Lifecycle Guide](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/)</li>
+<li>[Resource Management](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

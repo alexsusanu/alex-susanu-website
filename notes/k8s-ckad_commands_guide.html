@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKAD Essential kubectl Commands Study Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKAD Essential kubectl Commands Study Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">CKAD</span><span class="tag">kubectl</span><span class="tag">Kubernetes</span><span class="tag">DevOps</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>CKAD Essential kubectl Commands Study Guide</h2>
+<h3>Core Pod Management & Configuration</h3>
+The foundation of CKAD exam success lies in mastering pod creation, configuration management, and basic troubleshooting. These commands form the building blocks for more complex scenarios.
+<h4>Pod Operations & YAML Generation</h4>
+<ul><li><strong>kubectl run</strong> - Primary command for pod creation and YAML generation</li>
+<li><strong>kubectl get pods</strong> - Essential for viewing pod status and details</li>
+<li><strong>kubectl describe pod</strong> - Critical for troubleshooting and understanding pod configuration</li>
+<li><strong>kubectl delete pod</strong> - Clean up resources</li>
+<h4>Configuration Management</h4>
+<li><strong>ConfigMaps</strong> - Externalize application configuration</li>
+<li><strong>Secrets</strong> - Manage sensitive data securely</li>
+<li><strong>Environment Variables</strong> - Inject configuration into containers</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>YAML Generation (MOST IMPORTANT for exam)</h2>
+kubectl run nginx --image=nginx --dry-run=client -o yaml > pod.yaml
+<h2>kubectl run nginx = create pod named "nginx"</h2>
+<h2>--image=nginx = use nginx container image</h2>
+<h2>--dry-run=client = simulate creation, don't actually create (client-side validation)</h2>
+<h2>-o yaml = output in YAML format instead of creating</h2>
+<h2>> pod.yaml = save output to file named pod.yaml</h2>
+<p>kubectl create deployment app --image=nginx --dry-run=client -o yaml > deploy.yaml
+<h2>create deployment app = make deployment named "app"</h2>
+<h2>--image=nginx = container image to use</h2>
+<h2>--dry-run=client = simulate without creating</h2>
+<h2>-o yaml = show YAML instead of creating</h2>
+<h2>> deploy.yaml = save to file</h2></p>
+<h2>Basic Pod Management</h2>
+kubectl run nginx --image=nginx --port=80 --restart=Never
+<h2>run nginx = create pod named nginx</h2>
+<h2>--image=nginx = use nginx image</h2>
+<h2>--port=80 = expose port 80 (adds to YAML, doesn't create service)</h2>
+<h2>--restart=Never = create Pod (not Deployment)</h2>
+<p>kubectl get pods -o wide --show-labels
+<h2>get pods = list all pods</h2>
+<h2>-o wide = show extra columns (IP, node, age, etc.)</h2>
+<h2>--show-labels = display all labels assigned to pods</h2></p>
+<p>kubectl describe pod nginx | grep -A5 Events
+<h2>describe pod nginx = show detailed info about nginx pod</h2>
+<h2>| = pipe output to next command</h2>
+<h2>grep -A5 Events = find "Events" line and show 5 lines after it</h2></p>
+<p>kubectl delete pod nginx --force --grace-period=0
+<h2>delete pod nginx = remove the nginx pod</h2>
+<h2>--force = don't wait for graceful shutdown</h2>
+<h2>--grace-period=0 = kill immediately (0 seconds wait time)</h2></p>
+<h2>ConfigMap Creation</h2>
+kubectl create configmap app-config --from-literal=key1=value1 --from-literal=key2=value2
+<h2>create configmap app-config = make ConfigMap named "app-config"</h2>
+<h2>--from-literal=key1=value1 = add key-value pair directly in command</h2>
+<h2>--from-literal=key2=value2 = add another key-value pair</h2>
+<p>kubectl create configmap app-config --from-file=config.properties
+<h2>--from-file=config.properties = read entire file as one key-value</h2>
+<h2>filename becomes key, file content becomes value</h2></p>
+<p>kubectl create configmap app-config --from-env-file=config.env
+<h2>--from-env-file=config.env = read file with KEY=VALUE lines</h2>
+<h2>each line becomes separate key-value pair in ConfigMap</h2></p>
+<h2>Secret Management</h2>
+kubectl create secret generic db-secret --from-literal=username=admin --from-literal=password=secret
+<h2>create secret generic = make generic secret (vs tls/docker types)</h2>
+<h2>db-secret = name of the secret</h2>
+<h2>--from-literal works same as configmap but values get base64 encoded</h2>
+<p>kubectl create secret tls tls-secret --cert=path/to/cert --key=path/to/key
+<h2>create secret tls = make TLS certificate secret</h2>
+<h2>--cert=path/to/cert = certificate file location</h2>
+<h2>--key=path/to/key = private key file location</h2></p>
+<p>kubectl get secret db-secret -o jsonpath='{.data.password}' | base64 -d
+<h2>get secret db-secret = retrieve the secret</h2>
+<h2>-o jsonpath='{.data.password}' = extract only password field</h2>
+<h2>| base64 -d = decode from base64 to readable text</h2></code></pre></p>
+<h3>Deployments, Services & Networking</h3>
+Deployments handle application lifecycle while Services provide network access. These are heavily tested areas requiring fast command execution.
+<h4>Deployment Lifecycle Management</h4>
+<li><strong>kubectl create deployment</strong> - Initial deployment creation</li>
+<li><strong>kubectl scale</strong> - Horizontal scaling of applications</li>
+<li><strong>kubectl rollout</strong> - Manage deployment updates and rollbacks</li>
+<li><strong>kubectl set image</strong> - Update container images in deployments</li>
+<h4>Service Types & Networking</h4>
+<li><strong>ClusterIP</strong> - Internal cluster communication (default)</li>
+<li><strong>NodePort</strong> - External access via node ports</li>
+<li><strong>LoadBalancer</strong> - Cloud provider load balancer</li>
+<li><strong>kubectl expose</strong> - Quick service creation from existing resources</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>Deployment Management</h2>
+kubectl create deployment nginx --image=nginx:1.16 --replicas=3
+<h2>create deployment nginx = make deployment named "nginx"</h2>
+<h2>--image=nginx:1.16 = use specific version of nginx</h2>
+<h2>--replicas=3 = start with 3 pod copies</h2>
+<p>kubectl scale deployment nginx --replicas=5
+<h2>scale deployment nginx = change pod count for nginx deployment</h2>
+<h2>--replicas=5 = change to 5 total pods</h2></p>
+<p>kubectl set image deployment/nginx nginx=nginx:1.17 --record
+<h2>set image = update container image</h2>
+<h2>deployment/nginx = target the nginx deployment</h2>
+<h2>nginx=nginx:1.17 = container_name=new_image_version</h2>
+<h2>--record = save this command in rollout history (for rollbacks)</h2></p>
+<p>kubectl rollout status deployment/nginx
+<h2>rollout status = check if deployment update is complete</h2>
+<h2>deployment/nginx = which deployment to monitor</h2></p>
+<p>kubectl rollout undo deployment/nginx --to-revision=2
+<h2>rollout undo = revert to previous version</h2>
+<h2>--to-revision=2 = go to specific revision number (optional)</h2></p>
+<p>kubectl rollout restart deployment/nginx
+<h2>rollout restart = kill all pods and recreate with same image</h2>
+<h2>forces fresh pods without changing image version</h2></p>
+<h2>Service Creation & Testing</h2>
+kubectl expose deployment nginx --port=80 --target-port=80
+<h2>expose deployment nginx = create service pointing to nginx deployment</h2>
+<h2>--port=80 = service listens on port 80</h2>
+<h2>--target-port=80 = pods receive traffic on port 80</h2>
+<p>kubectl create service nodeport nginx --tcp=80:80 --dry-run=client -o yaml
+<h2>create service nodeport = make NodePort service (external access)</h2>
+<h2>--tcp=80:80 = service_port:target_port mapping</h2>
+<h2>--dry-run=client -o yaml = generate YAML, don't create</h2></p>
+<p>kubectl port-forward service/nginx 8080:80
+<h2>port-forward = create tunnel from your machine to cluster</h2>
+<h2>service/nginx = tunnel to nginx service</h2>
+<h2>8080:80 = localhost:8080 maps to service:80</h2></p>
+<h2>Network Testing</h2>
+kubectl run test --image=busybox --rm -it -- sh
+<h2>run test = create pod named "test"</h2>
+<h2>--image=busybox = use busybox image (has network tools)</h2>
+<h2>--rm = delete pod automatically when you exit</h2>
+<h2>-it = interactive terminal (i=interactive, t=tty)</h2>
+<h2>-- sh = run shell command inside container</h2>
+<p>kubectl get endpoints nginx
+<h2>get endpoints nginx = show which pods the nginx service points to</h2>
+<h2>endpoints = actual pod IPs that service routes to</h2></code></pre></p>
+<h3>Storage & Multi-Container Pods</h3>
+Storage management and multi-container patterns are complex CKAD topics requiring understanding of volumes, persistent storage, and container interaction patterns.
+<h4>Volume Types & Persistent Storage</h4>
+<li><strong>emptyDir</strong> - Temporary storage shared between containers</li>
+<li><strong>hostPath</strong> - Node filesystem access</li>
+<li><strong>persistentVolumeClaim</strong> - Persistent storage abstraction</li>
+<li><strong>configMap/secret</strong> - Configuration and sensitive data as files</li>
+<h4>Multi-Container Patterns</h4>
+<li><strong>Sidecar</strong> - Helper container alongside main application</li>
+<li><strong>Init Containers</strong> - Initialization before main containers start</li>
+<li><strong>Adapter</strong> - Modify data format or interface</li>
+<li><strong>Ambassador</strong> - Proxy external services</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>Volume & Storage Commands</h2>
+kubectl get pv,pvc
+<h2>get pv,pvc = list PersistentVolumes and PersistentVolumeClaims</h2>
+<h2>pv = cluster-wide storage resources</h2>
+<h2>pvc = user requests for storage</h2>
+<p>kubectl describe pv volume-name
+<h2>describe pv = show detailed info about PersistentVolume</h2>
+<h2>includes capacity, access modes, reclaim policy</h2></p>
+<p>kubectl describe pvc claim-name
+<h2>describe pvc = show PersistentVolumeClaim details</h2>
+<h2>shows bound volume, requested size, access modes</h2></p>
+<h2>Multi-container Pod Creation (always via YAML editing)</h2>
+kubectl run multi-pod --image=nginx --dry-run=client -o yaml > multi-pod.yaml
+<h2>Creates single-container YAML that you edit to add more containers</h2>
+<h2>Edit file to add sidecar containers, init containers, volumes</h2>
+<h2>Container Interaction</h2>
+kubectl exec multi-pod -c container-name -- env
+<h2>exec multi-pod = run command in multi-pod</h2>
+<h2>-c container-name = specify which container (required for multi-container)</h2>
+<h2>-- env = command to run (show environment variables)</h2>
+<p>kubectl logs multi-pod -c sidecar-container
+<h2>logs multi-pod = get logs from multi-pod</h2>
+<h2>-c sidecar-container = specify which container's logs</h2></p>
+<p>kubectl exec -it multi-pod -c main-container -- /bin/bash
+<h2>-it = interactive terminal</h2>
+<h2>-c main-container = specify container</h2>
+<h2>-- /bin/bash = start bash shell</h2></code></pre></p>
+<h3>Jobs, Observability & Troubleshooting</h3>
+Batch workloads and application monitoring are essential skills, especially for debugging scenarios common in the CKAD exam.
+<h4>Job Management</h4>
+<li><strong>kubectl create job</strong> - One-time task execution</li>
+<li><strong>kubectl create cronjob</strong> - Scheduled task management</li>
+<h4>Logging & Monitoring</h4>
+<li><strong>kubectl logs</strong> - Application log access</li>
+<li><strong>kubectl top</strong> - Resource usage monitoring</li>
+<li><strong>kubectl describe</strong> - Detailed resource information</li>
+<li><strong>kubectl get events</strong> - Cluster-wide event monitoring</li>
+<h4>Debugging Techniques</h4>
+<li><strong>kubectl exec</strong> - Direct container access</li>
+<li><strong>kubectl cp</strong> - File transfer to/from containers</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>Jobs & CronJobs</h2>
+kubectl create job hello --image=busybox -- echo "Hello World"
+<h2>create job hello = make one-time job named "hello"</h2>
+<h2>--image=busybox = use busybox image</h2>
+<h2>-- echo "Hello World" = command to run in container</h2>
+<p>kubectl create cronjob backup --image=busybox --schedule="0 2 <em> </em> *" -- /backup.sh
+<h2>create cronjob backup = make scheduled job named "backup"</h2>
+<h2>--schedule="0 2 <em> </em> *" = cron format (daily at 2 AM)</h2>
+<h2>-- /backup.sh = script to run</h2></p>
+<p>kubectl create job manual-backup --from=cronjob/backup
+<h2>create job manual-backup = create one-time job</h2>
+<h2>--from=cronjob/backup = copy settings from existing cronjob</h2></p>
+<h2>Logging & Monitoring</h2>
+kubectl logs nginx -f --tail=50 --since=1h
+<h2>logs nginx = show logs from nginx pod</h2>
+<h2>-f = follow mode (stream new logs as they appear)</h2>
+<h2>--tail=50 = show only last 50 lines</h2>
+<h2>--since=1h = only logs from last 1 hour</h2>
+<p>kubectl logs nginx -c container-name --previous
+<h2>-c container-name = specify container (multi-container pods)</h2>
+<h2>--previous = logs from previous container instance (if restarted)</h2></p>
+<p>kubectl logs -l app=nginx --all-containers=true
+<h2>-l app=nginx = logs from all pods with label app=nginx</h2>
+<h2>--all-containers=true = show logs from all containers in matching pods</h2></p>
+<p>kubectl top pods --containers --sort-by=memory
+<h2>top pods = show CPU/memory usage (requires metrics-server)</h2>
+<h2>--containers = show per-container usage (not just per-pod)</h2>
+<h2>--sort-by=memory = order by memory usage (highest first)</h2></p>
+<h2>Debugging & Troubleshooting</h2>
+kubectl exec -it nginx -- /bin/bash
+<h2>exec -it nginx = run interactive command in nginx pod</h2>
+<h2>-it = interactive terminal (always use together)</h2>
+<h2>-- /bin/bash = start bash shell</h2>
+<p>kubectl cp nginx:/tmp/file.txt ./local-file.txt
+<h2>cp = copy files between container and local machine</h2>
+<h2>nginx:/tmp/file.txt = source (pod_name:/path/in/container)</h2>
+<h2>./local-file.txt = destination on your local machine</h2></p>
+<p>kubectl run debug --image=busybox --rm -it -- sh
+<h2>run debug = create temporary pod named "debug"</h2>
+<h2>--rm = auto-delete pod when you exit</h2>
+<h2>-it = interactive terminal</h2>
+<h2>-- sh = run shell</h2></p>
+<p>kubectl describe pod nginx | tail -20
+<h2>describe pod nginx = show detailed pod information</h2>
+<h2>| tail -20 = show only last 20 lines (usually the important events)</h2></p>
+<p>kubectl get events --sort-by=.metadata.creationTimestamp --field-selector involvedObject.name=nginx
+<h2>get events = show cluster events (errors, warnings, info)</h2>
+<h2>--sort-by=.metadata.creationTimestamp = order by time (newest last)</h2>
+<h2>--field-selector involvedObject.name=nginx = only events about nginx pod</h2></code></pre></p>
+<h3>RBAC & Security Management</h3>
+Role-Based Access Control (RBAC) is heavily tested in CKAD. You need to understand roles, bindings, and permission verification for applications.
+<h4>Security Commands & Authentication</h4>
+<li><strong>kubectl create role</strong> - Namespace-level permissions</li>
+<li><strong>kubectl create clusterrole</strong> - Cluster-wide permissions</li>
+<li><strong>kubectl create rolebinding</strong> - Bind roles to users/groups/serviceaccounts</li>
+<li><strong>kubectl create clusterrolebinding</strong> - Bind cluster roles</li>
+<li><strong>kubectl auth can-i</strong> - Test permissions</li>
+<li><strong>kubectl create serviceaccount</strong> - Create service accounts for applications</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>RBAC Role Creation</h2>
+kubectl create role pod-reader --verb=get,list,watch --resource=pods
+<h2>create role pod-reader = make role named "pod-reader"</h2>
+<h2>--verb=get,list,watch = allowed actions (what you can do)</h2>
+<h2>--resource=pods = what resources the actions apply to</h2>
+<p>kubectl create clusterrole pod-reader --verb=get,list,watch --resource=pods
+<h2>create clusterrole = cluster-wide role (all namespaces)</h2>
+<h2>same verbs and resources as role, but applies everywhere</h2></p>
+<h2>RBAC Binding Creation</h2>
+kubectl create rolebinding read-pods --role=pod-reader --user=jane --group=mygroup
+<h2>create rolebinding read-pods = bind role to users/groups in current namespace</h2>
+<h2>--role=pod-reader = which role to bind</h2>
+<h2>--user=jane = give permission to user "jane"</h2>
+<h2>--group=mygroup = give permission to group "mygroup"</h2>
+<p>kubectl create rolebinding read-pods --clusterrole=pod-reader --serviceaccount=default:my-sa
+<h2>--clusterrole=pod-reader = bind a clusterrole (but only for current namespace)</h2>
+<h2>--serviceaccount=default:my-sa = give permission to service account</h2></p>
+<p>kubectl create clusterrolebinding read-pods --clusterrole=pod-reader --user=jane
+<h2>create clusterrolebinding = bind clusterrole across ALL namespaces</h2>
+<h2>gives jane pod-reader permissions in every namespace</h2></p>
+<h2>Permission Testing</h2>
+kubectl auth can-i create pods
+<h2>auth can-i = check if I have permission</h2>
+<h2>create pods = test if I can create pods in current namespace</h2>
+<p>kubectl auth can-i create pods --as=jane
+<h2>--as=jane = test permissions as different user</h2>
+<h2>useful for testing RBAC configurations</h2></p>
+<p>kubectl auth can-i create pods --as=system:serviceaccount:default:my-sa
+<h2>--as=system:serviceaccount:default:my-sa = test as service account</h2>
+<h2>format: system:serviceaccount:namespace:serviceaccount_name</h2></p>
+<h2>Service Account Management</h2>
+kubectl create serviceaccount my-service-account
+<h2>create serviceaccount = make new service account for pods to use</h2>
+<h2>service accounts are for applications, not humans</h2>
+<p>kubectl describe serviceaccount my-service-account
+<h2>describe serviceaccount = show details including secrets and tokens</h2></code></pre></p>
+<h3>Ingress & Advanced Networking</h3>
+Ingress controllers route external traffic to services. Critical for exposing applications outside the cluster.
+<h4>Ingress Management</h4>
+<li><strong>kubectl create ingress</strong> - Create ingress rules for external access</li>
+<li><strong>kubectl get ingress</strong> - List ingress resources</li>
+<li><strong>kubectl describe ingress</strong> - Debug ingress configuration</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>Basic Ingress Creation</h2>
+kubectl create ingress my-ingress --rule="example.com/app=my-service:80"
+<h2>create ingress my-ingress = make ingress named "my-ingress"</h2>
+<h2>--rule="example.com/app=my-service:80" = route rule</h2>
+<h2>example.com/app = incoming request path</h2>
+<h2>my-service:80 = target service and port</h2>
+<h2>Multiple Path Ingress</h2>
+kubectl create ingress multi-path --rule="example.com/app=app-service:80" --rule="example.com/api=api-service:8080"
+<h2>--rule can be repeated for multiple paths</h2>
+<h2>different paths can route to different services</h2>
+<h2>TLS Enabled Ingress</h2>
+kubectl create ingress secure-ingress --rule="example.com/app=my-service:80,tls=my-tls-secret"
+<h2>,tls=my-tls-secret = use TLS certificate from secret</h2>
+<h2>secret must contain tls.crt and tls.key</h2>
+<h2>Default Backend Ingress</h2>
+kubectl create ingress default-backend --default-backend=default-service:80 --rule="example.com/=main-service:80"
+<h2>--default-backend = fallback service for unmatched requests</h2>
+<h2>useful for catch-all scenarios</h2>
+<h2>Get and Describe Ingress</h2>
+kubectl get ingress -o wide
+<h2>-o wide = show additional columns like hosts, addresses</h2>
+kubectl describe ingress my-ingress
+<h2>shows events, rules, and backend configuration</h2></code></pre>
+<h3>Resource Management & Editing</h3>
+Essential commands for modifying resources and managing changes during the exam.
+<h4>Resource Modification Commands</h4>
+<li><strong>kubectl apply</strong> - Declarative resource management</li>
+<li><strong>kubectl replace</strong> - Imperative full resource replacement</li>
+<li><strong>kubectl patch</strong> - Partial resource updates</li>
+<li><strong>kubectl edit</strong> - Interactive resource editing</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>Apply vs Create vs Replace</h2>
+kubectl apply -f deployment.yaml
+<h2>apply = create if doesn't exist, update if exists</h2>
+<h2>declarative approach - tells Kubernetes desired state</h2>
+<h2>can be run multiple times safely</h2>
+<p>kubectl create -f deployment.yaml
+<h2>create = make new resource, fails if already exists</h2>
+<h2>imperative approach - tells Kubernetes exactly what to do</h2></p>
+<p>kubectl replace -f deployment.yaml
+<h2>replace = delete existing resource and create new one</h2>
+<h2>requires complete resource definition</h2>
+<h2>imperative approach, fails if resource doesn't exist</h2></p>
+<h2>Interactive Editing</h2>
+kubectl edit pod nginx
+<h2>edit pod nginx = open pod definition in text editor (vi/nano)</h2>
+<h2>saves automatically when you exit editor</h2>
+<h2>some fields cannot be edited on running pods</h2>
+<p>kubectl edit deployment nginx
+<h2>edit deployment = modify deployment interactively</h2>
+<h2>most deployment fields can be edited live</h2></p>
+<h2>Patch Commands (Partial Updates)</h2>
+kubectl patch pod nginx -p '{"spec":{"containers":[{"name":"nginx","image":"nginx:1.20"}]}}'
+<h2>patch pod nginx = partially update nginx pod</h2>
+<h2>-p = patch data in JSON format</h2>
+<h2>only changes specified fields, leaves others unchanged</h2>
+<p>kubectl patch deployment nginx -p '{"spec":{"replicas":5}}'
+<h2>patch deployment = update only replica count</h2>
+<h2>faster than editing full resource</h2></p>
+<p>kubectl patch pod nginx --type='json' -p='[{"op": "replace", "path": "/spec/containers/0/image", "value":"nginx:1.20"}]'
+<h2>--type='json' = JSON patch format (more precise)</h2>
+<h2>"op": "replace" = operation type (replace, add, remove)</h2>
+<h2>"path": "/spec/containers/0/image" = exact field to change</h2></p>
+<h2>Force Operations</h2>
+kubectl replace --force -f pod.yaml
+<h2>--force = delete and recreate resource</h2>
+<h2>useful when normal update is not possible</h2>
+<p>kubectl apply -f pod.yaml --force
+<h2>--force with apply = force apply even if field ownership conflicts</h2></code></pre></p>
+<h3>Node Management & Scheduling</h3>
+Node operations are essential for understanding pod placement and cluster management.
+<h4>Node Operations</h4>
+<li><strong>kubectl get nodes</strong> - List cluster nodes</li>
+<li><strong>kubectl describe node</strong> - Node details and capacity</li>
+<li><strong>kubectl label node</strong> - Add labels for scheduling</li>
+<li><strong>kubectl taint node</strong> - Add taints to control scheduling</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>Node Information</h2>
+kubectl get nodes -o wide --show-labels
+<h2>get nodes = list all cluster nodes</h2>
+<h2>-o wide = show additional info (IPs, OS, kernel version)</h2>
+<h2>--show-labels = display all node labels</h2>
+<p>kubectl describe node worker-1
+<h2>describe node = detailed node information</h2>
+<h2>shows capacity, allocatable resources, conditions, events</h2>
+<h2>useful for troubleshooting node issues</h2></p>
+<h2>Node Labeling (for scheduling)</h2>
+kubectl label node worker-1 disktype=ssd
+<h2>label node worker-1 = add label to node</h2>
+<h2>disktype=ssd = key=value label</h2>
+<h2>used with nodeSelector in pod specs</h2>
+<p>kubectl label node worker-1 environment=production --overwrite
+<h2>--overwrite = replace existing label value</h2>
+<h2>without this, command fails if label already exists</h2></p>
+<p>kubectl label node worker-1 disktype-
+<h2>disktype- = remove label (note the minus sign)</h2></p>
+<h2>Node Taints (advanced scheduling)</h2>
+kubectl taint node worker-1 key=value:NoSchedule
+<h2>taint node worker-1 = add taint to node</h2>
+<h2>key=value = taint key and value</h2>
+<h2>NoSchedule = taint effect (pods without toleration won't schedule)</h2>
+<p>kubectl taint node worker-1 key=value:NoExecute
+<h2>NoExecute = evict existing pods without toleration</h2></p>
+<p>kubectl taint node worker-1 key-
+<h2>key- = remove taint (note the minus sign)</h2></p>
+<h2>Drain and Cordon (maintenance)</h2>
+kubectl drain worker-1 --ignore-daemonsets --delete-emptydir-data
+<h2>drain = safely evict all pods from node for maintenance</h2>
+<h2>--ignore-daemonsets = don't evict daemonset pods</h2>
+<h2>--delete-emptydir-data = delete pods with emptyDir volumes</h2>
+<p>kubectl cordon worker-1
+<h2>cordon = mark node as unschedulable (no new pods)</h2>
+<h2>existing pods continue running</h2></p>
+<p>kubectl uncordon worker-1
+<h2>uncordon = make node schedulable again</h2></code></pre></p>
+<h3>Utility & Information Commands</h3>
+Essential commands for getting information and debugging during the exam.
+<h4>Information & Debugging Commands</h4>
+<li><strong>kubectl api-resources</strong> - List available resource types</li>
+<li><strong>kubectl api-versions</strong> - List API versions</li>
+<li><strong>kubectl explain</strong> - Field documentation</li>
+<li><strong>kubectl version</strong> - Cluster version information</li>
+<h4>Commands with Detailed Explanations</h4>
+<pre><code><h2>API Information</h2>
+kubectl api-resources
+<h2>api-resources = list all available resource types</h2>
+<h2>shows shortnames, API groups, namespaced status</h2>
+<h2>useful when you forget resource names</h2>
+<p>kubectl api-resources --namespaced=true
+<h2>--namespaced=true = only show namespaced resources</h2>
+<h2>--namespaced=false = only show cluster-wide resources</h2></p>
+<p>kubectl api-versions
+<h2>api-versions = list all available API versions</h2>
+<h2>shows apps/v1, v1, networking.k8s.io/v1, etc.</h2></p>
+<h2>Field Documentation (CRITICAL for exam)</h2>
+kubectl explain pod.spec.containers
+<h2>explain = show field documentation and structure</h2>
+<h2>pod.spec.containers = navigate object hierarchy</h2>
+<h2>better than memorizing YAML structure</h2>
+<p>kubectl explain deployment.spec.template.spec.containers.resources
+<h2>can go deep into nested fields</h2>
+<h2>shows required fields, types, descriptions</h2></p>
+<p>kubectl explain pod --recursive
+<h2>--recursive = show all fields in hierarchical structure</h2>
+<h2>useful for seeing complete object structure</h2></p>
+<h2>Version and Cluster Info</h2>
+kubectl version --short
+<h2>version = show client and server versions</h2>
+<h2>--short = condensed output</h2>
+<p>kubectl cluster-info
+<h2>cluster-info = show cluster endpoint information</h2>
+<h2>displays master and service URLs</h2></p>
+<h2>Resource Usage and Quotas</h2>
+kubectl top nodes
+<h2>top nodes = show CPU and memory usage per node</h2>
+<h2>requires metrics-server to be installed</h2>
+<p>kubectl top pods --all-namespaces --containers
+<h2>top pods = show resource usage per pod</h2>
+<h2>--all-namespaces = across all namespaces</h2>
+<h2>--containers = show per-container usage</h2></p>
+<p>kubectl describe quota -n my-namespace
+<h2>describe quota = show resource quota limits and usage</h2>
+<h2>quotas limit CPU, memory, pod count, etc.</h2></p>
+<h2>Event Monitoring</h2>
+kubectl get events --all-namespaces --sort-by=.metadata.creationTimestamp
+<h2>get events = show cluster events (warnings, errors, info)</h2>
+<h2>--all-namespaces = events from all namespaces</h2>
+<h2>--sort-by=.metadata.creationTimestamp = order by time</h2>
+<p>kubectl get events --field-selector type=Warning
+<h2>--field-selector type=Warning = only show warning events</h2>
+<h2>can filter by reason, involvedObject, etc.</h2></code></pre></p>
+<h3>Key Concepts Summary</h3>
+<li><strong>YAML Generation</strong> - Use <code>--dry-run=client -o yaml</code> for all resource creation</li>
+<li><strong>Label Selectors</strong> - Critical for service discovery and resource management</li>
+<li><strong>Context Switching</strong> - Essential for multi-cluster exam environment</li>
+<li><strong>Resource Limits</strong> - Memory and CPU constraints for containers</li>
+<li><strong>Health Checks</strong> - Liveness, readiness, and startup probes</li>
+<li><strong>Security Contexts</strong> - User permissions and security constraints</li>
+<h3>Best Practices / Tips</h3>
+1. <strong>Master YAML Generation</strong> - Never write YAML from scratch during the exam
+   <code>`</code>bash
+   kubectl run nginx --image=nginx --dry-run=client -o yaml > pod.yaml
+   # Always use this pattern, then edit the generated file
+   kubectl create deployment app --image=nginx --dry-run=client -o yaml > deploy.yaml
+   kubectl create ingress web --rule="example.com/=service:80" --dry-run=client -o yaml > ingress.yaml
+   <code>`</code>
+<p>2. <strong>Set Up Time-Saving Aliases</strong> - Configure before exam starts
+   <code>`</code>bash
+   alias k=kubectl
+   alias kgp='kubectl get pods'
+   alias kgs='kubectl get svc'
+   alias kgd='kubectl get deployments'
+   alias kgi='kubectl get ingress'
+   alias kaf='kubectl apply -f'
+   <code>`</code></p>
+<p>3. <strong>Use kubectl explain</strong> - Built-in documentation for any field
+   <code>`</code>bash
+   kubectl explain pod.spec.containers
+   # Shows all fields and their descriptions
+   kubectl explain deployment.spec.template.spec.containers.resources
+   # Navigate object hierarchy for field references
+   kubectl explain ingress.spec.rules --recursive
+   # See complete structure with --recursive
+   <code>`</code></p>
+<p>4. <strong>Master Context Switching</strong> - Exam uses multiple clusters and namespaces
+   <code>`</code>bash
+   kubectl config get-contexts
+   # List all available contexts (clusters)
+   kubectl config use-context cluster-name
+   # Switch to different cluster
+   kubectl config set-context --current --namespace=dev
+   # Change default namespace for current context
+   <code>`</code></p>
+<p>5. <strong>Practice Fast Troubleshooting</strong> - Standard debugging workflow
+   <code>`</code>bash
+   kubectl get pods                    # Check status
+   kubectl describe pod problem-pod    # Check events
+   kubectl logs problem-pod           # Check logs
+   kubectl exec -it problem-pod -- sh # Access container
+   <code>`</code></p>
+<p>6. <strong>RBAC Quick Patterns</strong> - Common permission scenarios
+   <code>`</code>bash
+   # Test permissions before creating resources
+   kubectl auth can-i create pods
+   kubectl auth can-i create pods --as=system:serviceaccount:default:my-sa
+   
+   # Quick role creation pattern
+   kubectl create role pod-reader --verb=get,list,watch --resource=pods --dry-run=client -o yaml
+   <code>`</code></p>
+<p>7. <strong>Resource Modification Strategy</strong> - Choose the right command
+   <code>`</code>bash
+   # For small changes - use patch
+   kubectl patch deployment nginx -p '{"spec":{"replicas":3}}'
+   
+   # For interactive editing - use edit
+   kubectl edit deployment nginx
+   
+   # For complete replacement - use replace
+   kubectl replace -f deployment.yaml
+   
+   # For declarative management - use apply
+   kubectl apply -f deployment.yaml
+   <code>`</code></p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Pod Not Starting</h4>
+<li><strong>Symptom:</strong> Pod stuck in Pending, CrashLoopBackOff, or ImagePullBackOff</li>
+<li><strong>Cause:</strong> Resource constraints, image issues, or configuration errors</li>
+<li><strong>Solution:</strong> Check events and logs</li>
+  <code>`</code>bash
+  kubectl describe pod problem-pod | grep -A10 Events
+  kubectl logs problem-pod --previous
+  <code>`</code>
+<h4>Service Not Accessible</h4>
+<li><strong>Symptom:</strong> Cannot reach application through service</li>
+<li><strong>Cause:</strong> Incorrect labels, wrong ports, or network policies</li>
+<li><strong>Solution:</strong> Verify endpoints and selectors</li>
+  <code>`</code>bash
+  kubectl get endpoints service-name
+  kubectl describe service service-name
+  kubectl get pods --show-labels
+  <code>`</code>
+<h4>Ingress Not Working</h4>
+<li><strong>Symptom:</strong> External traffic not reaching application</li>
+<li><strong>Cause:</strong> Incorrect ingress rules, missing TLS secrets, or ingress controller issues</li>
+<li><strong>Solution:</strong> Check ingress configuration and controller</li>
+  <code>`</code>bash
+  kubectl describe ingress my-ingress
+  kubectl get ingress -o wide
+  kubectl logs -n ingress-nginx deployment/nginx-ingress-controller
+  <code>`</code>
+<h4>RBAC Permission Denied</h4>
+<li><strong>Symptom:</strong> "Forbidden" errors when accessing resources</li>
+<li><strong>Cause:</strong> Missing roles, bindings, or incorrect service account permissions</li>
+<li><strong>Solution:</strong> Test permissions and verify RBAC configuration</li>
+  <code>`</code>bash
+  kubectl auth can-i create pods --as=user-name
+  kubectl describe role role-name
+  kubectl describe rolebinding binding-name
+  kubectl get serviceaccount my-sa -o yaml
+  <code>`</code>
+<h4>Configuration Not Loading</h4>
+<li><strong>Symptom:</strong> Application using defaults instead of ConfigMap/Secret</li>
+<li><strong>Cause:</strong> Incorrect volume mounts or environment variable references</li>
+<li><strong>Solution:</strong> Check container configuration</li>
+  <code>`</code>bash
+  kubectl describe pod app-pod | grep -A5 Mounts
+  kubectl exec app-pod -- env | grep CONFIG
+  <code>`</code>
+<h4>Resource Limits Exceeded</h4>
+<li><strong>Symptom:</strong> Pod evicted or OOMKilled</li>
+<li><strong>Cause:</strong> Insufficient memory or CPU limits</li>
+<li><strong>Solution:</strong> Check resource usage</li>
+  <code>`</code>bash
+  kubectl top pods --containers
+  kubectl describe pod app-pod | grep -A5 Limits
+  <code>`</code>
+<h4>Node Scheduling Issues</h4>
+<li><strong>Symptom:</strong> Pods stuck in Pending with scheduling errors</li>
+<li><strong>Cause:</strong> Node taints, resource constraints, or affinity rules</li>
+<li><strong>Solution:</strong> Check node status and scheduling constraints</li>
+  <code>`</code>bash
+  kubectl describe node worker-1 | grep -A5 Taints
+  kubectl get events --field-selector reason=FailedScheduling
+  kubectl describe pod pending-pod | grep -A5 Events
+  <code>`</code>
+<h3>References / Further Reading</h3>
+<li>[Official CKAD Curriculum](https://github.com/cncf/curriculum)</li>
+<li>[Kubernetes Documentation](https://kubernetes.io/docs/)</li>
+<li>[kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)</li>
+<li>[Practice Exercises](https://github.com/dgkanatsios/CKAD-exercises)</li>
+<li>[CKAD Exam Tips](https://kubernetes.io/docs/reference/kubectl/conventions/)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

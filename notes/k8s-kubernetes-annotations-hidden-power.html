@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Annotations – Hidden Power in Metadata - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Annotations – Hidden Power in Metadata</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Kubernetes (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">annotations</span><span class="tag">kubernetes</span><span class="tag">observability</span><span class="tag">tooling</span><span class="tag">DevOps</span><span class="tag">metadata</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Annotations – Hidden Power in Metadata</h2>
+<h3>Main Topic 1</h3>
+<p>Annotations in Kubernetes are key-value pairs that attach arbitrary, non-identifying metadata to objects. Unlike labels, which are used for selection and grouping, <strong>annotations are meant for machine-readable instructions, tool hints, documentation, and integration logic</strong>.</p>
+<h4>Subtopic A – What Exactly Are Annotations?</h4>
+<p>* Annotations are stored under <code>metadata.annotations</code>
+* Syntax: flat key-value pairs (both strings)
+* Can be added to almost any Kubernetes object (Pods, Deployments, Services, Namespaces, etc.)
+* Keys should be namespaced using domain-style notation (e.g. <code>tool.example.com/config</code>)
+* There is <strong>no schema validation</strong> — values can be freeform text, URLs, JSON, or base64 blobs</p>
+<h4>Subtopic B – Functional vs. Informational Annotations</h4>
+<p>Annotations fall into two broad categories:</p>
+<p>* <strong>Functional Annotations</strong>: These are parsed and acted upon by Kubernetes components or external tools. They control behaviors like Prometheus scraping, Istio sidecar injection, GitOps sync, etc.
+* <strong>Informational Annotations</strong>: These serve as structured documentation for humans and ops teams, e.g., links to runbooks, ticket IDs, contact info.</p>
+<h3>Main Topic 2 – Do Annotations Affect Runtime?</h3>
+<h4>Core Kubernetes Behavior</h4>
+<p>* Kubernetes core itself <strong>ignores most annotations</strong>, except for a few internal ones like:</p>
+<p>* <code>kubernetes.io/change-cause</code>
+  * <code>kubectl.kubernetes.io/last-applied-configuration</code>
+  * <code>deployment.kubernetes.io/revision</code></p>
+<p>These are used by <code>kubectl</code>, rollouts, and other built-in commands.</p>
+<h4>Tool-Specific Reactions</h4>
+<p>Annotations <strong>do have runtime impact</strong> when tools explicitly parse them. That includes:</p>
+<p>* Monitoring (Prometheus)
+* Ingress controllers (NGINX, Traefik)
+* Service meshes (Istio, Linkerd)
+* GitOps (ArgoCD, Flux)
+* Auto-scalers (KEDA, HPA extensions)
+* CI/CD or policy enforcement (OPA Gatekeeper, Kyverno)</p>
+<p>If the tool you're using watches the annotation, it can <strong>trigger behaviors</strong>, inject containers, block resources, or start scraping metrics.</p>
+<h3>Main Topic 3 – Annotations vs Labels</h3>
+<p>| Feature            | Labels                          | Annotations                              |
+| ------------------ | ------------------------------- | ---------------------------------------- |
+| Purpose            | Selection, grouping             | Metadata, integration, tool hints        |
+| Size Limit         | Small (used for indexing)       | Larger values allowed                    |
+| Used By Selectors? | ✅ Yes                           | ❌ No                                     |
+| Use in queries     | <code>kubectl get ... -l</code>            | Not queryable                            |
+| Typical use cases  | app grouping, service targeting | Prometheus config, runbooks, oncall info |</p>
+<h3>Code Example: Annotated Deployment</h3>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  annotations:
+    kubernetes.io/change-cause: "Applied CVE-2023-1234 patch"
+    documentation.company.com/runbook: "https://wiki.company.com/db-maintenance"
+    contact.company.com/oncall: "database-team@example.com"
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
+    terraform.io/resource-id: "aws_instance.db_primary"
+    terraform.io/state-version: "v4.2.1"</code></pre>
+<h4>Commands (Useful with Annotations)</h4>
+<pre><code><h2>View annotations on an object</h2>
+kubectl get pod mypod -o jsonpath='{.metadata.annotations}'
+<h2>Add or update an annotation</h2>
+kubectl annotate deployment payment-service \
+  kubernetes.io/change-cause="Security patch v2.1.5"
+<h2>Remove an annotation (note the trailing dash '-')</h2>
+kubectl annotate pod mypod key-to-remove-
+<h2>This removes the annotation with key 'key-to-remove' from the pod</h2>
+<h2>Patch annotations programmatically</h2>
+kubectl patch deployment myapp \
+  -p '{"metadata":{"annotations":{"custom.example.com/info":"value"}}}'</code></pre>
+<h3>Key Concepts Summary</h3>
+<p>* <strong>Annotations</strong> are powerful for tool integrations and automation hints
+* They are <strong>not used</strong> for filtering or selection like labels
+* Tools like Prometheus, Istio, Linkerd, ArgoCD, and NGINX rely heavily on annotations
+* Annotations can be critical to debugging and auditability in CI/CD
+* <strong>If no controller/tool reads it, it’s just stored data</strong></p>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Namespace your annotation keys</strong> using domain notation (e.g. <code>team.mycompany.com/purpose</code>)
+2. <strong>Keep critical behavior-related annotations consistent and documented</strong>
+3. Avoid stuffing large blobs unless needed — prefer links (e.g., runbook URLs)
+4. Don’t use annotations for selection or querying — that’s what labels are for
+5. Use annotations to improve observability, on-call traceability, and GitOps automation</p>
+<p>---</p>
+<h3>Curated List of Functional Annotations by Tool</h3>
+<h4>🔧 Kubernetes Native</h4>
+<p>| Annotation                                         | Purpose                       |
+| -------------------------------------------------- | ----------------------------- |
+| <code>kubernetes.io/change-cause</code>                       | Track rollout history changes |
+| <code>deployment.kubernetes.io/revision</code>                | Internal revision tracking    |
+| <code>kubectl.kubernetes.io/last-applied-configuration</code> | Stores <code>kubectl apply</code> state  |</p>
+<h4>🔭 Prometheus</h4>
+<p>| Annotation             | Purpose                 |
+| ---------------------- | ----------------------- |
+| <code>prometheus.io/scrape</code> | Enable metrics scraping |
+| <code>prometheus.io/port</code>   | Port to scrape          |
+| <code>prometheus.io/path</code>   | Metrics endpoint path   |</p>
+<h4>🌐 Ingress Controllers (NGINX / Traefik)</h4>
+<p>| Annotation                                         | Purpose                                |
+| -------------------------------------------------- | -------------------------------------- |
+| <code>nginx.ingress.kubernetes.io/rewrite-target</code>       | Rewrites incoming request path         |
+| <code>nginx.ingress.kubernetes.io/ssl-redirect</code>         | Forces HTTPS redirect                  |
+| <code>nginx.ingress.kubernetes.io/proxy-body-size</code>      | Controls max request size              |
+| <code>traefik.ingress.kubernetes.io/router.entrypoints</code> | Assign to specific Traefik entrypoints |</p>
+<h4>🧐 ArgoCD / GitOps</h4>
+<p>| Annotation                           | Purpose                             |
+| ------------------------------------ | ----------------------------------- |
+| <code>argocd.argoproj.io/instance</code>        | Ties resource to ArgoCD application |
+| <code>argocd.argoproj.io/sync-options</code>    | Customize sync behavior             |
+| <code>argocd.argoproj.io/compare-options</code> | Skip diffing on fields              |</p>
+<h4>🛡️ Istio / Linkerd (Service Mesh)</h4>
+<p>| Annotation                                         | Purpose                          |
+| -------------------------------------------------- | -------------------------------- |
+| <code>sidecar.istio.io/inject</code>                          | Controls Istio sidecar injection |
+| <code>traffic.sidecar.istio.io/includeOutboundIPRanges</code> | Restrict egress traffic          |
+| <code>linkerd.io/inject</code>                                | Enable Linkerd proxy injection   |</p>
+<h4>📊 KEDA (Kubernetes Event-Driven Autoscaling)</h4>
+<p>| Annotation               | Purpose                        |
+| ------------------------ | ------------------------------ |
+| <code>keda.sh/scaleTargetRef</code> | Define the target to autoscale |</p>
+<h4>⚙️ Terraform</h4>
+<p>| Annotation                   | Purpose                         |
+| ---------------------------- | ------------------------------- |
+| <code>terraform.io/resource-id</code>   | Maps resource back to Terraform |
+| <code>terraform.io/state-version</code> | Track Terraform version         |</p>
+<p>---</p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

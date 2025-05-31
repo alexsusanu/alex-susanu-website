@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Security: Complete Deep Technical Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Security: Complete Deep Technical Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">security</span><span class="tag">rbac</span><span class="tag">pod-security</span><span class="tag">secrets</span><span class="tag">admission-controllers</span><span class="tag">network-policies</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Security: Complete Deep Technical Guide</h2>
+<h3>Introduction to Kubernetes Security</h3>
+<p>Kubernetes security is built on <strong>multiple layers of defense</strong> - no single security mechanism protects everything. Instead, Kubernetes uses several interconnected security systems that work together to create a secure environment.</p>
+<h4>The Security Onion Model</h4>
+<strong>Authentication</strong> → <strong>Authorization</strong> → <strong>Admission Control</strong> → <strong>Runtime Security</strong>
+<strong>Layer 1: Authentication</strong> - "Who are you?"
+<ul><li>Proves the identity of users and services trying to access the cluster</li>
+<li>Uses certificates, tokens, or external identity providers</li>
+<strong>Layer 2: Authorization</strong> - "What can you do?"
+<li>Determines what authenticated users/services are allowed to do</li>
+<li>Implemented primarily through RBAC (Role-Based Access Control)</li>
+<strong>Layer 3: Admission Control</strong> - "Is this request safe?"
+<li>Validates and potentially modifies requests before they're stored</li>
+<li>Can reject dangerous configurations or automatically add security policies</li>
+<strong>Layer 4: Runtime Security</strong> - "What's happening inside?"
+<li>Monitors running workloads for suspicious behavior</li>
+<li>Includes pod security standards, network policies, and runtime monitoring</li>
+<h4>Why Kubernetes Security is Complex</h4>
+<strong>Multi-Tenant by Design:</strong>
+<li>Multiple users, teams, and applications share the same cluster</li>
+<li>Need to isolate workloads while maintaining shared infrastructure</li>
+<li>Default configuration is often "open" for ease of use</li>
+<strong>Distributed Attack Surface:</strong>
+<pre><code>API Server ← Primary target (controls everything)
+etcd ← Stores all secrets and configuration
+Nodes ← Run untrusted workloads
+Network ← East-west traffic between services
+Images ← Code and dependencies from external sources</code></pre>
+<strong>Shared Responsibility Model:</strong>
+<li><strong>Kubernetes provides</strong> - Security frameworks and APIs</li>
+<li><strong>You must configure</strong> - Policies, access controls, and monitoring</li>
+<li><strong>Applications must implement</strong> - Secure coding and secret management</li>
+<h3>Authentication Deep Dive</h3>
+<h4>How Kubernetes Authentication Works</h4>
+<strong>Authentication happens at the API server</strong> - Every request to the Kubernetes API must be authenticated before it can proceed to authorization.
+<strong>Authentication Flow:</strong>
+<pre><code>Client Request → API Server → Authentication → Authorization → Admission → etcd
+                     ↓
+              "Who are you?" ← Multiple authenticators tried in order</code></pre>
+<strong>Types of Clients:</strong>
+<li><strong>Human Users</strong> - kubectl, dashboard users, CI/CD systems</li>
+<li><strong>Service Accounts</strong> - Pods, controllers, system components</li>
+<li><strong>External Systems</strong> - Monitoring, backup tools, operators</li>
+<h4>Authentication Methods</h4>
+<p>#### X.509 Client Certificates</p>
+<strong>How Certificate Authentication Works:</strong>
+1. <strong>Certificate Authority (CA)</strong> - Cluster has a root CA that signs all certificates
+2. <strong>Client Certificate</strong> - Contains user identity in the "Common Name" and groups in "Organization"
+3. <strong>Certificate Verification</strong> - API server validates certificate against cluster CA
+<strong>Certificate Structure:</strong>
+<pre><code>Subject: CN=jane.doe, O=developers, O=staging-users
+         ↑            ↑           ↑
+      Username    Group 1     Group 2</code></pre>
+<strong>Creating User Certificates:</strong>
+<pre><code><h2>1. Generate private key</h2>
+openssl genrsa -out jane.key 2048
+<h2>2. Create certificate signing request</h2>
+openssl req -new -key jane.key -out jane.csr -subj "/CN=jane.doe/O=developers/O=staging-users"
+<h2>3. Sign with cluster CA (on master node)</h2>
+sudo openssl x509 -req -in jane.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out jane.crt -days 365
+<h2>4. Create kubeconfig for user</h2>
+kubectl config set-credentials jane --client-certificate=jane.crt --client-key=jane.key
+kubectl config set-context jane-context --cluster=my-cluster --user=jane</code></pre>
+<strong>Using Certificate in kubeconfig:</strong>
+<pre><code>apiVersion: v1
+kind: Config
+clusters:
+<li>cluster:</li>
+    certificate-authority-data: LS0tLS1CRUdJTi... # Base64 encoded CA cert
+    server: https://kubernetes.example.com:6443
+  name: my-cluster
+contexts:
+<li>context:</li>
+    cluster: my-cluster
+    user: jane
+  name: jane-context
+current-context: jane-context
+users:
+<li>name: jane</li>
+  user:
+    client-certificate-data: LS0tLS1CRUdJTi... # Base64 encoded user cert
+    client-key-data: LS0tLS1CRUdJTi...         # Base64 encoded private key</code></pre>
+<p>#### Service Account Tokens</p>
+<strong>What Service Accounts Are:</strong>
+Service Accounts are Kubernetes resources that provide identity for pods and system components. Each pod automatically gets a service account token mounted as a file.
+<strong>Automatic Token Mounting:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  serviceAccountName: my-service-account  # Optional: defaults to "default"
+  containers:
+  - name: app
+    image: myapp:latest
+    # Kubernetes automatically mounts token at:
+    # /var/run/secrets/kubernetes.io/serviceaccount/token</code></pre>
+<strong>Service Account Token Structure:</strong>
+<pre><code><h2>Inside a pod</h2>
+$ cat /var/run/secrets/kubernetes.io/serviceaccount/token
+eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1In0.eyJpc3MiOiJrdWJlcm5ldGVzL3Nlcn...
+<h2>Decode the JWT token (header.payload.signature)</h2>
+<h2>Header: {"alg":"RS256","kid":"12345"}</h2>
+<h2>Payload: {</h2>
+<h2>  "iss": "kubernetes/serviceaccount",</h2>
+<h2>  "kubernetes.io/serviceaccount/namespace": "default",</h2>
+<h2>  "kubernetes.io/serviceaccount/secret.name": "my-sa-token-abc123",</h2>
+<h2>  "kubernetes.io/serviceaccount/service-account.name": "my-service-account",</h2>
+<h2>  "kubernetes.io/serviceaccount/service-account.uid": "12345678-1234-1234-1234-123456789012"</h2>
+<h2>}</h2></code></pre>
+<strong>Custom Service Account Example:</strong>
+<pre><code>apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: monitoring-sa
+  namespace: monitoring
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: monitoring-sa-token
+  namespace: monitoring
+  annotations:
+    kubernetes.io/service-account.name: monitoring-sa
+type: kubernetes.io/service-account-token
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-app
+spec:
+  template:
+    spec:
+      serviceAccountName: monitoring-sa
+      containers:
+      - name: monitor
+        image: monitoring:latest
+        # This pod will authenticate as monitoring-sa service account</code></pre>
+<p>#### OpenID Connect (OIDC) Integration</p>
+<strong>How OIDC Works with Kubernetes:</strong>
+<pre><code>User → Identity Provider (Google, Azure AD, etc.) → ID Token → Kubernetes API</code></pre>
+<strong>API Server OIDC Configuration:</strong>
+<pre><code><h2>In kube-apiserver configuration</h2>
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kube-apiserver
+    command:
+    - kube-apiserver
+    - --oidc-issuer-url=https://accounts.google.com
+    - --oidc-client-id=abc123.apps.googleusercontent.com
+    - --oidc-username-claim=email
+    - --oidc-groups-claim=groups
+    - --oidc-ca-file=/etc/ssl/certs/ca-certificates.crt</code></pre>
+<strong>OIDC kubeconfig Example:</strong>
+<pre><code>apiVersion: v1
+kind: Config
+users:
+<li>name: oidc-user</li>
+  user:
+    auth-provider:
+      name: oidc
+      config:
+        client-id: abc123.apps.googleusercontent.com
+        client-secret: xyz789
+        id-token: eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1In0...
+        idp-issuer-url: https://accounts.google.com
+        refresh-token: 1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY</code></pre>
+<p>#### Webhook Token Authentication</p>
+<strong>External Authentication Service:</strong>
+<pre><code><h2>API server configuration</h2>
+<li>--authentication-token-webhook-config-file=/etc/kubernetes/auth-webhook.yaml</li>
+<li>--authentication-token-webhook-cache-ttl=30s</code></pre></li>
+<strong>Webhook Configuration:</strong>
+<pre><code><h2>/etc/kubernetes/auth-webhook.yaml</h2>
+apiVersion: v1
+kind: Config
+clusters:
+<li>name: auth-server</li>
+  cluster:
+    server: https://auth.company.com/authenticate
+    certificate-authority: /etc/ssl/certs/auth-ca.crt
+contexts:
+<li>context:</li>
+    cluster: auth-server
+  name: webhook
+current-context: webhook</code></pre>
+<strong>Webhook Request/Response:</strong>
+<pre><code>// Request to webhook
+{
+  "apiVersion": "authentication.k8s.io/v1beta1",
+  "kind": "TokenReview",
+  "spec": {
+    "token": "user-provided-token"
+  }
+}
+<p>// Response from webhook
+{
+  "apiVersion": "authentication.k8s.io/v1beta1",
+  "kind": "TokenReview",
+  "status": {
+    "authenticated": true,
+    "user": {
+      "username": "jane.doe",
+      "groups": ["developers", "staging-users"]
+    }
+  }
+}</code></pre></p>
+<h3>RBAC (Role-Based Access Control) Deep Dive</h3>
+<h4>RBAC Core Concepts</h4>
+<strong>RBAC Model:</strong>
+<pre><code>Subject (User/Group/ServiceAccount) + Role (Permissions) = RoleBinding (Assignment)</code></pre>
+<strong>Four RBAC Resources:</strong>
+<li><strong>Role</strong> - Defines permissions within a namespace</li>
+<li><strong>ClusterRole</strong> - Defines permissions cluster-wide</li>
+<li><strong>RoleBinding</strong> - Assigns Role to subjects within a namespace</li>
+<li><strong>ClusterRoleBinding</strong> - Assigns ClusterRole to subjects cluster-wide</li>
+<h4>Permissions Model</h4>
+<strong>Permissions are ADDITIVE</strong> - No "deny" permissions, only "allow"
+<pre><code><h2>This means: Can do X OR Y OR Z</h2>
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  verbs: ["get", "list"]
+<li>apiGroups: ["apps"]</li>
+  resources: ["deployments"]
+  verbs: ["create", "update"]</code></pre>
+<strong>Verb Hierarchy:</strong>
+<li><strong>get</strong> - Read single resource by name</li>
+<li><strong>list</strong> - Read multiple resources</li>
+<li><strong>watch</strong> - Watch for changes (real-time updates)</li>
+<li><strong>create</strong> - Create new resources</li>
+<li><strong>update</strong> - Modify existing resources (PUT)</li>
+<li><strong>patch</strong> - Partially modify resources (PATCH)</li>
+<li><strong>delete</strong> - Delete single resource</li>
+<li><strong>deletecollection</strong> - Delete multiple resources</li>
+<h4>Role Examples</h4>
+<p>#### Basic Namespace Role
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: production
+  name: pod-reader
+rules:
+<h2>Read pods</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+<h2>Read pod logs</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+<h2>Can't create, update, or delete pods</h2></code></pre></p>
+<p>#### Developer Role (More Permissions)
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: development
+  name: developer
+rules:
+<h2>Full access to most resources in namespace</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["*"]  # All verbs
+<li>apiGroups: ["apps"]</li>
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+<h2>Can't delete namespace or modify resource quotas</h2>
+<li>apiGroups: [""]</li>
+  resources: ["namespaces", "resourcequotas"]
+  verbs: []  # No permissions</code></pre></p>
+<p>#### Admin Role with Resource Names
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: production
+  name: production-admin
+rules:
+<h2>Full access to all resources</h2>
+<li>apiGroups: ["*"]</li>
+  resources: ["*"]
+  verbs: ["*"]
+<h2>Exception: Can only access specific secrets</h2>
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+  resourceNames: ["app-config", "database-credentials"]  # Only these secrets</code></pre></p>
+<h4>ClusterRole Examples</h4>
+<p>#### Read-Only Cluster Access
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-reader
+rules:
+<h2>Read all resources in all namespaces</h2>
+<li>apiGroups: ["*"]</li>
+  resources: ["*"]
+  verbs: ["get", "list", "watch"]
+<h2>Explicitly deny access to secrets</h2>
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  verbs: []</code></pre></p>
+<p>#### Monitoring ClusterRole
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: monitoring
+rules:
+<h2>Read nodes and their metrics</h2>
+<li>apiGroups: [""]</li>
+  resources: ["nodes", "nodes/metrics", "nodes/stats"]
+  verbs: ["get", "list"]
+<h2>Read pods across all namespaces</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+<h2>Access metrics APIs</h2>
+<li>apiGroups: ["metrics.k8s.io"]</li>
+  resources: ["nodes", "pods"]
+  verbs: ["get", "list"]</code></pre></p>
+<p>#### Security Scanning ClusterRole
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: security-scanner
+rules:
+<h2>Read pod security contexts</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  verbs: ["get", "list"]
+<h2>Read network policies</h2>
+<li>apiGroups: ["networking.k8s.io"]</li>
+  resources: ["networkpolicies"]
+  verbs: ["get", "list"]
+<h2>Read RBAC configuration</h2>
+<li>apiGroups: ["rbac.authorization.k8s.io"]</li>
+  resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+  verbs: ["get", "list"]
+<h2>Read pod security policies (if using PSP)</h2>
+<li>apiGroups: ["policy"]</li>
+  resources: ["podsecuritypolicies"]
+  verbs: ["get", "list"]</code></pre></p>
+<h4>RoleBinding Examples</h4>
+<p>#### Simple User Binding
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developer-binding
+  namespace: development
+subjects:
+<h2>Individual user</h2>
+<li>kind: User</li>
+  name: jane.doe
+  apiGroup: rbac.authorization.k8s.io
+<h2>Group of users  </h2>
+<li>kind: Group</li>
+  name: developers
+  apiGroup: rbac.authorization.k8s.io
+<h2>Service account</h2>
+<li>kind: ServiceAccount</li>
+  name: ci-cd-sa
+  namespace: development
+roleRef:
+  kind: Role
+  name: developer
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<p>#### Cross-Namespace Service Account Binding
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: monitoring-access
+  namespace: production
+subjects:
+<h2>Service account from different namespace</h2>
+<li>kind: ServiceAccount</li>
+  name: prometheus
+  namespace: monitoring  # Different namespace!
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<h4>ClusterRoleBinding Examples</h4>
+<p>#### Cluster Admin Access
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-binding
+subjects:
+<h2>Specific admin user</h2>
+<li>kind: User</li>
+  name: admin@company.com
+  apiGroup: rbac.authorization.k8s.io
+<h2>Admin group from OIDC</h2>
+<li>kind: Group</li>
+  name: cluster-admins
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin  # Built-in cluster admin role
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<p>#### Global Monitoring Access
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: monitoring-binding
+subjects:
+<li>kind: ServiceAccount</li>
+  name: prometheus
+  namespace: monitoring
+roleRef:
+  kind: ClusterRole
+  name: monitoring
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<h4>Built-in ClusterRoles</h4>
+<strong>cluster-admin</strong> - Full cluster access (dangerous!)
+<pre><code>kubectl describe clusterrole cluster-admin
+<h2>Rules: [<em>] [</em>] [*] - Everything!</h2></code></pre>
+<strong>admin</strong> - Full namespace access
+<pre><code>kubectl describe clusterrole admin
+<h2>Can do everything in a namespace except modify resource quotas/namespace itself</h2></code></pre>
+<strong>edit</strong> - Read/write access to most resources
+<pre><code>kubectl describe clusterrole edit
+<h2>Can create/update/delete most resources but not view secrets or modify RBAC</h2></code></pre>
+<strong>view</strong> - Read-only access
+<pre><code>kubectl describe clusterrole view
+<h2>Can read most resources but not secrets</h2></code></pre>
+<h4>Advanced RBAC Patterns</h4>
+<p>#### Environment-Based Access Control
+<pre><code><h2>Production namespace - restrictive</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: production
+  name: production-deployer
+rules:
+<li>apiGroups: ["apps"]</li>
+  resources: ["deployments"]
+  verbs: ["get", "list", "update", "patch"]  # Can update but not create/delete
+<li>apiGroups: [""]</li>
+  resources: ["configmaps"]
+  verbs: ["get", "list"]  # Read-only config
+---
+<h2>Development namespace - permissive</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: development
+  name: development-full-access
+rules:
+<li>apiGroups: ["*"]</li>
+  resources: ["*"]
+  verbs: ["*"]  # Full access for experimentation</code></pre></p>
+<p>#### Application-Specific Service Accounts
+<pre><code><h2>Database service account - only database permissions</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: database-sa
+  namespace: production
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: production
+  name: database-role
+rules:
+<h2>Can read its own config</h2>
+<li>apiGroups: [""]</li>
+  resources: ["configmaps", "secrets"]
+  verbs: ["get"]
+  resourceNames: ["database-config", "database-credentials"]
+<h2>Can update its own status</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: database-binding
+  namespace: production
+subjects:
+<li>kind: ServiceAccount</li>
+  name: database-sa
+  namespace: production
+roleRef:
+  kind: Role
+  name: database-role
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<p>#### CI/CD Pipeline Permissions
+<pre><code><h2>CI/CD service account with deployment permissions</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ci-cd-deployer
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ci-cd-deployer
+rules:
+<h2>Can manage deployments across all namespaces</h2>
+<li>apiGroups: ["apps"]</li>
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+<h2>Can read and create services</h2>
+<li>apiGroups: [""]</li>
+  resources: ["services"]
+  verbs: ["get", "list", "create", "update", "patch"]
+<h2>Can read but not modify secrets (for pulling images)</h2>
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+<h2>Can create and update configmaps</h2>
+<li>apiGroups: [""]</li>
+  resources: ["configmaps"]
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+<h2>Can read namespaces</h2>
+<li>apiGroups: [""]</li>
+  resources: ["namespaces"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ci-cd-deployer-binding
+subjects:
+<li>kind: ServiceAccount</li>
+  name: ci-cd-deployer
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: ci-cd-deployer
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<h3>Pod Security Standards Deep Dive</h3>
+<h4>What Pod Security Standards Replace</h4>
+<strong>Old System: Pod Security Policies (PSP)</strong> - Complex, deprecated
+<strong>New System: Pod Security Standards</strong> - Three built-in levels with clear definitions
+<h4>Security Levels</h4>
+<p>#### Privileged Level
+<strong>What it means:</strong> No restrictions - pods can do anything
+<pre><code><h2>Anything goes</h2>
+securityContext:
+  privileged: true
+  runAsUser: 0  # root
+  allowPrivilegeEscalation: true
+  capabilities:
+    add: ["SYS_ADMIN", "NET_ADMIN"]</code></pre></p>
+<p>#### Baseline Level  
+<strong>What it means:</strong> Minimal restrictions - prevents known privilege escalations
+<pre><code><h2>Prevents most dangerous configurations</h2>
+securityContext:
+  runAsNonRoot: true  # Required
+  # privileged: false  # Default
+  # allowPrivilegeEscalation: false  # Default
+  seccompProfile:
+    type: RuntimeDefault  # Required</code></pre></p>
+<p>#### Restricted Level
+<strong>What it means:</strong> Heavily restricted - follows security best practices
+<pre><code><h2>Very secure configuration</h2>
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000  # Non-root user ID
+  runAsGroup: 3000
+  fsGroup: 2000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]  # Drop all capabilities
+  seccompProfile:
+    type: RuntimeDefault
+  seLinuxOptions:
+    level: "s0:c123,c456"</code></pre></p>
+<h4>Implementing Pod Security Standards</h4>
+<p>#### Namespace-Level Enforcement
+<pre><code>apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    # Enforce restricted security standard
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.25
+    
+    # Warn on baseline violations  
+    pod-security.kubernetes.io/warn: baseline
+    pod-security.kubernetes.io/warn-version: v1.25
+    
+    # Audit all security levels
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/audit-version: v1.25</code></pre></p>
+<p>#### What Happens with Enforcement
+<pre><code><h2>This pod will be REJECTED in namespace with "restricted" enforcement</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    securityContext:
+      runAsUser: 0  # ROOT USER - violates restricted standard!
+      privileged: true  # PRIVILEGED - violates restricted standard!</code></pre></p>
+<strong>API Server Response:</strong>
+<pre><code>Error creating pod: pods "bad-pod" is forbidden: violates PodSecurity "restricted:v1.25": 
+privileged (container "app" must not set securityContext.privileged=true), 
+runAsNonRoot != true (pod or container "app" must set securityContext.runAsNonRoot=true)</code></pre>
+<h4>Security Context Deep Dive</h4>
+<p>#### Pod-Level Security Context
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  securityContext:
+    # Run as specific user/group
+    runAsUser: 1000      # UID 1000
+    runAsGroup: 3000     # GID 3000
+    runAsNonRoot: true   # Ensure non-root
+    fsGroup: 2000        # Files created belong to group 2000
+    
+    # Linux security modules
+    seLinuxOptions:
+      level: "s0:c123,c456"
+    seccompProfile:
+      type: RuntimeDefault
+    
+    # Filesystem controls
+    fsGroupChangePolicy: "Always"  # Change ownership of mounted volumes
+    
+  containers:
+  - name: app
+    image: myapp:latest
+    securityContext:
+      # Container-specific overrides
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
+        add: ["NET_BIND_SERVICE"]  # Only capability needed</code></pre></p>
+<p>#### What Each Security Setting Does</p>
+<strong>runAsUser/runAsGroup:</strong>
+<pre><code><h2>Inside container without setting</h2>
+$ whoami
+root
+$ id
+uid=0(root) gid=0(root) groups=0(root)
+<h2>With runAsUser: 1000, runAsGroup: 3000</h2>
+$ whoami  
+app-user
+$ id
+uid=1000(app-user) gid=3000(app-group) groups=3000(app-group)</code></pre>
+<strong>readOnlyRootFilesystem:</strong>
+<pre><code>securityContext:
+  readOnlyRootFilesystem: true
+<h2>Result: Container can't write to / filesystem</h2>
+<h2>Need to mount writable volumes for temp files:</h2>
+volumeMounts:
+<li>name: tmp-volume</li>
+  mountPath: /tmp
+<li>name: var-volume</li>
+  mountPath: /var</code></pre>
+<strong>Capabilities:</strong>
+<pre><code>securityContext:
+  capabilities:
+    drop: ["ALL"]  # Remove all Linux capabilities
+    add: ["NET_BIND_SERVICE"]  # Add back only what's needed
+<h2>NET_BIND_SERVICE allows binding to ports < 1024</h2>
+<h2>Without it, non-root users can't bind to port 80/443</h2></code></pre>
+<p>#### Complete Secure Pod Example
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: ultra-secure-app
+  namespace: production
+spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 3000
+    runAsNonRoot: true
+    fsGroup: 2000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: app
+    image: myapp:latest
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
+    ports:
+    - containerPort: 8080  # Non-privileged port
+    volumeMounts:
+    - name: tmp-volume
+      mountPath: /tmp
+    - name: app-data
+      mountPath: /data
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+  volumes:
+  - name: tmp-volume
+    emptyDir: {}
+  - name: app-data
+    persistentVolumeClaim:
+      claimName: app-data-pvc
+  restartPolicy: Always
+  automountServiceAccountToken: false  # Don't mount SA token unless needed</code></pre></p>
+<h3>Secrets Management Deep Dive</h3>
+<h4>What Kubernetes Secrets Actually Are</h4>
+<strong>Secrets are NOT encrypted in etcd by default</strong> - They're only base64 encoded, which is NOT encryption!
+<strong>Secret vs ConfigMap:</strong>
+<li><strong>ConfigMap</strong> - Non-sensitive configuration data, stored as plain text</li>
+<li><strong>Secret</strong> - Sensitive data, slightly more secure handling, but still needs encryption at rest</li>
+<h4>Secret Types</h4>
+<p>#### Opaque Secrets (Generic)
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: production
+type: Opaque
+data:
+  # Base64 encoded values
+  database-password: cGFzc3dvcmQxMjM=  # "password123"
+  api-key: YWJjZGVmZ2hpams=            # "abcdefghijk"
+stringData:
+  # Plain text values (automatically base64 encoded)
+  database-url: "postgresql://user:password@host:5432/db"
+  ssl-cert: |
+    -----BEGIN CERTIFICATE-----
+    MIIDXTCCAkWgAwIBAgIJAKlwmMhJlJb...
+    -----END CERTIFICATE-----</code></pre></p>
+<p>#### Docker Registry Secrets
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: docker-registry-secret
+  namespace: production
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJyZWdpc3RyeS5jb21wYW55LmNvbSI6IHsKICAgICAgInVzZXJuYW1lIjogImRvY2tlci11c2VyIiwKICAgICAgInBhc3N3b3JkIjogInBhc3N3b3JkMTIzIiwKICAgICAgImF1dGgiOiJaRzlqYTJWeUxYVnpaWEk2Y0dGemMzZHZjbVF4TWpNPSIKICAgIH0KICB9Cn0=</code></pre></p>
+<strong>Creating Docker Registry Secret:</strong>
+<pre><code>kubectl create secret docker-registry docker-registry-secret \
+  --docker-server=registry.company.com \
+  --docker-username=docker-user \
+  --docker-password=password123 \
+  --docker-email=docker@company.com</code></pre>
+<p>#### TLS Secrets
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: tls-secret
+  namespace: production
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTi... # Base64 encoded certificate
+  tls.key: LS0tLS1CRUdJTi... # Base64 encoded private key</code></pre></p>
+<strong>Creating TLS Secret:</strong>
+<pre><code>kubectl create secret tls tls-secret \
+  --cert=path/to/cert.pem \
+  --key=path/to/key.pem</code></pre>
+<p>#### Service Account Token Secrets
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: build-robot-secret
+  namespace: default
+  annotations:
+    kubernetes.io/service-account.name: build-robot
+type: kubernetes.io/service-account-token</code></pre></p>
+<h4>Using Secrets in Pods</h4>
+<p>#### Environment Variable Injection
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-secrets
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    env:
+    # Single secret value
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: database-password
+    # All secret values as env vars
+    envFrom:
+    - secretRef:
+        name: app-secrets
+    # Result: DATABASE_PASSWORD=password123, API_KEY=abcdefghijk, etc.</code></pre></p>
+<p>#### Volume Mounting (More Secure)
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-secret-files
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    volumeMounts:
+    - name: secret-volume
+      mountPath: /etc/secrets
+      readOnly: true
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: app-secrets
+      defaultMode: 0400  # Read-only for owner
+      items:
+      - key: database-password
+        path: db-password
+        mode: 0400
+      - key: ssl-cert
+        path: ssl/cert.pem
+        mode: 0444</code></pre></p>
+<strong>Result in container:</strong>
+<pre><code>$ ls -la /etc/secrets/
+total 8
+drwxrwxrwt 3 root root  100 Jan  1 12:00 .
+drwxr-xr-x 1 root root 4096 Jan  1 12:00 ..
+-r-------- 1 root root   11 Jan  1 12:00 db-password
+drwxr-xr-x 2 root root   60 Jan  1 12:00 ssl
+-r--r--r-- 1 root root 1234 Jan  1 12:00 ssl/cert.pem
+<p>$ cat /etc/secrets/db-password
+password123</code></pre></p>
+<h4>Secret Security Best Practices</h4>
+<p>#### Encryption at Rest
+<pre><code><h2>/etc/kubernetes/encryption-config.yaml</h2>
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+<li>resources:</li>
+  - secrets
+  providers:
+  - aescbc:
+      keys:
+      - name: key1
+        secret: c2VjcmV0IGlzIHNlY3VyZQ==  # Base64 encoded encryption key
+  - identity: {}  # Fallback to unencrypted</code></pre></p>
+<strong>API Server Configuration:</strong>
+<pre><code>kube-apiserver \
+  --encryption-provider-config=/etc/kubernetes/encryption-config.yaml \
+  # ... other flags</code></pre>
+<p>#### External Secret Management</p>
+<strong>Using External Secrets Operator:</strong>
+<pre><code><h2>Install external-secrets-operator first</h2>
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: aws-secrets-manager
+  namespace: production
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: us-west-2
+      auth:
+        secretRef:
+          accessKeyID:
+            name: aws-credentials
+            key: access-key-id
+          secretAccessKey:
+            name: aws-credentials
+            key: secret-access-key
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: database-secret
+  namespace: production
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: SecretStore
+  target:
+    name: database-credentials
+    creationPolicy: Owner
+  data:
+  - secretKey: password
+    remoteRef:
+      key: production/database
+      property: password
+  - secretKey: username
+    remoteRef:
+      key: production/database
+      property: username</code></pre>
+<p>#### Secret Rotation Example
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rotate-database-password
+  namespace: production
+spec:
+  schedule: "0 2 <em> </em> 0"  # Weekly at 2 AM Sunday
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: secret-rotator
+          containers:
+          - name: rotator
+            image: secret-rotator:latest
+            command:
+            - sh
+            - -c
+            - |
+              # Generate new password
+              NEW_PASSWORD=$(openssl rand -base64 32)
+              
+              # Update database
+              mysql -h database -u root -p${OLD_PASSWORD} -e "ALTER USER 'app'@'%' IDENTIFIED BY '${NEW_PASSWORD}';"
+              
+              # Update Kubernetes secret
+              kubectl patch secret database-credentials -p='{"data":{"password":"'$(echo -n $NEW_PASSWORD | base64)'"}}'
+              
+              # Restart pods to pick up new secret
+              kubectl rollout restart deployment/app
+            env:
+            - name: OLD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-credentials
+                  key: password
+          restartPolicy: OnFailure</code></pre></p>
+<h3>Admission Controllers Deep Dive</h3>
+<h4>What Admission Controllers Do</h4>
+<strong>Admission controllers</strong> are plugins that intercept requests to the Kubernetes API server <strong>after</strong> authentication and authorization, but <strong>before</strong> the object is stored in etcd. They can:
+<strong>Validate</strong> - Check if the request meets certain criteria
+<strong>Mutate</strong> - Modify the request before storing it
+<strong>Reject</strong> - Block dangerous or invalid requests
+<strong>Request Flow:</strong>
+<pre><code>Client → Authentication → Authorization → Admission Controllers → etcd
+                                            ↓
+                                    [Validation & Mutation]</code></pre>
+<h4>Built-in Admission Controllers</h4>
+<p>#### NamespaceLifecycle
+<strong>What it does:</strong> Prevents operations on namespaces being deleted, ensures default namespace always exists</p>
+<pre><code><h2>This will be REJECTED if namespace is being deleted</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  namespace: being-deleted-namespace  # ❌ Rejected</code></pre>
+<p>#### ResourceQuota
+<strong>What it does:</strong> Enforces resource quotas in namespaces</p>
+<pre><code>apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: production-quota
+  namespace: production
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    persistentvolumeclaims: "10"
+---
+<h2>This pod will be REJECTED if it exceeds quota</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-heavy-pod
+  namespace: production
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    resources:
+      requests:
+        cpu: "5"      # ❌ Exceeds quota of 4 CPU
+        memory: 10Gi  # ❌ Exceeds quota of 8Gi memory</code></pre>
+<p>#### LimitRanger
+<strong>What it does:</strong> Enforces resource limits and provides defaults</p>
+<pre><code>apiVersion: v1
+kind: LimitRange
+metadata:
+  name: production-limits
+  namespace: production
+spec:
+  limits:
+  # Pod limits
+  - type: Pod
+    max:
+      cpu: "2"
+      memory: 4Gi
+    min:
+      cpu: 100m
+      memory: 128Mi
+  # Container limits
+  - type: Container
+    default:
+      cpu: 200m      # Default CPU limit
+      memory: 256Mi   # Default memory limit
+    defaultRequest:
+      cpu: 100m      # Default CPU request
+      memory: 128Mi   # Default memory request
+    max:
+      cpu: "1"       # Max CPU per container
+      memory: 2Gi     # Max memory per container
+    min:
+      cpu: 50m       # Min CPU per container
+      memory: 64Mi    # Min memory per container</code></pre>
+<p>#### ServiceAccount
+<strong>What it does:</strong> Automatically adds service account to pods without one</p>
+<pre><code><h2>Pod without serviceAccountName</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+<h2>After ServiceAccount admission controller:</h2>
+<h2>serviceAccountName: default (automatically added)</h2>
+<h2>automountServiceAccountToken: true (automatically added)</h2></code></pre>
+<p>#### DefaultStorageClass
+<strong>What it does:</strong> Adds default storage class to PVCs without one</p>
+<pre><code><h2>PVC without storageClassName</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+<h2>After DefaultStorageClass admission controller:</h2>
+<h2>storageClassName: gp2 (default storage class automatically added)</h2></code></pre>
+<h4>ValidatingAdmissionWebhooks</h4>
+<strong>How Webhook Validation Works:</strong>
+1. <strong>API server receives request</strong> → Validates against webhook
+2. <strong>Webhook called</strong> → External service validates request
+3. <strong>Webhook responds</strong> → Allow or deny with reason
+4. <strong>Request processed</strong> → Continues or gets rejected
+<p>#### Custom Validation Webhook Example
+<pre><code>apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionWebhook
+metadata:
+  name: security-policy-validator
+webhooks:
+<li>name: pod-security.company.com</li>
+  clientConfig:
+    service:
+      name: security-webhook
+      namespace: kube-system
+      path: /validate-pods
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  admissionReviewVersions: ["v1", "v1beta1"]
+  sideEffects: None
+  failurePolicy: Fail  # Reject if webhook is unavailable</code></pre></p>
+<strong>Webhook Service Implementation:</strong>
+<pre><code><h2>Python webhook example</h2>
+from flask import Flask, request, jsonify
+import base64
+import json
+<p>app = Flask(__name__)</p>
+<p>@app.route('/validate-pods', methods=['POST'])
+def validate_pod():
+    admission_review = request.get_json()
+    
+    # Extract pod spec
+    pod = admission_review['request']['object']
+    
+    # Validation logic
+    allowed = True
+    message = ""
+    
+    # Check 1: No privileged containers
+    for container in pod['spec'].get('containers', []):
+        security_context = container.get('securityContext', {})
+        if security_context.get('privileged', False):
+            allowed = False
+            message = f"Container {container['name']} cannot be privileged"
+            break
+    
+    # Check 2: Must have resource limits
+    if allowed:
+        for container in pod['spec'].get('containers', []):
+            resources = container.get('resources', {})
+            if 'limits' not in resources:
+                allowed = False
+                message = f"Container {container['name']} must have resource limits"
+                break
+    
+    # Response
+    response = {
+        "apiVersion": "admission.k8s.io/v1",
+        "kind": "AdmissionReview",
+        "response": {
+            "uid": admission_review['request']['uid'],
+            "allowed": allowed
+        }
+    }
+    
+    if not allowed:
+        response['response']['status'] = {
+            "code": 403,
+            "message": message
+        }
+    
+    return jsonify(response)</p>
+<p>if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8443, ssl_context='adhoc')</code></pre></p>
+<h4>MutatingAdmissionWebhooks</h4>
+<strong>How Webhook Mutation Works:</strong>
+1. <strong>API server receives request</strong> → Calls mutating webhooks first
+2. <strong>Webhook modifies request</strong> → Returns JSON patch with changes  
+3. <strong>Request updated</strong> → API server applies the patches
+4. <strong>Validation happens</strong> → Then validating webhooks run
+<p>#### Sidecar Injection Example (Like Istio)
+<pre><code>apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingAdmissionWebhook
+metadata:
+  name: sidecar-injector
+webhooks:
+<li>name: sidecar-injector.company.com</li>
+  clientConfig:
+    service:
+      name: sidecar-injector
+      namespace: kube-system
+      path: /mutate
+  rules:
+  - operations: ["CREATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  admissionReviewVersions: ["v1"]
+  sideEffects: None</code></pre></p>
+<strong>Mutation Webhook Response:</strong>
+<pre><code>{
+  "apiVersion": "admission.k8s.io/v1",
+  "kind": "AdmissionReview",
+  "response": {
+    "uid": "request-uid",
+    "allowed": true,
+    "patchType": "JSONPatch",
+    "patch": "W3sib3AiOiJhZGQiLCJwYXRoIjoiL3NwZWMvY29udGFpbmVycyIsInZhbHVlIjpbeyJuYW1lIjoic2lkZWNhciIsImltYWdlIjoicHJveHk6bGF0ZXN0In1dfV0="
+  }
+}</code></pre>
+<strong>Decoded patch (base64 decoded):</strong>
+<pre><code>[{
+  "op": "add",
+  "path": "/spec/containers/-",
+  "value": {
+    "name": "sidecar",
+    "image": "proxy:latest",
+    "ports": [{"containerPort": 15001}]
+  }
+}]</code></pre>
+<p>#### Security Enhancement Webhook
+<pre><code><h2>Webhook that automatically adds security contexts</h2>
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingAdmissionWebhook
+metadata:
+  name: security-enhancer
+webhooks:
+<li>name: security.company.com</li>
+  clientConfig:
+    service:
+      name: security-webhook
+      namespace: kube-system
+      path: /mutate-security
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  admissionReviewVersions: ["v1"]</code></pre></p>
+<strong>Security Enhancement Logic:</strong>
+<pre><code>def enhance_security(pod):
+    patches = []
+    
+    # Add security context if missing
+    if 'securityContext' not in pod['spec']:
+        patches.append({
+            "op": "add",
+            "path": "/spec/securityContext",
+            "value": {
+                "runAsNonRoot": True,
+                "runAsUser": 1000,
+                "fsGroup": 2000
+            }
+        })
+    
+    # Add security context to containers without one
+    for i, container in enumerate(pod['spec']['containers']):
+        if 'securityContext' not in container:
+            patches.append({
+                "op": "add",
+                "path": f"/spec/containers/{i}/securityContext",
+                "value": {
+                    "allowPrivilegeEscalation": False,
+                    "readOnlyRootFilesystem": True,
+                    "capabilities": {"drop": ["ALL"]}
+                }
+            })
+    
+    return patches</code></pre>
+<h3>Key Concepts Summary</h3>
+<li><strong>Authentication</strong> - Proving identity using certificates, tokens, or external providers</li>
+<li><strong>Authorization (RBAC)</strong> - Defining what authenticated users can do with Roles and RoleBindings</li>
+<li><strong>Service Accounts</strong> - Kubernetes identities for pods and system components with automatic token mounting</li>
+<li><strong>Pod Security Standards</strong> - Three levels (Privileged, Baseline, Restricted) replacing Pod Security Policies</li>
+<li><strong>Security Contexts</strong> - Pod and container-level security settings for users, capabilities, and filesystem access</li>
+<li><strong>Secrets Management</strong> - Storing sensitive data with base64 encoding, requiring encryption at rest for true security</li>
+<li><strong>Admission Controllers</strong> - Plugins that validate and mutate requests before storing in etcd</li>
+<li><strong>Webhooks</strong> - Custom validation and mutation logic for enforcing organizational policies</li>
+<li><strong>Defense in Depth</strong> - Multiple security layers working together rather than relying on single controls</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Principle of Least Privilege</strong> - Grant minimum permissions necessary for each user/service
+2. <strong>Use Service Accounts</strong> - Create specific service accounts for each application, don't use default
+3. <strong>Enable Encryption at Rest</strong> - Encrypt secrets in etcd using EncryptionConfiguration
+4. <strong>Implement Pod Security Standards</strong> - Use restricted level for production workloads
+5. <strong>Regular RBAC Audits</strong> - Review and remove unnecessary permissions periodically
+6. <strong>External Secret Management</strong> - Use HashiCorp Vault, AWS Secrets Manager, or similar for sensitive data
+7. <strong>Network Policies</strong> - Implement zero-trust networking with default deny policies
+8. <strong>Admission Controllers</strong> - Use ValidatingAdmissionWebhooks to enforce organizational policies
+9. <strong>Security Scanning</strong> - Scan container images for vulnerabilities before deployment
+10. <strong>Monitor Security Events</strong> - Set up alerting for privilege escalations and suspicious activities</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: RBAC Permission Denied</h4>
+<li><strong>Symptom:</strong> "User cannot get/list/create resource X" errors</li>
+<li><strong>Cause:</strong> Missing RBAC permissions or incorrect role bindings</li>
+<li><strong>Solution:</strong> Check user's roles and verify required permissions exist</li>
+<pre><code><h2>Check user's permissions</h2>
+kubectl auth can-i get pods --as=jane.doe
+kubectl auth can-i create deployments --as=jane.doe --namespace=production
+<h2>Check role bindings for user</h2>
+kubectl get rolebindings,clusterrolebindings -o wide | grep jane.doe
+<h2>Check what permissions a role has</h2>
+kubectl describe role developer
+kubectl describe clusterrole cluster-admin</code></pre>
+<h4>Problem 2: Service Account Token Not Working</h4>
+<li><strong>Symptom:</strong> Pods can't access Kubernetes API despite having service account</li>
+<li><strong>Cause:</strong> Service account token not mounted or RBAC not configured</li>
+<li><strong>Solution:</strong> Verify token mounting and service account permissions</li>
+<pre><code><h2>Check if token is mounted</h2>
+kubectl exec -it pod-name -- ls /var/run/secrets/kubernetes.io/serviceaccount/
+<h2>Check service account</h2>
+kubectl get serviceaccount my-sa -o yaml
+<h2>Check service account permissions</h2>
+kubectl auth can-i get pods --as=system:serviceaccount:namespace:my-sa</code></pre>
+<h4>Problem 3: Pod Security Standard Violations</h4>
+<li><strong>Symptom:</strong> Pods rejected with security policy violations</li>
+<li><strong>Cause:</strong> Pod configuration violates namespace security standards</li>
+<li><strong>Solution:</strong> Adjust pod security context or namespace security level</li>
+<pre><code><h2>Check namespace security labels</h2>
+kubectl get namespace production --show-labels
+<h2>Test pod against security standard</h2>
+kubectl --dry-run=server create -f pod.yaml
+<h2>Check what's wrong with pod</h2>
+kubectl describe pod failing-pod</code></pre>
+<h4>Problem 4: Admission Webhook Failures</h4>
+<li><strong>Symptom:</strong> All pod creation fails with webhook timeout errors</li>
+<li><strong>Cause:</strong> Admission webhook service unavailable or misconfigured</li>
+<li><strong>Solution:</strong> Check webhook service status and configuration</li>
+<pre><code><h2>Check webhook configuration</h2>
+kubectl get validatingadmissionwebhooks
+kubectl get mutatingadmissionwebhooks
+<h2>Check webhook service</h2>
+kubectl get svc -n kube-system webhook-service
+<h2>Check webhook pods</h2>
+kubectl get pods -n kube-system | grep webhook</code></pre>
+<h4>Problem 5: Secret Not Accessible</h4>
+<li><strong>Symptom:</strong> Pods can't read mounted secrets or environment variables empty</li>
+<li><strong>Cause:</strong> Secret doesn't exist, wrong namespace, or incorrect mounting</li>
+<li><strong>Solution:</strong> Verify secret existence and mounting configuration</li>
+<pre><code><h2>Check if secret exists</h2>
+kubectl get secret my-secret -o yaml
+<h2>Check secret content (base64 encoded)</h2>
+kubectl get secret my-secret -o jsonpath='{.data}'
+<h2>Check pod's volume mounts</h2>
+kubectl describe pod my-pod
+<h2>Test secret access inside pod</h2>
+kubectl exec -it my-pod -- ls -la /etc/secrets/</code></pre>
+<h3>References / Further Reading</h3>
+<li>[Kubernetes Security Documentation](https://kubernetes.io/docs/concepts/security/)</li>
+<li>[RBAC Authorization Guide](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)</li>
+<li>[Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)</li>
+<li>[Admission Controllers Guide](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/)</li>
+<li>[Secrets Management](https://kubernetes.io/docs/concepts/configuration/secret/)</li>
+<li>[Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/security-checklist/)</li>
+<li>[External Secrets Operator](https://external-secrets.io/)</li>
+<li>[OPA Gatekeeper](https://open-policy-agent.github.io/gatekeeper/)</li>
+<li>[Falco Runtime Security](https://falco.org/)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

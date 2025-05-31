@@ -66,6 +66,26 @@
 
                 <div class="notes-grid" id="notesContainer">
 
+    <div class="note-card" data-tags="linkerd,service-mesh,kubernetes,microservices,security,observability" onclick="window.location.href='notes/mesh-linkerd.html'">
+        <h3>Linkerd - Service Mesh Overview</h3>
+        <div class="note-meta">Kubernetes (mesh) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Linkerd is a lightweight, open-source service mesh for Kubernetes that provides runtime debugging, observability, reliability, and security for mic...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">linkerd</span><span class="tag">service-mesh</span><span class="tag">kubernetes</span><span class="tag">microservices</span><span class="tag">security</span><span class="tag">observability</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="istio,service-mesh,kubernetes,microservices,security,observability" onclick="window.location.href='notes/mesh-istio.html'">
+        <h3>Istio - Service Mesh Overview</h3>
+        <div class="note-meta">Kubernetes (mesh) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Istio is an open-source service mesh that helps manage service-to-service communication within a Kubernetes cluster (and beyond).</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">istio</span><span class="tag">service-mesh</span><span class="tag">kubernetes</span><span class="tag">microservices</span><span class="tag">security</span><span class="tag">observability</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="docker,compose,swarm,orchestration,multi-container" onclick="window.location.href='notes/docker-docker_orchestration.html'">
         <h3>Docker Orchestration</h3>
         <div class="note-meta">DevOps (docker) • May 29, 2025</div>
@@ -104,6 +124,96 @@
         </div>
         <div class="note-tags">
             <span class="tag">docker</span><span class="tag">networking</span><span class="tag">volumes</span><span class="tag">storage</span><span class="tag">ports</span><span class="tag">bind-mounts</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="service-mesh,istio,envoy,sidecar,kubernetes" onclick="window.location.href='notes/architectural-patterns-service-mesh-architecture.html'">
+        <h3>Service Mesh / Sidecar Pattern</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>A Service Mesh is a dedicated infrastructure layer for managing service-to-service communication in microservices.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">service-mesh</span><span class="tag">istio</span><span class="tag">envoy</span><span class="tag">sidecar</span><span class="tag">kubernetes</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="hexagonal,clean-architecture,java,ports-adapters,kubernetes" onclick="window.location.href='notes/architectural-patterns-hexagonal-architecture.html'">
+        <h3>Hexagonal Architecture (Ports & Adapters)</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Hexagonal Architecture, or Ports and Adapters, separates the core logic from the infrastructure, allowing independent evolution of business logic a...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">hexagonal</span><span class="tag">clean-architecture</span><span class="tag">java</span><span class="tag">ports-adapters</span><span class="tag">kubernetes</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="ddd,java,design,microservices,kubernetes" onclick="window.location.href='notes/architectural-patterns-domain-driven-design.html'">
+        <h3>Domain-Driven Design (DDD)</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Domain-Driven Design (DDD) is an approach to software development that focuses on modeling software based on the business domain, using rich, behav...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">ddd</span><span class="tag">java</span><span class="tag">design</span><span class="tag">microservices</span><span class="tag">kubernetes</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="layered,mvc,java,design-patterns,kubernetes" onclick="window.location.href='notes/architectural-patterns-layered-architecture.html'">
+        <h3>Layered Architecture</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Layered Architecture (also known as n-tier) divides the system into layers with well-defined responsibilities, such as presentation, business, and ...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">layered</span><span class="tag">mvc</span><span class="tag">java</span><span class="tag">design-patterns</span><span class="tag">kubernetes</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="monolith,java,kubernetes,devops" onclick="window.location.href='notes/architectural-patterns-monolithic-architecture.html'">
+        <h3>Monolithic Architecture</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>A Monolithic Architecture is a single-tiered application structure where all functions—UI, business logic, and data access—are tightly coupled and ...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">monolith</span><span class="tag">java</span><span class="tag">kubernetes</span><span class="tag">devops</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="microservices,java,kubernetes,spring-boot,scalability" onclick="window.location.href='notes/architectural-patterns-microservices-architecture.html'">
+        <h3>Microservices Architecture</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>A Microservices Architecture is a design where an application is composed of small, independent services that communicate over well-defined APIs.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">microservices</span><span class="tag">java</span><span class="tag">kubernetes</span><span class="tag">spring-boot</span><span class="tag">scalability</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="cqrs,java,axon,eventsourcing,kubernetes" onclick="window.location.href='notes/architectural-patterns-cqrs-architecture.html'">
+        <h3>CQRS (Command Query Responsibility Segregation)</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>CQRS separates the responsibility for reading and writing data into different models, enhancing scalability and performance for complex systems.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">cqrs</span><span class="tag">java</span><span class="tag">axon</span><span class="tag">eventsourcing</span><span class="tag">kubernetes</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="event-driven,kafka,java,kubernetes,microservices" onclick="window.location.href='notes/architectural-patterns-event-driven-architecture.html'">
+        <h3>Event-Driven Architecture</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Event-Driven Architecture (EDA) is a design paradigm where components communicate through events—emitted, consumed, and reacted upon—decoupling the...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">event-driven</span><span class="tag">kafka</span><span class="tag">java</span><span class="tag">kubernetes</span><span class="tag">microservices</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="serverless,faas,cloud,kubernetes,java" onclick="window.location.href='notes/architectural-patterns-serverless-architecture.html'">
+        <h3>Serverless Architecture</h3>
+        <div class="note-meta">Architecture (architectural-patterns) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Serverless Architecture delegates infrastructure management to the cloud, allowing you to write functions that execute on demand without managing s...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">serverless</span><span class="tag">faas</span><span class="tag">cloud</span><span class="tag">kubernetes</span><span class="tag">java</span>
         </div>
     </div>
     <div class="note-card" data-tags="kubernetes,k8s,networking,service,ingress,networkpolicy,dns" onclick="window.location.href='notes/k8s-k8s_networking.html'">
@@ -166,6 +276,16 @@
             
         </div>
     </div>
+    <div class="note-card" data-tags="kubernetes,initcontainers,pods,orchestration,containers" onclick="window.location.href='notes/k8s-k8s-initcontainers-note.html'">
+        <h3>Understanding `initContainers` in Kubernetes</h3>
+        <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>are a native Kubernetes feature that allow you to run one or more containers before your main application containers start.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">kubernetes</span><span class="tag">initcontainers</span><span class="tag">pods</span><span class="tag">orchestration</span><span class="tag">containers</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-exam modules.html'">
         <h3>Exam Modules</h3>
         <div class="note-meta">General (k8s) • May 27, 2025</div>
@@ -186,6 +306,16 @@
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">configuration</span><span class="tag">configmap</span><span class="tag">secret</span><span class="tag">serviceaccount</span><span class="tag">rbac</span>
         </div>
     </div>
+    <div class="note-card" data-tags="sidecar,microservices,pod-design,kubernetes,containers,architecture" onclick="window.location.href='notes/k8s-shared-pod-microservices-vs-sidecar.html'">
+        <h3>Shared Pod Microservices vs Sidecar Pattern</h3>
+        <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>This document explains the difference between running multiple microservices in a single pod (with shared volumes) and using the sidecar pattern.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">sidecar</span><span class="tag">microservices</span><span class="tag">pod-design</span><span class="tag">kubernetes</span><span class="tag">containers</span><span class="tag">architecture</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="configmap,yaml,volumes,kubectl" onclick="window.location.href='notes/k8s-configmap-inline-vs-file-based.html'">
         <h3>ConfigMap: Inline vs File-Based Configuration  </h3>
         <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
@@ -194,6 +324,16 @@
         </div>
         <div class="note-tags">
             <span class="tag">configmap</span><span class="tag">yaml</span><span class="tag">volumes</span><span class="tag">kubectl</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="health-checks,liveness,readiness,probes,k8s,monitoring" onclick="window.location.href='notes/k8s-kubernetes-health-probes.html'">
+        <h3>Kubernetes Health Probes - Liveness vs Readiness</h3>
+        <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Kubernetes uses health probes to automatically detect when containers are alive and ready to serve traffic.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">health-checks</span><span class="tag">liveness</span><span class="tag">readiness</span><span class="tag">probes</span><span class="tag">k8s</span><span class="tag">monitoring</span>
         </div>
     </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-state persistence.html'">
@@ -246,6 +386,16 @@
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">storage</span><span class="tag">volumes</span><span class="tag">persistentvolume</span><span class="tag">pvc</span><span class="tag">storageclass</span>
         </div>
     </div>
+    <div class="note-card" data-tags="logging,sidecar,fluent-bit,elasticsearch,emptydir,volumes" onclick="window.location.href='notes/k8s-logging-architecture-sidecar-es.html'">
+        <h3>Logging Architecture with Sidecar and Elasticsearch  </h3>
+        <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>This setup demonstrates how to use a sidecar pattern to collect logs from an application container and forward them to Elasticsearch.</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">logging</span><span class="tag">sidecar</span><span class="tag">fluent-bit</span><span class="tag">elasticsearch</span><span class="tag">emptyDir</span><span class="tag">volumes</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-observability.html'">
         <h3>Deep Dive: Observability in Container Orchestration</h3>
         <div class="note-meta">General (k8s) • May 27, 2025</div>
@@ -284,6 +434,26 @@
         </div>
         <div class="note-tags">
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">containers</span><span class="tag">orchestration</span><span class="tag">core-concepts</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/observability-monitoring_observability_why.html'">
+        <h3>Monitoring and Debugging: The System's Nervous System</h3>
+        <div class="note-meta">General (observability) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Imagine driving a car with no dashboard - no speedometer, no fuel gauge, no engine temperature warning, no check engine light.</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/observability-monitoring_debugging_guide.html'">
+        <h3>Monitoring and Debugging: The System's Nervous System</h3>
+        <div class="note-meta">General (observability) • May 29, 2025</div>
+        <div class="note-preview">
+            <p>Monitoring isn't just about knowing when things break—it's about understanding trends, predicting problems, and optimizing performance.</p>
+        </div>
+        <div class="note-tags">
+            
         </div>
     </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/linux-linux_networking_commands.html'">

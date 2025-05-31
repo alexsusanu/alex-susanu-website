@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Cluster Internals: Complete Deep Technical Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Cluster Internals: Complete Deep Technical Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">cluster-internals</span><span class="tag">control-plane</span><span class="tag">api-server</span><span class="tag">etcd</span><span class="tag">kubelet</span><span class="tag">scheduler</span><span class="tag">controllers</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Cluster Internals: Complete Deep Technical Guide</h2>
+<h3>Introduction to Kubernetes Cluster Internals</h3>
+<p>Understanding Kubernetes cluster internals is crucial for troubleshooting, performance optimization, and designing robust systems. Kubernetes is essentially a <strong>distributed system</strong> that manages containerized workloads across multiple machines.</p>
+<h4>High-Level Cluster Architecture</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    CONTROL PLANE                           │
+├─────────────────┬─────────────────┬─────────────────────────┤
+│   API Server    │   Controller    │      Scheduler          │
+│                 │   Manager       │                         │
+├─────────────────┼─────────────────┼─────────────────────────┤
+│                 │      etcd       │                         │
+│                 │  (Data Store)   │                         │
+└─────────────────┴─────────────────┴─────────────────────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+         ┌────▼────┐   ┌─────▼─────┐   ┌────▼────┐
+         │ Node 1  │   │  Node 2   │   │ Node 3  │
+         │         │   │           │   │         │
+         │ kubelet │   │  kubelet  │   │ kubelet │
+         │ kube-   │   │  kube-    │   │ kube-   │
+         │ proxy   │   │  proxy    │   │ proxy   │
+         │         │   │           │   │         │
+         │ Pods    │   │  Pods     │   │ Pods    │
+         └─────────┘   └───────────┘   └─────────┘</code></pre>
+<h4>Master vs Worker Node Split</h4>
+<strong>Control Plane (Master Nodes):</strong>
+<ul><li>Makes global decisions about the cluster</li>
+<li>Stores cluster state and configuration</li>
+<li>Schedules workloads to worker nodes</li>
+<li>Exposes the Kubernetes API</li>
+<strong>Worker Nodes:</strong>
+<li>Run application workloads (pods)</li>
+<li>Communicate with control plane</li>
+<li>Execute containers and provide networking</li>
+<li>Report status back to control plane</li>
+<h3>API Server Deep Dive</h3>
+<h4>What the API Server Actually Does</h4>
+<p>The <strong>kube-apiserver</strong> is the <strong>central hub</strong> of the entire Kubernetes cluster. Every operation in Kubernetes goes through the API server - it's the only component that directly interacts with etcd.</p>
+<strong>API Server Responsibilities:</strong>
+<li><strong>HTTP API Gateway</strong> - Exposes REST APIs for all Kubernetes operations</li>
+<li><strong>Authentication & Authorization</strong> - Validates who can do what</li>
+<li><strong>Admission Control</strong> - Validates and potentially modifies requests</li>
+<li><strong>etcd Interface</strong> - Only component that reads/writes to etcd</li>
+<li><strong>Event Notification</strong> - Notifies clients about resource changes via watch APIs</li>
+<h4>API Server Request Flow</h4>
+<strong>Complete Request Journey:</strong>
+<pre><code>kubectl create pod → API Server → Authentication → Authorization → Admission Controllers → Validation → etcd → Response</code></pre>
+<strong>Detailed Flow:</strong>
+1. <strong>HTTP Request</strong> - Client sends HTTP request to API server
+2. <strong>TLS Termination</strong> - API server handles SSL/TLS
+3. <strong>Authentication</strong> - Verify client identity (certificates, tokens, etc.)
+4. <strong>Authorization</strong> - Check if client can perform this action (RBAC)
+5. <strong>Admission Controllers</strong> - Validate and potentially modify request
+6. <strong>Schema Validation</strong> - Ensure request matches Kubernetes API schema
+7. <strong>etcd Write</strong> - Store object in etcd if all checks pass
+8. <strong>Response</strong> - Return success/failure to client
+9. <strong>Watch Notifications</strong> - Notify other components watching this resource type
+<h4>API Server Configuration</h4>
+<p>#### Complete API Server Configuration
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-apiserver
+    image: k8s.gcr.io/kube-apiserver:v1.28.0
+    command:
+    - kube-apiserver
+    
+    # Basic connectivity
+    - --bind-address=0.0.0.0
+    - --secure-port=6443
+    - --insecure-port=0  # Disable insecure port
+    
+    # etcd configuration
+    - --etcd-servers=https://127.0.0.1:2379
+    - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
+    - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
+    - --etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key
+    
+    # Client certificate authentication
+    - --client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    
+    # Service account token authentication
+    - --service-account-key-file=/etc/kubernetes/pki/sa.pub
+    - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
+    - --service-account-issuer=https://kubernetes.default.svc.cluster.local
+    
+    # Authorization
+    - --authorization-mode=Node,RBAC
+    
+    # Admission controllers
+    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,NodeRestriction
+    
+    # Aggregation layer (for custom APIs)
+    - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+    - --requestheader-allowed-names=front-proxy-client
+    - --requestheader-extra-headers-prefix=X-Remote-Extra-
+    - --requestheader-group-headers=X-Remote-Group
+    - --requestheader-username-headers=X-Remote-User
+    - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
+    - --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key
+    
+    # API priority and fairness
+    - --enable-priority-and-fairness=true
+    - --max-requests-inflight=400
+    - --max-mutating-requests-inflight=200
+    
+    # Audit logging
+    - --audit-log-path=/var/log/audit.log
+    - --audit-log-maxage=30
+    - --audit-log-maxbackup=3
+    - --audit-log-maxsize=100
+    - --audit-policy-file=/etc/kubernetes/audit-policy.yaml
+    
+    # Performance and reliability
+    - --default-watch-cache-size=100
+    - --watch-cache-sizes=pods#1000,nodes#100
+    - --runtime-config=api/all=true
+    
+    # Security
+    - --anonymous-auth=false
+    - --kubelet-certificate-authority=/etc/kubernetes/pki/ca.crt
+    - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+    - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+    
+    ports:
+    - containerPort: 6443
+      name: https
+    
+    volumeMounts:
+    - name: etc-kubernetes
+      mountPath: /etc/kubernetes
+      readOnly: true
+    - name: var-log
+      mountPath: /var/log
+    
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    
+    livenessProbe:
+      httpGet:
+        host: 127.0.0.1
+        path: /livez
+        port: 6443
+        scheme: HTTPS
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 15
+      failureThreshold: 8
+    
+    readinessProbe:
+      httpGet:
+        host: 127.0.0.1
+        path: /readyz
+        port: 6443
+        scheme: HTTPS
+      initialDelaySeconds: 0
+      periodSeconds: 1
+      timeoutSeconds: 15
+      failureThreshold: 3
+  
+  volumes:
+  - name: etc-kubernetes
+    hostPath:
+      path: /etc/kubernetes
+      type: DirectoryOrCreate
+  - name: var-log
+    hostPath:
+      path: /var/log
+      type: DirectoryOrCreate</code></pre></p>
+<h4>API Server Watch Mechanism</h4>
+<strong>How Watch Works:</strong>
+The API server provides a <strong>watch</strong> mechanism that allows clients to receive real-time notifications when resources change.
+<pre><code>// Example of how controllers watch for changes
+package main
+<p>import (
+    "context"
+    "fmt"
+    
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/apimachinery/pkg/watch"
+    "k8s.io/client-go/kubernetes"
+)</p>
+<p>func watchPods(clientset *kubernetes.Clientset) {
+    watchlist := cache.NewListWatchFromClient(
+        clientset.CoreV1().RESTClient(),
+        "pods",
+        metav1.NamespaceAll,
+        fields.Everything(),
+    )
+    
+    watcher, err := watchlist.Watch(context.TODO(), metav1.ListOptions{})
+    if err != nil {
+        panic(err)
+    }
+    
+    for event := range watcher.ResultChan() {
+        pod := event.Object.(*v1.Pod)
+        
+        switch event.Type {
+        case watch.Added:
+            fmt.Printf("Pod ADDED: %s/%s\n", pod.Namespace, pod.Name)
+        case watch.Modified:
+            fmt.Printf("Pod MODIFIED: %s/%s\n", pod.Namespace, pod.Name)
+        case watch.Deleted:
+            fmt.Printf("Pod DELETED: %s/%s\n", pod.Namespace, pod.Name)
+        }
+    }
+}</code></pre></p>
+<strong>Watch Implementation Details:</strong>
+<li><strong>Long-polling HTTP connections</strong> - Client keeps connection open</li>
+<li><strong>Resource versions</strong> - Each object has a version number for consistency</li>
+<li><strong>Bookmarks</strong> - Periodic events to keep connections alive</li>
+<li><strong>Watch resumption</strong> - Can resume watching from a specific resource version</li>
+<h4>API Server Scaling and High Availability</h4>
+<p>#### Multi-Master Setup
+<pre><code><h2>API Server with load balancer</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver-master1
+spec:
+  containers:
+  - name: kube-apiserver
+    command:
+    - kube-apiserver
+    - --advertise-address=10.0.1.10  # This master's IP
+    - --etcd-servers=https://10.0.1.10:2379,https://10.0.1.11:2379,https://10.0.1.12:2379
+    # ... other flags
+---
+<h2>Load balancer configuration (HAProxy example)</h2>
+global
+    daemon</p>
+<p>defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms</p>
+<p>frontend kubernetes-frontend
+    bind *:6443
+    mode tcp
+    default_backend kubernetes-backend</p>
+<p>backend kubernetes-backend
+    mode tcp
+    balance roundrobin
+    server master1 10.0.1.10:6443 check
+    server master2 10.0.1.11:6443 check
+    server master3 10.0.1.12:6443 check</code></pre></p>
+<h3>etcd Deep Dive</h3>
+<h4>What etcd Actually Does</h4>
+<strong>etcd</strong> is a distributed key-value store that serves as Kubernetes' "brain" - it stores all cluster state, configuration, and metadata. Understanding etcd is crucial because it's the single source of truth for your entire cluster.
+<strong>etcd Responsibilities:</strong>
+<li><strong>Cluster State Storage</strong> - All Kubernetes objects (pods, services, etc.)</li>
+<li><strong>Configuration Data</strong> - ConfigMaps, Secrets, policies</li>
+<li><strong>Distributed Consensus</strong> - Uses Raft algorithm for consistency</li>
+<li><strong>Watch Notifications</strong> - Notifies API server of changes</li>
+<li><strong>Atomic Operations</strong> - Ensures consistency during updates</li>
+<h4>etcd Data Model</h4>
+<strong>How Kubernetes Data is Stored in etcd:</strong>
+<pre><code><h2>etcd stores Kubernetes objects as key-value pairs</h2>
+/registry/pods/default/my-pod → {pod object JSON}
+/registry/services/default/my-service → {service object JSON}
+/registry/configmaps/default/my-config → {configmap object JSON}
+<h2>Hierarchical structure</h2>
+/registry/
+├── pods/
+│   ├── default/
+│   │   ├── pod1
+│   │   └── pod2
+│   └── kube-system/
+│       ├── api-server-pod
+│       └── etcd-pod
+├── services/
+├── configmaps/
+└── secrets/</code></pre>
+<strong>Example etcd Operations:</strong>
+<pre><code><h2>View all Kubernetes data in etcd</h2>
+ETCDCTL_API=3 etcdctl get /registry --prefix --keys-only
+<h2>Get specific pod data</h2>
+ETCDCTL_API=3 etcdctl get /registry/pods/default/my-pod
+<h2>Watch for changes to pods</h2>
+ETCDCTL_API=3 etcdctl watch /registry/pods --prefix
+<h2>View cluster member list</h2>
+ETCDCTL_API=3 etcdctl member list</code></pre>
+<h4>etcd Cluster Configuration</h4>
+<p>#### Three-Node etcd Cluster
+<pre><code><h2>etcd member 1</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-master1
+  namespace: kube-system
+spec:
+  containers:
+  - name: etcd
+    image: k8s.gcr.io/etcd:3.5.6-0
+    command:
+    - etcd
+    - --name=master1
+    - --data-dir=/var/lib/etcd
+    
+    # Cluster configuration
+    - --initial-cluster=master1=https://10.0.1.10:2380,master2=https://10.0.1.11:2380,master3=https://10.0.1.12:2380
+    - --initial-cluster-state=new
+    - --initial-cluster-token=k8s-etcd-cluster
+    
+    # This member's URLs
+    - --listen-peer-urls=https://10.0.1.10:2380
+    - --listen-client-urls=https://10.0.1.10:2379,https://127.0.0.1:2379
+    - --advertise-client-urls=https://10.0.1.10:2379
+    - --initial-advertise-peer-urls=https://10.0.1.10:2380
+    
+    # Security
+    - --cert-file=/etc/kubernetes/pki/etcd/server.crt
+    - --key-file=/etc/kubernetes/pki/etcd/server.key
+    - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+    - --client-cert-auth=true
+    - --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+    - --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+    - --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+    - --peer-client-cert-auth=true
+    
+    # Performance and reliability
+    - --snapshot-count=10000
+    - --heartbeat-interval=100
+    - --election-timeout=1000
+    - --max-snapshots=5
+    - --max-wals=5
+    - --quota-backend-bytes=2147483648  # 2GB
+    
+    ports:
+    - containerPort: 2379
+      name: client
+    - containerPort: 2380
+      name: peer
+    
+    volumeMounts:
+    - name: etcd-data
+      mountPath: /var/lib/etcd
+    - name: etcd-certs
+      mountPath: /etc/kubernetes/pki/etcd
+      readOnly: true
+    
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    
+    livenessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -c
+        - ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key get foo
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      timeoutSeconds: 15
+      failureThreshold: 8
+  
+  volumes:
+  - name: etcd-data
+    hostPath:
+      path: /var/lib/etcd
+      type: DirectoryOrCreate
+  - name: etcd-certs
+    hostPath:
+      path: /etc/kubernetes/pki/etcd
+      type: DirectoryOrCreate</code></pre></p>
+<h4>etcd Backup and Restore</h4>
+<p>#### Automated Backup Script
+<pre><code>#!/bin/bash
+<h2>etcd backup script</h2></p>
+<p>BACKUP_DIR="/var/backups/etcd"
+RETENTION_DAYS=7
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)</p>
+<h2>Create backup directory</h2>
+mkdir -p $BACKUP_DIR
+<h2>Create snapshot</h2>
+ETCDCTL_API=3 etcdctl snapshot save $BACKUP_DIR/etcd-snapshot-$TIMESTAMP.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+<h2>Verify snapshot</h2>
+ETCDCTL_API=3 etcdctl snapshot status $BACKUP_DIR/etcd-snapshot-$TIMESTAMP.db
+<h2>Compress backup</h2>
+gzip $BACKUP_DIR/etcd-snapshot-$TIMESTAMP.db
+<h2>Upload to S3 (optional)</h2>
+aws s3 cp $BACKUP_DIR/etcd-snapshot-$TIMESTAMP.db.gz s3://k8s-etcd-backups/
+<h2>Clean up old backups</h2>
+find $BACKUP_DIR -name "etcd-snapshot-*.db.gz" -mtime +$RETENTION_DAYS -delete
+<p>echo "Backup completed: etcd-snapshot-$TIMESTAMP.db.gz"</code></pre></p>
+<p>#### Backup as Kubernetes CronJob
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+  namespace: kube-system
+spec:
+  schedule: "0 2 <em> </em> *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          hostNetwork: true
+          tolerations:
+          - operator: Exists
+            effect: NoSchedule
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
+          containers:
+          - name: etcd-backup
+            image: k8s.gcr.io/etcd:3.5.6-0
+            command:
+            - /bin/sh
+            - -c
+            - |
+              BACKUP_DIR="/backup"
+              TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+              
+              # Create snapshot
+              ETCDCTL_API=3 etcdctl snapshot save $BACKUP_DIR/etcd-snapshot-$TIMESTAMP.db \
+                --endpoints=https://127.0.0.1:2379 \
+                --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+                --cert=/etc/kubernetes/pki/etcd/server.crt \
+                --key=/etc/kubernetes/pki/etcd/server.key
+              
+              # Verify and compress
+              ETCDCTL_API=3 etcdctl snapshot status $BACKUP_DIR/etcd-snapshot-$TIMESTAMP.db
+              gzip $BACKUP_DIR/etcd-snapshot-$TIMESTAMP.db
+              
+              # Clean up old backups
+              find $BACKUP_DIR -name "*.db.gz" -mtime +7 -delete
+              
+              echo "Backup completed: etcd-snapshot-$TIMESTAMP.db.gz"
+            
+            volumeMounts:
+            - name: etcd-certs
+              mountPath: /etc/kubernetes/pki/etcd
+              readOnly: true
+            - name: backup-storage
+              mountPath: /backup
+          
+          volumes:
+          - name: etcd-certs
+            hostPath:
+              path: /etc/kubernetes/pki/etcd
+          - name: backup-storage
+            hostPath:
+              path: /var/backups/etcd
+          
+          restartPolicy: OnFailure</code></pre></p>
+<p>#### Disaster Recovery Process
+<pre><code><h2>1. Stop all API servers</h2>
+systemctl stop kubelet</p>
+<h2>2. Remove existing etcd data</h2>
+rm -rf /var/lib/etcd
+<h2>3. Restore from snapshot</h2>
+ETCDCTL_API=3 etcdctl snapshot restore /var/backups/etcd/etcd-snapshot-20240115_020000.db.gz \
+  --data-dir=/var/lib/etcd \
+  --name=master1 \
+  --initial-cluster=master1=https://10.0.1.10:2380,master2=https://10.0.1.11:2380,master3=https://10.0.1.12:2380 \
+  --initial-cluster-token=k8s-etcd-cluster \
+  --initial-advertise-peer-urls=https://10.0.1.10:2380
+<h2>4. Fix ownership</h2>
+chown -R etcd:etcd /var/lib/etcd
+<h2>5. Start etcd and API server</h2>
+systemctl start kubelet
+<h2>6. Verify cluster state</h2>
+kubectl get nodes
+kubectl get pods --all-namespaces</code></pre>
+<h3>kubelet Deep Dive</h3>
+<h4>What kubelet Actually Does</h4>
+<p>The <strong>kubelet</strong> is the "node agent" that runs on every worker node. It's responsible for managing the lifecycle of pods and ensuring that containers are running and healthy.</p>
+<strong>kubelet Responsibilities:</strong>
+<li><strong>Pod Lifecycle Management</strong> - Create, update, and delete pods</li>
+<li><strong>Container Runtime Interface</strong> - Communicate with container runtime (Docker, containerd, CRI-O)</li>
+<li><strong>Resource Monitoring</strong> - Collect node and pod metrics</li>
+<li><strong>Volume Management</strong> - Mount and unmount volumes for pods</li>
+<li><strong>Network Setup</strong> - Work with CNI plugins for pod networking</li>
+<li><strong>Node Status Reporting</strong> - Report node health and capacity to API server</li>
+<h4>kubelet Configuration</h4>
+<p>#### Complete kubelet Configuration
+<pre><code><h2>/var/lib/kubelet/config.yaml</h2>
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration</p>
+<h2>Basic settings</h2>
+address: 0.0.0.0
+port: 10250
+readOnlyPort: 0
+<h2>Authentication and authorization</h2>
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+    cacheTTL: 2m0s
+  x509:
+    clientCAFile: /etc/kubernetes/pki/ca.crt
+authorization:
+  mode: Webhook
+  webhook:
+    cacheAuthorizedTTL: 5m0s
+    cacheUnauthorizedTTL: 30s
+<h2>Cluster configuration</h2>
+clusterDomain: cluster.local
+clusterDNS:
+<li>10.96.0.10</li>
+<h2>Container runtime</h2>
+containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+<h2>Resource management</h2>
+maxPods: 110
+podsPerCore: 0
+enableControllerAttachDetach: true
+<h2>Cgroup configuration</h2>
+cgroupDriver: systemd
+cgroupRoot: /
+cgroupsPerQOS: true
+enforceNodeAllocatable:
+<li>pods</li>
+<li>kube-reserved</li>
+<li>system-reserved</li>
+<h2>Resource reservations</h2>
+kubeReserved:
+  cpu: 100m
+  memory: 128Mi
+  ephemeral-storage: 1Gi
+systemReserved:
+  cpu: 100m
+  memory: 128Mi
+  ephemeral-storage: 1Gi
+<h2>Eviction policies</h2>
+evictionHard:
+  memory.available: 100Mi
+  nodefs.available: 10%
+  nodefs.inodesFree: 5%
+  imagefs.available: 15%
+evictionSoft:
+  memory.available: 300Mi
+  nodefs.available: 15%
+evictionSoftGracePeriod:
+  memory.available: 1m30s
+  nodefs.available: 1m30s
+evictionMaxPodGracePeriod: 90
+<h2>Image management</h2>
+imageMinimumGCAge: 2m0s
+imageGCHighThresholdPercent: 85
+imageGCLowThresholdPercent: 80
+<h2>Logging</h2>
+logging:
+  format: json
+  verbosity: 2
+<h2>Feature gates</h2>
+featureGates:
+  RotateKubeletServerCertificate: true
+  PodSecurity: true
+<h2>TLS configuration</h2>
+tlsCertFile: /var/lib/kubelet/pki/kubelet.crt
+tlsPrivateKeyFile: /var/lib/kubelet/pki/kubelet.key
+tlsCipherSuites:
+<li>TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256</li>
+<li>TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</li>
+<h2>Health and monitoring</h2>
+healthzBindAddress: 127.0.0.1
+healthzPort: 10248
+metricsBindAddress: 127.0.0.1:10249
+<h2>Volume plugin directory</h2>
+volumePluginDir: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
+<h2>Node status update frequency</h2>
+nodeStatusUpdateFrequency: 10s
+nodeStatusReportFrequency: 5m0s
+<h2>Pod termination</h2>
+shutdownGracePeriod: 30s
+shutdownGracePeriodCriticalPods: 10s</code></pre>
+<h4>Container Runtime Interface (CRI)</h4>
+<p>#### How kubelet Communicates with Container Runtime
+<pre><code>// Simplified example of kubelet CRI interaction
+package main</p>
+<p>import (
+    "context"
+    "google.golang.org/grpc"
+    runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
+)</p>
+<p>func createPod(client runtimeapi.RuntimeServiceClient, podConfig *runtimeapi.PodSandboxConfig) {
+    // 1. Create pod sandbox (network namespace)
+    sandboxResponse, err := client.RunPodSandbox(context.Background(), &runtimeapi.RunPodSandboxRequest{
+        Config: podConfig,
+    })
+    if err != nil {
+        panic(err)
+    }
+    
+    podSandboxID := sandboxResponse.PodSandboxId
+    
+    // 2. Create containers in the pod
+    for _, containerConfig := range podConfig.Containers {
+        // Pull image if needed
+        _, err := client.PullImage(context.Background(), &runtimeapi.PullImageRequest{
+            Image: &runtimeapi.ImageSpec{
+                Image: containerConfig.Image,
+            },
+        })
+        
+        // Create container
+        createResponse, err := client.CreateContainer(context.Background(), &runtimeapi.CreateContainerRequest{
+            PodSandboxId:  podSandboxID,
+            Config:        containerConfig,
+            SandboxConfig: podConfig,
+        })
+        
+        containerID := createResponse.ContainerId
+        
+        // Start container
+        _, err = client.StartContainer(context.Background(), &runtimeapi.StartContainerRequest{
+            ContainerId: containerID,
+        })
+    }
+}</code></pre></p>
+<p>#### Container Runtime Options</p>
+<strong>containerd Configuration:</strong>
+<pre><code><h2>/etc/containerd/config.toml</h2>
+version = 2
+<p>[grpc]
+  address = "/var/run/containerd/containerd.sock"</p>
+<p>[plugins."io.containerd.grpc.v1.cri"]
+  sandbox_image = "k8s.gcr.io/pause:3.9"
+  
+  [plugins."io.containerd.grpc.v1.cri".containerd]
+    snapshotter = "overlayfs"
+    default_runtime_name = "runc"
+    
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+      runtime_type = "io.containerd.runc.v2"
+      
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+        SystemdCgroup = true
+        
+  [plugins."io.containerd.grpc.v1.cri".cni]
+    bin_dir = "/opt/cni/bin"
+    conf_dir = "/etc/cni/net.d"
+    
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+        endpoint = ["https://registry-1.docker.io"]</code></pre></p>
+<h4>kubelet Node Registration</h4>
+<p>#### How Nodes Join the Cluster
+<pre><code><h2>1. kubelet starts with bootstrap token</h2>
+kubelet --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \
+        --kubeconfig=/etc/kubernetes/kubelet.conf \
+        --config=/var/lib/kubelet/config.yaml</p>
+<h2>2. kubelet uses bootstrap token to create CSR</h2>
+<h2>3. Controller manager auto-approves node CSR</h2>
+<h2>4. kubelet gets signed certificate</h2>
+<h2>5. kubelet registers node with API server</h2></code></pre>
+<strong>Node Registration Process:</strong>
+<pre><code><h2>kubelet creates Node object</h2>
+apiVersion: v1
+kind: Node
+metadata:
+  name: worker-node-1
+  labels:
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: worker-node-1
+    kubernetes.io/os: linux
+    node-role.kubernetes.io/worker: ""
+spec:
+  podCIDR: 10.244.1.0/24
+  providerID: aws:///us-west-2a/i-1234567890abcdef0
+status:
+  addresses:
+  - address: 10.0.1.100
+    type: InternalIP
+  - address: worker-node-1
+    type: Hostname
+  allocatable:
+    cpu: "4"
+    ephemeral-storage: 50Gi
+    hugepages-1Gi: "0"
+    hugepages-2Mi: "0"
+    memory: 8Gi
+    pods: "110"
+  capacity:
+    cpu: "4"
+    ephemeral-storage: 50Gi
+    hugepages-1Gi: "0"
+    hugepages-2Mi: "0"
+    memory: 8Gi
+    pods: "110"
+  conditions:
+  - type: Ready
+    status: "True"
+    reason: KubeletReady
+    message: kubelet is posting ready status
+  - type: MemoryPressure
+    status: "False"
+    reason: KubeletHasSufficientMemory
+  - type: DiskPressure
+    status: "False"
+    reason: KubeletHasNoDiskPressure
+  - type: PIDPressure
+    status: "False"
+    reason: KubeletHasSufficientPID
+  nodeInfo:
+    architecture: amd64
+    bootID: 12345678-1234-5678-9012-123456789abc
+    containerRuntimeVersion: containerd://1.6.6
+    kernelVersion: 5.4.0-74-generic
+    kubeProxyVersion: v1.28.0
+    kubeletVersion: v1.28.0
+    machineID: 12345678901234567890123456789012
+    operatingSystem: linux
+    osImage: Ubuntu 20.04.3 LTS
+    systemUUID: 12345678-1234-5678-9012-123456789abc</code></pre>
+<h3>Scheduler Deep Dive</h3>
+<h4>What the Scheduler Actually Does</h4>
+<p>The <strong>kube-scheduler</strong> watches for newly created pods that have no node assigned and selects a node for them to run on based on various factors.</p>
+<strong>Scheduling Process:</strong>
+1. <strong>Watch for Unscheduled Pods</strong> - Monitor API server for pods with <code>spec.nodeName</code> empty
+2. <strong>Filtering</strong> - Find nodes that meet pod requirements (resource, constraints)
+3. <strong>Scoring</strong> - Rank suitable nodes based on priorities
+4. <strong>Binding</strong> - Assign pod to highest-scoring node
+<h4>Scheduling Algorithm Deep Dive</h4>
+<p>#### Filtering Phase (Predicates)
+<pre><code>// Example predicates that filter nodes
+func nodeAffinityPredicate(pod <em>v1.Pod, node </em>v1.Node) bool {
+    // Check if node matches pod's node affinity requirements
+    if pod.Spec.Affinity != nil && pod.Spec.Affinity.NodeAffinity != nil {
+        return checkNodeAffinity(pod.Spec.Affinity.NodeAffinity, node)
+    }
+    return true
+}</p>
+<p>func resourcesPredicate(pod <em>v1.Pod, node </em>v1.Node) bool {
+    // Check if node has enough CPU and memory
+    podRequests := calculatePodRequests(pod)
+    nodeAllocatable := node.Status.Allocatable
+    
+    if podRequests.CPU > nodeAllocatable.CPU {
+        return false
+    }
+    if podRequests.Memory > nodeAllocatable.Memory {
+        return false
+    }
+    return true
+}</p>
+<p>func podAntiAffinityPredicate(pod <em>v1.Pod, node </em>v1.Node, existingPods []*v1.Pod) bool {
+    // Check if pod's anti-affinity rules are satisfied
+    if pod.Spec.Affinity != nil && pod.Spec.Affinity.PodAntiAffinity != nil {
+        return checkPodAntiAffinity(pod, node, existingPods)
+    }
+    return true
+}</code></pre></p>
+<p>#### Scoring Phase (Priorities)
+<pre><code>// Example scoring functions
+func nodeResourceScore(pod <em>v1.Pod, node </em>v1.Node) int {
+    // Score based on resource utilization (prefer less utilized nodes)
+    cpuFraction := node.Status.Allocatable.CPU / node.Status.Capacity.CPU
+    memoryFraction := node.Status.Allocatable.Memory / node.Status.Capacity.Memory
+    
+    // Lower utilization = higher score
+    score := int((2.0 - cpuFraction - memoryFraction) * 50)
+    return score
+}</p>
+<p>func nodeAffinityScore(pod <em>v1.Pod, node </em>v1.Node) int {
+    // Score based on node affinity preferences
+    if pod.Spec.Affinity != nil && pod.Spec.Affinity.NodeAffinity != nil {
+        return calculateNodeAffinityScore(pod.Spec.Affinity.NodeAffinity, node)
+    }
+    return 0
+}</p>
+<p>func podAffinityScore(pod <em>v1.Pod, node </em>v1.Node, existingPods []*v1.Pod) int {
+    // Score based on pod affinity preferences
+    score := 0
+    if pod.Spec.Affinity != nil && pod.Spec.Affinity.PodAffinity != nil {
+        score += calculatePodAffinityScore(pod, node, existingPods)
+    }
+    return score
+}</code></pre></p>
+<h4>Scheduler Configuration</h4>
+<p>#### Custom Scheduler Configuration
+<pre><code>apiVersion: kubescheduler.config.k8s.io/v1beta3
+kind: KubeSchedulerConfiguration
+profiles:
+<li>schedulerName: default-scheduler</li>
+  plugins:
+    # Filtering plugins (predicates)
+    filter:
+      enabled:
+      - name: NodeResourcesFit
+      - name: NodeAffinity
+      - name: PodTopologySpread
+      - name: InterPodAffinity
+      - name: VolumeBinding
+      - name: NodePorts
+      - name: NodeUnschedulable
+      - name: TaintToleration
+      disabled:
+      - name: NodeResourcesLeastAllocated  # Use custom scoring instead
+    
+    # Scoring plugins (priorities)
+    score:
+      enabled:
+      - name: NodeResourcesFit
+        weight: 10
+      - name: NodeAffinity
+        weight: 5
+      - name: InterPodAffinity
+        weight: 5
+      - name: NodeResourcesBalancedAllocation
+        weight: 10
+      - name: ImageLocality
+        weight: 1
+      - name: TaintToleration
+        weight: 1
+  
+  pluginConfig:
+  - name: NodeResourcesFit
+    args:
+      scoringStrategy:
+        type: LeastAllocated  # or MostAllocated, RequestedToCapacityRatio
+        resources:
+        - name: cpu
+          weight: 1
+        - name: memory
+          weight: 1
+  
+  - name: PodTopologySpread
+    args:
+      defaultConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+      - maxSkew: 3
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway</p>
+<h2>Multiple scheduler profiles</h2>
+<li>schedulerName: gpu-scheduler</li>
+  plugins:
+    filter:
+      enabled:
+      - name: NodeResourcesFit
+      - name: NodeAffinity
+    score:
+      enabled:
+      - name: NodeResourcesFit
+        weight: 100  # Heavily weight GPU resources
+  pluginConfig:
+  - name: NodeResourcesFit
+    args:
+      scoringStrategy:
+        type: LeastAllocated
+        resources:
+        - name: nvidia.com/gpu
+          weight: 100
+        - name: cpu
+          weight: 1
+        - name: memory
+          weight: 1</code></pre>
+<p>#### Advanced Scheduling Examples</p>
+<strong>Pod Affinity and Anti-Affinity:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: web-server
+  labels:
+    app: web
+    tier: frontend
+spec:
+  affinity:
+    # Pod affinity - prefer to be scheduled with cache pods
+    podAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - cache
+          topologyKey: kubernetes.io/hostname
+    
+    # Pod anti-affinity - avoid other web servers on same node
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - web
+        topologyKey: kubernetes.io/hostname
+    
+    # Node affinity - prefer nodes with SSD storage
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 80
+        preference:
+          matchExpressions:
+          - key: storage-type
+            operator: In
+            values:
+            - ssd
+      
+      # Required node affinity - must be in specific zones
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values:
+            - us-west-2a
+            - us-west-2b
+  
+  tolerations:
+  - key: dedicated
+    operator: Equal
+    value: frontend
+    effect: NoSchedule
+  
+  containers:
+  - name: web
+    image: nginx:latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi</code></pre>
+<strong>Topology Spread Constraints:</strong>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: distributed-app
+spec:
+  replicas: 12
+  selector:
+    matchLabels:
+      app: distributed-app
+  template:
+    metadata:
+      labels:
+        app: distributed-app
+    spec:
+      topologySpreadConstraints:
+      # Spread evenly across availability zones
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: distributed-app
+      
+      # Spread evenly across nodes (max 2 pods per node)
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: distributed-app
+      
+      containers:
+      - name: app
+        image: myapp:latest</code></pre>
+<h3>Controller Manager Deep Dive</h3>
+<h4>What Controller Manager Actually Does</h4>
+<p>The <strong>kube-controller-manager</strong> runs various controllers that watch for changes in the cluster state and work to move the current state toward the desired state.</p>
+<strong>Built-in Controllers:</strong>
+<li><strong>Deployment Controller</strong> - Manages ReplicaSets for Deployments</li>
+<li><strong>ReplicaSet Controller</strong> - Ensures desired number of pod replicas</li>
+<li><strong>Node Controller</strong> - Monitors node health and handles node failures</li>
+<li><strong>Service Account Controller</strong> - Creates default service accounts and tokens</li>
+<li><strong>Namespace Controller</strong> - Handles namespace deletion and cleanup</li>
+<li><strong>Persistent Volume Controller</strong> - Manages PV/PVC binding</li>
+<li><strong>Job Controller</strong> - Manages batch jobs</li>
+<li><strong>CronJob Controller</strong> - Manages scheduled jobs</li>
+<h4>Controller Pattern Implementation</h4>
+<p>#### Example Custom Controller
+<pre><code>package main</p>
+<p>import (
+    "context"
+    "fmt"
+    "time"
+    
+    appsv1 "k8s.io/api/apps/v1"
+    corev1 "k8s.io/api/core/v1"
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/apimachinery/pkg/runtime"
+    "k8s.io/apimachinery/pkg/watch"
+    "k8s.io/client-go/kubernetes"
+    "k8s.io/client-go/tools/cache"
+)</p>
+<p>// DeploymentController watches Deployments and ensures they have the right number of replicas
+type DeploymentController struct {
+    clientset    kubernetes.Interface
+    deploymentInformer cache.SharedIndexInformer
+    workqueue    chan string
+}</p>
+<p>func NewDeploymentController(clientset kubernetes.Interface) *DeploymentController {
+    deploymentInformer := cache.NewSharedIndexInformer(
+        &cache.ListWatch{
+            ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+                return clientset.AppsV1().Deployments("").List(context.TODO(), options)
+            },
+            WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+                return clientset.AppsV1().Deployments("").Watch(context.TODO(), options)
+            },
+        },
+        &appsv1.Deployment{},
+        time.Minute*10,
+        cache.Indexers{},
+    )
+    
+    controller := &DeploymentController{
+        clientset:          clientset,
+        deploymentInformer: deploymentInformer,
+        workqueue:         make(chan string, 256),
+    }
+    
+    // Add event handlers
+    deploymentInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+        AddFunc:    controller.handleAdd,
+        UpdateFunc: controller.handleUpdate,
+        DeleteFunc: controller.handleDelete,
+    })
+    
+    return controller
+}</p>
+<p>func (c *DeploymentController) handleAdd(obj interface{}) {
+    deployment := obj.(*appsv1.Deployment)
+    fmt.Printf("Deployment ADDED: %s/%s\n", deployment.Namespace, deployment.Name)
+    c.enqueue(deployment)
+}</p>
+<p>func (c *DeploymentController) handleUpdate(oldObj, newObj interface{}) {
+    deployment := newObj.(*appsv1.Deployment)
+    fmt.Printf("Deployment UPDATED: %s/%s\n", deployment.Namespace, deployment.Name)
+    c.enqueue(deployment)
+}</p>
+<p>func (c *DeploymentController) handleDelete(obj interface{}) {
+    deployment := obj.(*appsv1.Deployment)
+    fmt.Printf("Deployment DELETED: %s/%s\n", deployment.Namespace, deployment.Name)
+}</p>
+<p>func (c <em>DeploymentController) enqueue(deployment </em>appsv1.Deployment) {
+    key := fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name)
+    c.workqueue <- key
+}</p>
+<p>func (c *DeploymentController) Run(stopCh <-chan struct{}) {
+    defer close(c.workqueue)
+    
+    // Start the informer
+    go c.deploymentInformer.Run(stopCh)
+    
+    // Wait for cache sync
+    if !cache.WaitForCacheSync(stopCh, c.deploymentInformer.HasSynced) {
+        fmt.Println("Failed to sync cache")
+        return
+    }
+    
+    // Start worker goroutines
+    for i := 0; i < 4; i++ {
+        go c.worker()
+    }
+    
+    <-stopCh
+}</p>
+<p>func (c *DeploymentController) worker() {
+    for key := range c.workqueue {
+        c.processDeployment(key)
+    }
+}</p>
+<p>func (c *DeploymentController) processDeployment(key string) {
+    namespace, name, err := cache.SplitMetaNamespaceKey(key)
+    if err != nil {
+        fmt.Printf("Error parsing key %s: %v\n", key, err)
+        return
+    }
+    
+    // Get deployment from cache
+    obj, exists, err := c.deploymentInformer.GetIndexer().GetByKey(key)
+    if err != nil {
+        fmt.Printf("Error getting deployment %s: %v\n", key, err)
+        return
+    }
+    
+    if !exists {
+        fmt.Printf("Deployment %s no longer exists\n", key)
+        return
+    }
+    
+    deployment := obj.(*appsv1.Deployment)
+    
+    // Reconcile deployment - ensure ReplicaSet exists and has correct spec
+    err = c.reconcileDeployment(deployment)
+    if err != nil {
+        fmt.Printf("Error reconciling deployment %s/%s: %v\n", namespace, name, err)
+    }
+}</p>
+<p>func (c <em>DeploymentController) reconcileDeployment(deployment </em>appsv1.Deployment) error {
+    // This is where the real controller logic would go
+    // 1. Check if ReplicaSet exists for this deployment
+    // 2. Create or update ReplicaSet to match deployment spec
+    // 3. Handle rolling updates
+    // 4. Update deployment status
+    
+    fmt.Printf("Reconciling deployment %s/%s (replicas: %d)\n", 
+        deployment.Namespace, deployment.Name, *deployment.Spec.Replicas)
+    
+    return nil
+}</code></pre></p>
+<h4>Controller Manager Configuration</h4>
+<p>#### Controller Manager Setup
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-controller-manager
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-controller-manager
+    image: k8s.gcr.io/kube-controller-manager:v1.28.0
+    command:
+    - kube-controller-manager
+    
+    # Basic configuration
+    - --bind-address=127.0.0.1
+    - --secure-port=10257
+    - --port=0  # Disable insecure port
+    
+    # Cluster configuration
+    - --kubeconfig=/etc/kubernetes/controller-manager.conf
+    - --authentication-kubeconfig=/etc/kubernetes/controller-manager.conf
+    - --authorization-kubeconfig=/etc/kubernetes/controller-manager.conf
+    - --client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+    
+    # Controller configuration
+    - --controllers=*,bootstrapsigner,tokencleaner
+    - --leader-elect=true
+    - --leader-elect-lease-duration=15s
+    - --leader-elect-renew-deadline=10s
+    - --leader-elect-retry-period=2s
+    
+    # Node controller
+    - --node-monitor-period=5s
+    - --node-monitor-grace-period=40s
+    - --pod-eviction-timeout=5m0s
+    - --unhealthy-zone-threshold=0.55
+    
+    # Service account controller
+    - --service-account-private-key-file=/etc/kubernetes/pki/sa.key
+    - --root-ca-file=/etc/kubernetes/pki/ca.crt
+    
+    # Resource quotas and limits
+    - --concurrent-deployment-syncs=5
+    - --concurrent-replicaset-syncs=5
+    - --concurrent-resource-quota-syncs=5
+    - --concurrent-serviceaccount-token-syncs=5
+    
+    # Garbage collection
+    - --enable-garbage-collector=true
+    - --concurrent-gc-syncs=20
+    
+    # Feature gates
+    - --feature-gates=RotateKubeletServerCertificate=true
+    
+    ports:
+    - containerPort: 10257
+      name: https
+    
+    volumeMounts:
+    - name: k8s-certs
+      mountPath: /etc/kubernetes/pki
+      readOnly: true
+    - name: kubeconfig
+      mountPath: /etc/kubernetes/controller-manager.conf
+      readOnly: true
+    
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    
+    livenessProbe:
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 10257
+        scheme: HTTPS
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    
+    startupProbe:
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 10257
+        scheme: HTTPS
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 15
+      failureThreshold: 24
+  
+  volumes:
+  - name: k8s-certs
+    hostPath:
+      path: /etc/kubernetes/pki
+      type: DirectoryOrCreate
+  - name: kubeconfig
+    hostPath:
+      path: /etc/kubernetes/controller-manager.conf
+      type: FileOrCreate</code></pre></p>
+<h4>Node Controller Deep Dive</h4>
+<p>#### Node Lifecycle Management
+<pre><code>// Simplified node controller logic
+func (nc <em>NodeController) syncNode(node </em>v1.Node) error {
+    // Check node conditions
+    ready := false
+    for _, condition := range node.Status.Conditions {
+        if condition.Type == v1.NodeReady {
+            ready = (condition.Status == v1.ConditionTrue)
+            break
+        }
+    }
+    
+    if !ready {
+        // Node is not ready
+        timeSinceLastHeartbeat := time.Since(condition.LastHeartbeatTime.Time)
+        
+        if timeSinceLastHeartbeat > nc.PodEvictionTimeout {
+            // Node has been not ready for too long, evict pods
+            return nc.evictPodsFromNode(node)
+        }
+        
+        // Add NoSchedule taint to prevent new pods
+        return nc.addNoScheduleTaint(node)
+    } else {
+        // Node is ready, remove NoSchedule taint
+        return nc.removeNoScheduleTaint(node)
+    }
+}</p>
+<p>func (nc <em>NodeController) evictPodsFromNode(node </em>v1.Node) error {
+    pods, err := nc.getPodsOnNode(node.Name)
+    if err != nil {
+        return err
+    }
+    
+    for _, pod := range pods {
+        // Create eviction object
+        eviction := &policy.Eviction{
+            ObjectMeta: metav1.ObjectMeta{
+                Name:      pod.Name,
+                Namespace: pod.Namespace,
+            },
+        }
+        
+        // Evict pod
+        err := nc.clientset.PolicyV1().Evictions(pod.Namespace).Evict(context.TODO(), eviction)
+        if err != nil {
+            log.Printf("Failed to evict pod %s/%s: %v", pod.Namespace, pod.Name, err)
+        }
+    }
+    
+    return nil
+}</code></pre></p>
+<h3>Cluster Autoscaling</h3>
+<h4>How Cluster Autoscaler Works</h4>
+<strong>Cluster Autoscaler</strong> automatically adjusts the number of nodes in the cluster based on pod scheduling needs.
+<strong>Scaling Logic:</strong>
+<li><strong>Scale Up</strong> - When pods can't be scheduled due to insufficient resources</li>
+<li><strong>Scale Down</strong> - When nodes are underutilized for a period of time</li>
+<p>#### Cluster Autoscaler Configuration
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8085"
+    spec:
+      serviceAccountName: cluster-autoscaler
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/control-plane
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      containers:
+      - name: cluster-autoscaler
+        image: k8s.gcr.io/autoscaling/cluster-autoscaler:v1.28.0
+        command:
+        - ./cluster-autoscaler
+        - --v=4
+        - --stderrthreshold=info
+        - --cloud-provider=aws
+        - --skip-nodes-with-local-storage=false
+        - --expander=least-waste
+        - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/my-cluster
+        - --balance-similar-node-groups
+        - --skip-nodes-with-system-pods=false
+        - --scale-down-enabled=true
+        - --scale-down-delay-after-add=10m
+        - --scale-down-unneeded-time=10m
+        - --scale-down-utilization-threshold=0.5
+        - --max-node-provision-time=15m
+        
+        env:
+        - name: AWS_REGION
+          value: us-west-2
+        
+        ports:
+        - name: http
+          containerPort: 8085
+          protocol: TCP
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 300Mi
+          limits:
+            cpu: 100m
+            memory: 300Mi
+        
+        volumeMounts:
+        - name: ssl-certs
+          mountPath: /etc/ssl/certs/ca-certificates.crt
+          readOnly: true
+      
+      volumes:
+      - name: ssl-certs
+        hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt</code></pre></p>
+<p>#### AWS Auto Scaling Group Integration
+<pre><code><h2>Tag ASG for cluster autoscaler discovery</h2>
+aws autoscaling create-or-update-tags \
+  --tags \
+    ResourceId=my-cluster-worker-nodes \
+    ResourceType=auto-scaling-group \
+    Key=k8s.io/cluster-autoscaler/enabled \
+    Value=true \
+    PropagateAtLaunch=false \
+  --tags \
+    ResourceId=my-cluster-worker-nodes \
+    ResourceType=auto-scaling-group \
+    Key=k8s.io/cluster-autoscaler/my-cluster \
+    Value=owned \
+    PropagateAtLaunch=false</code></pre></p>
+<h3>Key Concepts Summary</h3>
+<li><strong>API Server</strong> - Central hub handling all cluster operations, authentication, authorization, and etcd communication</li>
+<li><strong>etcd</strong> - Distributed key-value store containing all cluster state and configuration data</li>
+<li><strong>kubelet</strong> - Node agent managing pod lifecycle, container runtime communication, and resource monitoring</li>
+<li><strong>Scheduler</strong> - Assigns pods to nodes based on resource requirements, constraints, and policies</li>
+<li><strong>Controller Manager</strong> - Runs controllers that maintain desired cluster state through reconciliation loops</li>
+<li><strong>Container Runtime</strong> - Actually runs containers (containerd, CRI-O) communicating via CRI</li>
+<li><strong>Watch API</strong> - Real-time notification mechanism allowing components to react to state changes</li>
+<li><strong>Leader Election</strong> - Ensures only one instance of controllers runs in multi-master setups</li>
+<li><strong>Node Registration</strong> - Process by which kubelet joins nodes to the cluster</li>
+<li><strong>Cluster Autoscaling</strong> - Automatic adjustment of cluster size based on workload demands</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Monitor control plane health</strong> - Use health check endpoints and metrics
+2. <strong>Backup etcd regularly</strong> - Automated snapshots with proper retention policies
+3. <strong>Secure component communication</strong> - Use TLS certificates for all inter-component communication
+4. <strong>Resource reservations</strong> - Reserve CPU/memory for system components on nodes
+5. <strong>High availability</strong> - Run multiple control plane replicas across availability zones
+6. <strong>Version consistency</strong> - Keep all cluster components at compatible versions
+7. <strong>Audit logging</strong> - Enable comprehensive audit logs for security and compliance
+8. <strong>Monitor resource usage</strong> - Track API server, etcd, and kubelet resource consumption
+9. <strong>Certificate rotation</strong> - Implement automatic certificate renewal
+10. <strong>Disaster recovery planning</strong> - Document and test cluster recovery procedures</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: API Server Not Responding</h4>
+<li><strong>Symptom:</strong> kubectl commands timeout or fail</li>
+<li><strong>Cause:</strong> API server overload, etcd issues, or certificate problems</li>
+<li><strong>Solution:</strong> Check API server logs, etcd health, and certificate validity</li>
+<pre><code><h2>Check API server health</h2>
+curl -k https://127.0.0.1:6443/healthz
+<h2>Check etcd cluster health</h2>
+ETCDCTL_API=3 etcdctl endpoint health
+<h2>Check certificates</h2>
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout</code></pre>
+<h4>Problem 2: Nodes Not Ready</h4>
+<li><strong>Symptom:</strong> Nodes show NotReady status</li>
+<li><strong>Cause:</strong> kubelet issues, container runtime problems, or network connectivity</li>
+<li><strong>Solution:</strong> Check kubelet logs and container runtime status</li>
+<pre><code><h2>Check node status</h2>
+kubectl describe node node-name
+<h2>Check kubelet logs</h2>
+journalctl -u kubelet -f
+<h2>Check container runtime</h2>
+systemctl status containerd
+crictl info</code></pre>
+<h4>Problem 3: Pods Stuck in Pending</h4>
+<li><strong>Symptom:</strong> Pods remain in Pending state</li>
+<li><strong>Cause:</strong> Scheduling constraints, resource shortages, or node taints</li>
+<li><strong>Solution:</strong> Check scheduler logs and pod events</li>
+<pre><code><h2>Check pod events</h2>
+kubectl describe pod pod-name
+<h2>Check scheduler logs</h2>
+kubectl logs -n kube-system kube-scheduler-master
+<h2>Check node resources</h2>
+kubectl top nodes</code></pre>
+<h4>Problem 4: etcd Performance Issues</h4>
+<li><strong>Symptom:</strong> Slow API responses, high latency</li>
+<li><strong>Cause:</strong> Disk I/O bottlenecks, network issues, or large objects</li>
+<li><strong>Solution:</strong> Monitor etcd metrics and optimize storage</li>
+<pre><code><h2>Check etcd metrics</h2>
+curl http://127.0.0.1:2381/metrics
+<h2>Check etcd logs</h2>
+journalctl -u etcd -f
+<h2>Monitor disk I/O</h2>
+iostat -x 1</code></pre>
+<h4>Problem 5: Controller Manager Not Working</h4>
+<li><strong>Symptom:</strong> Resources not being reconciled properly</li>
+<li><strong>Cause:</strong> Leader election issues, RBAC problems, or controller crashes</li>
+<li><strong>Solution:</strong> Check controller manager logs and leader election</li>
+<pre><code><h2>Check controller manager logs</h2>
+kubectl logs -n kube-system kube-controller-manager-master
+<h2>Check leader election</h2>
+kubectl get leases -n kube-system
+<h2>Check RBAC permissions</h2>
+kubectl auth can-i "<em>" "</em>" --as=system:kube-controller-manager</code></pre>
+<h3>References / Further Reading</h3>
+<li>[Kubernetes Components Documentation](https://kubernetes.io/docs/concepts/overview/components/)</li>
+<li>[API Server Deep Dive](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/)</li>
+<li>[etcd Operations Guide](https://etcd.io/docs/v3.5/op-guide/)</li>
+<li>[kubelet Configuration](https://kubernetes.io/docs/reference/config-file/kubelet-config.v1beta1/)</li>
+<li>[Scheduler Configuration](https://kubernetes.io/docs/reference/config-file/kube-scheduler-config.v1beta3/)</li>
+<li>[Controller Patterns](https://kubernetes.io/docs/concepts/architecture/controller/)</li>
+<li>[Cluster Autoscaler Documentation](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler)</li>
+<li>[Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)</li>
+<li>[CRI Specification](https://github.com/kubernetes/cri-api)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

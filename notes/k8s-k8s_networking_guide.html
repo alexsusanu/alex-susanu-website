@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Networking: Complete Deep Technical Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Networking: Complete Deep Technical Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">networking</span><span class="tag">cni</span><span class="tag">pod-networking</span><span class="tag">cluster-networking</span><span class="tag">network-policies</span><span class="tag">ingress</span><span class="tag">dns</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Networking: Complete Deep Technical Guide</h2>
+<h3>Introduction to Kubernetes Networking</h3>
+<p>Kubernetes networking is fundamentally different from traditional server networking. Instead of static IP addresses assigned to physical machines, Kubernetes creates a <strong>flat network space</strong> where every pod gets its own IP address that can communicate with every other pod in the cluster, regardless of which physical node they're running on.</p>
+<h4>The Four Kubernetes Networking Problems</h4>
+<p>Kubernetes networking solves four fundamental problems:</p>
+<strong>1. Container-to-Container Communication (within same pod)</strong>
+<ul><li>Containers in the same pod share a network namespace</li>
+<li>They communicate via <code>localhost</code> and must use different ports</li>
+<li>Solved by the shared network namespace created by the pause container</li>
+<strong>2. Pod-to-Pod Communication (across the cluster)</strong>  
+<li>Every pod gets its own cluster-wide unique IP address</li>
+<li>Pods can communicate directly without NAT (Network Address Translation)</li>
+<li>This requires a <strong>flat network</strong> where all pod IPs are routable</li>
+<strong>3. Pod-to-Service Communication (stable endpoints)</strong>
+<li>Services provide stable virtual IPs that don't change when pods restart</li>
+<li>Load balancing and service discovery through DNS</li>
+<li>Implemented through kube-proxy and iptables/IPVS rules</li>
+<strong>4. External-to-Service Communication (outside world to cluster)</strong>
+<li>Ingress controllers, LoadBalancers, and NodePorts</li>
+<li>Bringing external traffic into the cluster and routing it to the right pods</li>
+<h4>What "Flat Network" Actually Means</h4>
+<p>A <strong>flat network</strong> means all pods can reach all other pods directly using their IP addresses, as if they were all connected to the same giant switch. There's no NAT, no port forwarding, no complex routing - just direct IP communication.</p>
+<strong>Traditional Server Networking:</strong>
+<pre><code>Server A (10.0.1.5) → Router → NAT → Internet → NAT → Router → Server B (192.168.1.10)</code></pre>
+<strong>Kubernetes Flat Network:</strong>
+<pre><code>Pod A (10.244.1.5) → Direct IP communication → Pod B (10.244.2.10)</code></pre>
+<p>This flat network is <strong>virtual</strong> - it's created by software (CNI plugins) that handle the actual packet routing across physical network infrastructure.</p>
+<h3>Pod Networking Deep Dive</h3>
+<h4>How Pods Get IP Addresses</h4>
+<p>When Kubernetes schedules a pod to a node, the <strong>Container Network Interface (CNI)</strong> plugin on that node assigns the pod an IP address from a subnet allocated to that node.</p>
+<strong>IP Address Allocation Process:</strong>
+1. <strong>Cluster CIDR defined</strong> - Cluster admin sets overall IP range (e.g., <code>10.244.0.0/16</code>)
+2. <strong>Node subnets allocated</strong> - Each node gets a smaller subnet (e.g., Node1: <code>10.244.1.0/24</code>, Node2: <code>10.244.2.0/24</code>)
+3. <strong>Pod IP assignment</strong> - CNI plugin assigns next available IP from node's subnet
+4. <strong>Network namespace creation</strong> - Pod gets isolated network stack with assigned IP
+5. <strong>Route programming</strong> - CNI ensures other nodes know how to reach this pod IP
+<strong>Example IP allocation:</strong>
+<pre><code>Cluster CIDR: 10.244.0.0/16 (65,536 IPs available)
+├── Node1 subnet: 10.244.1.0/24 (254 pod IPs)
+│   ├── Pod A: 10.244.1.5
+│   ├── Pod B: 10.244.1.6
+│   └── Pod C: 10.244.1.7
+├── Node2 subnet: 10.244.2.0/24 (254 pod IPs)
+│   ├── Pod D: 10.244.2.5
+│   └── Pod E: 10.244.2.6
+└── Node3 subnet: 10.244.3.0/24 (254 pod IPs)
+    └── Pod F: 10.244.3.5</code></pre>
+<h4>CNI (Container Network Interface) Explained</h4>
+<strong>CNI</strong> is the standard interface between Kubernetes and network plugins. It's not a single piece of software, but a specification that different networking solutions implement.
+<strong>What CNI Actually Does:</strong>
+<li><strong>IP Address Management (IPAM)</strong> - Assigns and tracks IP addresses</li>
+<li><strong>Network Interface Creation</strong> - Creates virtual network interfaces in pods</li>
+<li><strong>Route Management</strong> - Programs routes so pods can reach each other</li>
+<li><strong>Network Policy Implementation</strong> - Enforces traffic filtering rules</li>
+<strong>Popular CNI Plugins:</strong>
+<li><strong>Flannel</strong> - Simple overlay network using VXLAN</li>
+<li><strong>Calico</strong> - BGP-based routing with network policies</li>
+<li><strong>Cilium</strong> - eBPF-based networking with advanced features</li>
+<li><strong>Weave</strong> - Mesh network with encryption</li>
+<li><strong>AWS VPC CNI</strong> - Uses real AWS VPC IPs for pods</li>
+<h4>Pod Network Namespace Deep Dive</h4>
+<p>Each pod gets its own <strong>network namespace</strong> - an isolated network stack that includes:</p>
+<strong>Network Interface (<code>eth0</code>)</strong>
+<li>Virtual ethernet interface inside the pod</li>
+<li>Assigned the pod's cluster IP address</li>
+<li>Connected to the node's network bridge</li>
+<strong>Routing Table</strong>
+<li>Default route pointing to node's gateway</li>
+<li>Routes for cluster communication</li>
+<li>Loopback interface (<code>lo</code>) for localhost communication</li>
+<strong>iptables Rules</strong>
+<li>Packet filtering and NAT rules</li>
+<li>Service routing rules (managed by kube-proxy)</li>
+<li>Network policy enforcement rules</li>
+<strong>Example of pod's network view:</strong>
+<pre><code><h2>Inside a pod, you'd see:</h2>
+$ ip addr show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN
+    inet 127.0.0.1/8 scope host lo
+<p>2: eth0@if123: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP
+    inet 10.244.1.5/24 brd 10.244.1.255 scope global eth0</p>
+<p>$ ip route show
+default via 10.244.1.1 dev eth0
+10.244.0.0/16 via 10.244.1.1 dev eth0
+10.244.1.0/24 dev eth0 proto kernel scope link src 10.244.1.5</code></pre></p>
+<h4>How Pause Containers Work</h4>
+<p>Every pod actually contains a hidden <strong>pause container</strong> (also called infrastructure container) that:</p>
+<strong>Creates the Network Namespace:</strong>
+<li>First container started in the pod</li>
+<li>Sets up the network interfaces and IP address</li>
+<li>Runs a minimal program that just sleeps forever</li>
+<li>Never gets restarted - provides stable network identity</li>
+<strong>Shares Network with App Containers:</strong>
+<li>Application containers join the pause container's network namespace</li>
+<li>All containers see the same network interfaces</li>
+<li>Same IP address, same ports, same routing table</li>
+<strong>Pod Creation Process:</strong>
+<pre><code>1. kubelet creates pause container → gets IP 10.244.1.5, creates network namespace
+2. CNI plugin sets up networking → routes, bridges, etc.
+3. App container A starts → joins pause container's network namespace
+4. App container B starts → joins same network namespace
+5. All containers now share IP 10.244.1.5</code></pre>
+<strong>Why Pause Containers Exist:</strong>
+<li><strong>Stable network identity</strong> - Network persists even if app containers restart</li>
+<li><strong>Shared networking</strong> - Multiple containers can share the same IP</li>
+<li><strong>Lifecycle management</strong> - Network setup/teardown independent of app containers</li>
+<h3>Cluster Networking Deep Dive</h3>
+<h4>How Cross-Node Pod Communication Works</h4>
+<p>When Pod A on Node1 wants to talk to Pod B on Node2, the packet journey involves multiple networking layers:</p>
+<strong>Packet Journey Example:</strong>
+<pre><code>Pod A (10.244.1.5 on Node1) → Pod B (10.244.2.6 on Node2)
+<p>1. Pod A sends packet to 10.244.2.6
+2. Packet hits Pod A's default route → goes to Node1's network bridge
+3. Node1 routing table: "10.244.2.0/24 is on Node2" → forwards to Node2's IP
+4. Physical network routes packet from Node1 to Node2
+5. Node2 receives packet, routing table: "10.244.2.6 is local" → forwards to Pod B
+6. Pod B receives packet</code></pre></p>
+<h4>CNI Plugin Implementation Patterns</h4>
+<p>#### Overlay Networks (Flannel, Weave)
+<strong>What "overlay" means:</strong> Creates a virtual network on top of the physical network by encapsulating pod packets inside node packets.</p>
+<strong>How VXLAN Overlay Works:</strong>
+<pre><code>Original packet: Pod A (10.244.1.5) → Pod B (10.244.2.6)
+Encapsulated packet: Node1 (192.168.1.10) → Node2 (192.168.1.11) containing the pod packet</code></pre>
+<strong>Encapsulation Process:</strong>
+1. Pod A sends packet to Pod B's IP (10.244.2.6)
+2. Node1's VXLAN interface receives packet
+3. Node1 wraps packet in UDP header with Node2's physical IP as destination
+4. Physical network routes UDP packet from Node1 to Node2
+5. Node2's VXLAN interface unwraps packet
+6. Node2 delivers original packet to Pod B
+<strong>Flannel Example Configuration:</strong>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-system
+data:
+  cni-conf.json: |
+    {
+      "name": "cbr0",
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "flannel",
+          "delegate": {
+            "hairpinMode": true,
+            "isDefaultGateway": true
+          }
+        },
+        {
+          "type": "portmap",
+          "capabilities": {
+            "portMappings": true
+          }
+        }
+      ]
+    }
+  net-conf.json: |
+    {
+      "Network": "10.244.0.0/16",
+      "Backend": {
+        "Type": "vxlan"
+      }
+    }</code></pre>
+<p>#### BGP-Based Networks (Calico)
+<strong>What BGP means:</strong> Border Gateway Protocol - routes are distributed between nodes like internet routing, no packet encapsulation needed.</p>
+<strong>How BGP Routing Works:</strong>
+1. Each node runs a BGP router (bird/Felix)
+2. Nodes advertise their pod subnets to other nodes
+3. Each node builds routing table with direct routes to other nodes' pods
+4. No encapsulation - packets routed directly through physical network
+<strong>Calico Route Advertisement:</strong>
+<pre><code>Node1 advertises: "I can reach 10.244.1.0/24 via 192.168.1.10"
+Node2 advertises: "I can reach 10.244.2.0/24 via 192.168.1.11"
+Node3 advertises: "I can reach 10.244.3.0/24 via 192.168.1.12"</code></pre>
+<strong>Resulting routing table on Node1:</strong>
+<pre><code>$ ip route show
+10.244.1.0/24 dev cali123 scope link  # Local pods
+10.244.2.0/24 via 192.168.1.11 dev eth0  # Node2's pods
+10.244.3.0/24 via 192.168.1.12 dev eth0  # Node3's pods</code></pre>
+<p>#### Cloud Provider Integration (AWS VPC CNI)
+<strong>How cloud integration works:</strong> Uses real cloud network IPs for pods instead of overlay networks.</p>
+<strong>AWS VPC CNI Process:</strong>
+1. Each node gets multiple Elastic Network Interfaces (ENIs)
+2. Each ENI has multiple secondary IP addresses
+3. Pods get assigned real VPC IP addresses from these ENIs
+4. No overlay needed - AWS VPC routes packets directly
+<strong>IP Assignment in AWS:</strong>
+<pre><code>Node1 (m5.large): 
+├── Primary ENI (eth0): 10.0.1.5 (node IP)
+├── Secondary ENI (eth1): 
+│   ├── Primary IP: 10.0.1.10
+│   ├── Secondary IP: 10.0.1.11 → Pod A
+│   ├── Secondary IP: 10.0.1.12 → Pod B
+│   └── Secondary IP: 10.0.1.13 → Pod C</code></pre>
+<h4>Node-Level Network Components</h4>
+<p>#### Bridge Networks
+<strong>What a bridge does:</strong> Connects multiple network segments together, like a network switch inside the node.</p>
+<strong>Typical Node Bridge Setup:</strong>
+<pre><code>┌─ Pod A (veth123) ──┐
+├─ Pod B (veth456) ──┤
+├─ Pod C (veth789) ──┼─ cbr0 bridge ── eth0 (node's physical interface)
+├─ docker0 ──────────┤
+└─ cni0 ─────────────┘</code></pre>
+<strong>How veth pairs work:</strong>
+<li><strong>Virtual Ethernet</strong> pair creates a "virtual cable"</li>
+<li>One end inside pod's network namespace (<code>eth0</code>)</li>
+<li>Other end connected to node's bridge (<code>veth123</code>)</li>
+<li>Traffic flows through this virtual cable</li>
+<p>#### iptables Integration
+<strong>How kube-proxy uses iptables:</strong> Creates rules that intercept service traffic and redirect to pod IPs.</p>
+<strong>Service traffic flow through iptables:</strong>
+<pre><code><h2>Example: Service IP 10.96.0.1:80 → Pod IPs 10.244.1.5:8080, 10.244.2.6:8080</h2>
+<h2>PREROUTING chain - catches incoming packets</h2>
+-A PREROUTING -j KUBE-SERVICES
+-A KUBE-SERVICES -d 10.96.0.1/32 -p tcp -m tcp --dport 80 -j KUBE-SVC-EXAMPLE
+<h2>Service chain - load balancing logic</h2>
+-A KUBE-SVC-EXAMPLE -m statistic --mode random --probability 0.5 -j KUBE-SEP-POD1
+-A KUBE-SVC-EXAMPLE -j KUBE-SEP-POD2
+<h2>Endpoint chains - DNAT to actual pod IPs</h2>
+-A KUBE-SEP-POD1 -p tcp -j DNAT --to-destination 10.244.1.5:8080
+-A KUBE-SEP-POD2 -p tcp -j DNAT --to-destination 10.244.2.6:8080</code></pre>
+<h3>Network Policies Deep Dive</h3>
+<h4>What Network Policies Actually Do</h4>
+<strong>Network Policies</strong> are Kubernetes resources that create firewall rules controlling traffic between pods. They're implemented by CNI plugins using iptables, eBPF, or other packet filtering mechanisms.
+<strong>What "default allow" means:</strong> By default, all pods can communicate with all other pods. Network policies create exceptions to this rule by implementing "default deny" for selected pods.
+<strong>Policy Implementation:</strong>
+<li><strong>No NetworkPolicy</strong> → All traffic allowed</li>
+<li><strong>NetworkPolicy exists</strong> → Default deny for selected pods, only explicitly allowed traffic passes</li>
+<li><strong>Multiple policies</strong> → Union of all policies (if any policy allows traffic, it's permitted)</li>
+<h4>How Network Policy Enforcement Works</h4>
+<strong>Technical Implementation (Calico example):</strong>
+1. <strong>Policy Creation</strong> - User creates NetworkPolicy resource
+2. <strong>Controller Detection</strong> - Calico controller watches for policy changes
+3. <strong>Rule Translation</strong> - Controller translates policy to iptables rules
+4. <strong>Rule Programming</strong> - Felix agent programs iptables on each node
+5. <strong>Traffic Filtering</strong> - Kernel filters packets using iptables rules
+<strong>iptables rules generated by NetworkPolicy:</strong>
+<pre><code><h2>Example: Deny all ingress to app=frontend pods except from app=backend</h2>
+-A cali-fw-frontend-pods -m set --match-set cali-backend-pods src -j ACCEPT
+-A cali-fw-frontend-pods -j DROP</code></pre>
+<h4>Network Policy Types and Examples</h4>
+<p>#### Ingress Policies (Incoming Traffic Control)</p>
+<strong>Basic Ingress Policy - Allow only from specific pods:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-ingress-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend  # Apply to pods with app=frontend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: backend  # Only allow traffic from app=backend pods
+    ports:
+    - protocol: TCP
+      port: 8080</code></pre>
+<strong>What this policy actually does:</strong>
+1. <strong>Selects target pods</strong> - All pods with <code>app=frontend</code> label in <code>production</code> namespace
+2. <strong>Default deny</strong> - Blocks all incoming traffic to selected pods
+3. <strong>Explicit allow</strong> - Only allows TCP traffic on port 8080 from pods labeled <code>app=backend</code>
+4. <strong>Same namespace</strong> - <code>podSelector</code> without <code>namespaceSelector</code> means same namespace only
+<strong>Namespace-based Ingress Policy:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-access-policy
+  namespace: database
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow from production namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: production
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow from staging namespace on different port
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: staging
+    ports:
+    - protocol: TCP
+      port: 5433</code></pre>
+<strong>IP Block-based Policy (External Traffic):</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: external-access-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow from corporate network
+  - from:
+    - ipBlock:
+        cidr: 10.0.0.0/8
+        except:
+        - 10.0.1.0/24  # Except this specific subnet
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow from specific external IPs
+  - from:
+    - ipBlock:
+        cidr: 203.0.113.0/24  # Partner company network
+    ports:
+    - protocol: TCP
+      port: 8080</code></pre>
+<p>#### Egress Policies (Outgoing Traffic Control)</p>
+<strong>Basic Egress Policy - Restrict outbound connections:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-egress-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS queries
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow to backend services
+  - to:
+    - podSelector:
+        matchLabels:
+          app: backend
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow to external APIs
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 443</code></pre>
+<strong>Database Egress Policy - Highly Restrictive:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-egress-policy
+  namespace: database
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Egress
+  egress:
+  # Only allow DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Only allow to backup storage
+  - to:
+    - ipBlock:
+        cidr: 203.0.113.100/32  # Backup server IP
+    ports:
+    - protocol: TCP
+      port: 22  # SSH for backup transfers</code></pre>
+<p>#### Combined Ingress and Egress Policies</p>
+<strong>Complete Microservice Isolation:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-service-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: payment-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Only accept from order service
+  - from:
+    - podSelector:
+        matchLabels:
+          app: order-service
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  # Allow DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow to database
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: database
+      podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow to external payment API
+  - to:
+    - ipBlock:
+        cidr: 203.0.113.0/24
+    ports:
+    - protocol: TCP
+      port: 443</code></pre>
+<h4>Advanced Network Policy Patterns</h4>
+<p>#### Default Deny All Traffic
+<pre><code><h2>Deny all ingress traffic to all pods in namespace</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: production
+spec:
+  podSelector: {}  # Empty selector = all pods
+  policyTypes:
+  - Ingress
+---
+<h2>Deny all egress traffic from all pods in namespace</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress</code></pre></p>
+<p>#### Allow All Traffic (Override Default Deny)
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-ingress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - {}  # Empty rule = allow from anywhere
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-egress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - {}  # Empty rule = allow to anywhere</code></pre></p>
+<h4>Network Policy Troubleshooting</h4>
+<p>#### Common Policy Issues</p>
+<strong>Problem: DNS Not Working After Applying Egress Policy</strong>
+<pre><code><h2>BROKEN - Blocks DNS</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: myapp
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: backend
+---
+<h2>FIXED - Allows DNS</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: myapp
+  policyTypes:
+  - Egress
+  egress:
+  # Always allow DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Then your other rules
+  - to:
+    - podSelector:
+        matchLabels:
+          app: backend</code></pre>
+<strong>Testing Network Policies:</strong>
+<pre><code><h2>Test connectivity between pods</h2>
+kubectl exec -it frontend-pod -- curl backend-service:8080
+<h2>Check if policy is applied</h2>
+kubectl describe networkpolicy policy-name
+<h2>View generated iptables rules (on node)</h2>
+sudo iptables -L -n | grep cali
+<h2>Debug with temporary test pod</h2>
+kubectl run test-pod --image=busybox --rm -it -- /bin/sh
+<h2>Then test connectivity from inside</h2></code></pre>
+<h3>Ingress Controllers Deep Dive</h3>
+<h4>What Ingress Controllers Actually Do</h4>
+<p>An <strong>Ingress Controller</strong> is a reverse proxy that runs inside your Kubernetes cluster and routes external HTTP/HTTPS traffic to your services. It's the "front door" to your cluster.</p>
+<strong>Why Services Aren't Enough for HTTP:</strong>
+<li><strong>LoadBalancer services</strong> create one cloud load balancer per service (expensive)</li>
+<li><strong>NodePort services</strong> require high ports and don't handle SSL well</li>
+<li><strong>ClusterIP services</strong> have no external access at all</li>
+<strong>Ingress Controller Solution:</strong>
+<li><strong>One external load balancer</strong> for the entire cluster</li>
+<li><strong>HTTP/HTTPS routing</strong> based on hostnames and paths</li>
+<li><strong>SSL termination</strong> centralized in one place</li>
+<li><strong>Advanced features</strong> like redirects, authentication, rate limiting</li>
+<h4>How Ingress Traffic Flow Works</h4>
+<strong>Complete HTTP Request Journey:</strong>
+<pre><code>External Client (internet)
+↓
+Cloud Load Balancer (if using LoadBalancer service)
+↓
+Node IP:Port (NodePort service for ingress controller)
+↓
+Ingress Controller Pod (nginx, traefik, etc.)
+↓
+Service Virtual IP (ClusterIP)
+↓
+Backend Pod IP</code></pre>
+<strong>Example with real IPs:</strong>
+<pre><code>1. Client requests: https://api.mycompany.com/users
+2. DNS resolves to: 203.0.113.100 (cloud load balancer IP)
+3. Load balancer forwards to: 192.168.1.10:30080 (node IP + NodePort)
+4. Node routes to: 10.244.1.5:80 (ingress controller pod)
+5. Ingress controller routes to: 10.96.0.1:80 (backend service)
+6. Service load-balances to: 10.244.2.6:8080 (backend pod)</code></pre>
+<h4>Ingress Resource vs Ingress Controller</h4>
+<strong>Ingress Resource</strong> - Kubernetes API object that defines routing rules:
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+spec:
+  rules:
+  - host: api.mycompany.com
+    http:
+      paths:
+      - path: /users
+        pathType: Prefix
+        backend:
+          service:
+            name: user-service
+            port:
+              number: 80</code></pre>
+<strong>Ingress Controller</strong> - The actual software that reads Ingress resources and implements the routing:
+<li><strong>NGINX Ingress Controller</strong> - Most popular, uses nginx as reverse proxy</li>
+<li><strong>Traefik</strong> - Modern proxy with automatic service discovery</li>
+<li><strong>HAProxy Ingress</strong> - Enterprise-grade load balancer</li>
+<li><strong>Cloud Provider Controllers</strong> - AWS ALB, GCP, Azure controllers</li>
+<h4>NGINX Ingress Controller Deep Dive</h4>
+<p>#### How NGINX Ingress Works Internally</p>
+<strong>Controller Components:</strong>
+1. <strong>Ingress Controller Pod</strong> - Runs nginx and controller logic
+2. <strong>ConfigMap</strong> - Global nginx configuration
+3. <strong>Service</strong> - Exposes controller (usually LoadBalancer or NodePort)
+4. <strong>ServiceAccount/RBAC</strong> - Permissions to watch Ingress resources
+<strong>Configuration Generation Process:</strong>
+1. <strong>Watch Ingress Resources</strong> - Controller watches for changes
+2. <strong>Generate nginx.conf</strong> - Translates Ingress rules to nginx configuration
+3. <strong>Reload nginx</strong> - Applies new configuration without dropping connections
+4. <strong>Update Status</strong> - Reports back IP addresses and status to Ingress resources
+<strong>Generated nginx.conf structure:</strong>
+<pre><code><h2>Global settings from ConfigMap</h2>
+worker_processes auto;
+<p>http {
+    # Upstream definitions (one per service)
+    upstream production-user-service-80 {
+        server 10.244.1.5:8080;  # Pod IPs
+        server 10.244.2.6:8080;
+        server 10.244.3.7:8080;
+    }
+    
+    upstream production-order-service-80 {
+        server 10.244.1.8:8080;
+        server 10.244.2.9:8080;
+    }
+    
+    # Server blocks (one per host)
+    server {
+        listen 80;
+        server_name api.mycompany.com;
+        
+        # Path-based routing
+        location /users {
+            proxy_pass http://production-user-service-80;
+        }
+        
+        location /orders {
+            proxy_pass http://production-order-service-80;
+        }
+    }
+    
+    server {
+        listen 443 ssl;
+        server_name api.mycompany.com;
+        ssl_certificate /etc/ssl/tls.crt;
+        ssl_certificate_key /etc/ssl/tls.key;
+        
+        # Same location blocks as HTTP
+    }
+}</code></pre></p>
+<p>#### Advanced Ingress Configuration</p>
+<strong>SSL Termination with Certificates:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tls-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - api.mycompany.com
+    - www.mycompany.com
+    secretName: mycompany-tls  # Contains tls.crt and tls.key
+  rules:
+  - host: api.mycompany.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 80
+  - host: www.mycompany.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80</code></pre>
+<strong>Path-Based Routing with Different Backends:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microservices-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - host: api.mycompany.com
+    http:
+      paths:
+      # /api/v1/users → user-service/users
+      - path: /api/v1/users(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: user-service
+            port:
+              number: 80
+      # /api/v1/orders → order-service/orders  
+      - path: /api/v1/orders(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: order-service
+            port:
+              number: 80
+      # /api/v1/payments → payment-service/payments
+      - path: /api/v1/payments(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: payment-service
+            port:
+              number: 80
+      # Default backend for unmatched paths
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: default-backend
+            port:
+              number: 80</code></pre>
+<strong>Advanced Annotations for Traffic Control:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: advanced-ingress
+  annotations:
+    # Rate limiting
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    
+    # Authentication
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth-secret
+    
+    # CORS headers
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://mycompany.com"
+    
+    # Custom headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Custom-Header "MyValue" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+    
+    # Load balancing method
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"
+    
+    # Session affinity
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "INGRESSCOOKIE"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "86400"
+    
+    # Request/response modifications
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+spec:
+  rules:
+  - host: api.mycompany.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 80</code></pre>
+<p>#### Multiple Ingress Controllers</p>
+<strong>Why Multiple Controllers:</strong>
+<li><strong>Different requirements</strong> - Internal vs external traffic</li>
+<li><strong>Different features</strong> - nginx for HTTP, traefik for gRPC</li>
+<li><strong>Different environments</strong> - Separate controllers per namespace</li>
+<strong>Ingress Class Configuration:</strong>
+<pre><code><h2>Define ingress classes</h2>
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx-internal
+spec:
+  controller: k8s.io/ingress-nginx
+  parameters:
+    apiGroup: k8s.io
+    kind: ConfigMap
+    name: nginx-internal-config
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx-external
+spec:
+  controller: k8s.io/ingress-nginx
+  parameters:
+    apiGroup: k8s.io
+    kind: ConfigMap
+    name: nginx-external-config
+---
+<h2>Use specific ingress class</h2>
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: internal-api
+spec:
+  ingressClassName: nginx-internal  # Uses internal controller
+  rules:
+  - host: internal-api.company.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: internal-service
+            port:
+              number: 80</code></pre>
+<h3>DNS in Kubernetes Deep Dive</h3>
+<h4>How Kubernetes DNS Works</h4>
+<p>Kubernetes runs a <strong>DNS server</strong> (CoreDNS) inside the cluster that provides name resolution for services and pods. Every pod automatically gets configured to use this DNS server.</p>
+<strong>DNS Resolution Hierarchy:</strong>
+1. <strong>Service DNS</strong> - <code>service-name.namespace.svc.cluster.local</code>
+2. <strong>Pod DNS</strong> - <code>pod-ip.namespace.pod.cluster.local</code> (if enabled)
+3. <strong>External DNS</strong> - Forwarded to upstream DNS servers
+<strong>Automatic DNS Configuration in Pods:</strong>
+<pre><code><h2>Every pod gets these DNS settings automatically:</h2>
+$ cat /etc/resolv.conf
+search default.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10  # ClusterIP of kube-dns service
+options ndots:5</code></pre>
+<h4>Service Discovery Through DNS</h4>
+<p>#### DNS Names for Services</p>
+<strong>Short Names (same namespace):</strong>
+<pre><code><h2>From pod in 'default' namespace</h2>
+curl http://web-service/api        # → web-service.default.svc.cluster.local
+curl http://database:5432          # → database.default.svc.cluster.local</code></pre>
+<strong>Namespace-Qualified Names:</strong>
+<pre><code><h2>From any namespace</h2>
+curl http://web-service.production/api     # → web-service.production.svc.cluster.local
+curl http://postgres.database:5432        # → postgres.database.svc.cluster.local</code></pre>
+<strong>Fully Qualified Domain Names (FQDN):</strong>
+<pre><code><h2>Explicit full DNS name</h2>
+curl http://api-service.production.svc.cluster.local:8080
+curl http://redis.cache.svc.cluster.local:6379</code></pre>
+<p>#### CoreDNS Configuration</p>
+<strong>CoreDNS Corefile Example:</strong>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+            lameduck 5s
+        }
+        ready
+        # Kubernetes zone - handles cluster.local
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        }
+        # Prometheus metrics
+        prometheus :9153
+        # Forward external queries to upstream DNS
+        forward . /etc/resolv.conf {
+            max_concurrent 1000
+        }
+        # Cache responses
+        cache 30
+        # Detect loops
+        loop
+        # Reload config automatically
+        reload
+        # Load balancing
+        loadbalance
+    }</code></pre>
+<strong>How DNS Resolution Works:</strong>
+1. <strong>Pod makes DNS query</strong> - App requests <code>web-service</code>
+2. <strong>Search domains applied</strong> - Tries <code>web-service.default.svc.cluster.local</code>
+3. <strong>CoreDNS receives query</strong> - DNS query hits CoreDNS pod
+4. <strong>Kubernetes plugin</strong> - Looks up service in etcd via API server
+5. <strong>Returns service ClusterIP</strong> - CoreDNS returns virtual IP address
+6. <strong>App connects to service</strong> - App uses IP to connect, kube-proxy handles routing
+<p>#### Custom DNS Configuration</p>
+<strong>Pod-Level DNS Config:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: custom-dns-pod
+spec:
+  dnsPolicy: "None"  # Disable automatic DNS config
+  dnsConfig:
+    nameservers:
+    - 8.8.8.8
+    - 1.1.1.1
+    searches:
+    - mycompany.com
+    - example.com
+    options:
+    - name: ndots
+      value: "2"
+    - name: edns0
+  containers:
+  - name: app
+    image: busybox
+    command: ["sleep", "3600"]</code></pre>
+<strong>Service-Level DNS Customization:</strong>
+<pre><code><h2>Headless service with custom DNS</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: custom-dns-service
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  clusterIP: None  # Headless
+  selector:
+    app: myapp
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+<h2>StatefulSet pods get predictable DNS names</h2>
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web-statefulset
+spec:
+  serviceName: custom-dns-service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: web
+        image: nginx
+        ports:
+        - containerPort: 80</code></pre>
+<strong>Generated DNS Names:</strong>
+<pre><code>web-statefulset-0.custom-dns-service.default.svc.cluster.local
+web-statefulset-1.custom-dns-service.default.svc.cluster.local  
+web-statefulset-2.custom-dns-service.default.svc.cluster.local</code></pre>
+<p>#### DNS-Based Service Discovery Patterns</p>
+<strong>Environment Variable vs DNS:</strong>
+<pre><code><h2>Old way - environment variables</h2>
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: frontend
+    image: myapp:latest
+    env:
+    - name: BACKEND_HOST
+      value: "backend-service.production.svc.cluster.local"
+    - name: BACKEND_PORT
+      value: "8080"
+---
+<h2>Better way - DNS resolution in code</h2>
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: frontend
+    image: myapp:latest
+    env:
+    - name: BACKEND_URL
+      value: "http://backend-service:8080"  # Short name, DNS resolves</code></pre>
+<strong>Service Mesh DNS Integration:</strong>
+<pre><code><h2>Istio service entry for external service</h2>
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-api
+spec:
+  hosts:
+  - external-api.mycompany.com
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+<h2>Now pods can use DNS name as if it's internal</h2>
+<h2>curl https://external-api.mycompany.com/api</h2></code></pre>
+<h3>Key Concepts Summary</h3>
+<li><strong>Flat Network</strong> - All pods can communicate directly using IP addresses without NAT</li>
+<li><strong>CNI Plugins</strong> - Software that implements pod networking (Flannel, Calico, Cilium, etc.)</li>
+<li><strong>Pod IP Assignment</strong> - Each pod gets unique cluster IP from node's subnet allocated by CNI</li>
+<li><strong>Pause Containers</strong> - Hidden infrastructure containers that create shared network namespaces</li>
+<li><strong>Overlay Networks</strong> - Virtual networks on top of physical infrastructure using encapsulation</li>
+<li><strong>BGP Routing</strong> - Direct routing between nodes without encapsulation using route advertisement</li>
+<li><strong>Network Policies</strong> - Firewall rules controlling traffic between pods using iptables/eBPF</li>
+<li><strong>Ingress Controllers</strong> - Reverse proxies that route external HTTP/HTTPS traffic to services</li>
+<li><strong>CoreDNS</strong> - Cluster DNS server providing service discovery and name resolution</li>
+<li><strong>Service Mesh</strong> - Additional networking layer providing advanced traffic management and security</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Choose the right CNI</strong> - Flannel for simplicity, Calico for network policies, Cilium for advanced features
+2. <strong>Plan IP addressing</strong> - Size cluster CIDR appropriately, avoid conflicts with existing networks
+3. <strong>Use Network Policies</strong> - Implement zero-trust networking with default deny policies
+4. <strong>SSL at Ingress</strong> - Terminate SSL/TLS at ingress controllers, not individual services
+5. <strong>DNS naming conventions</strong> - Use consistent service naming across environments
+6. <strong>Monitor network performance</strong> - Watch for packet loss, latency, and bandwidth issues
+7. <strong>Secure inter-pod communication</strong> - Use service mesh or network policies for sensitive workloads
+8. <strong>Plan for scale</strong> - Consider networking overhead when planning cluster growth
+9. <strong>Test network policies</strong> - Always test connectivity after applying network restrictions
+10. <strong>Document network architecture</strong> - Maintain clear documentation of network design and policies</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: Pods Can't Communicate Cross-Node</h4>
+<li><strong>Symptom:</strong> Pods on same node work, cross-node communication fails</li>
+<li><strong>Cause:</strong> CNI misconfiguration, firewall rules, or routing issues</li>
+<li><strong>Solution:</strong> Check CNI plugin status, node firewall rules, and routing tables</li>
+<pre><code><h2>Check CNI plugin status</h2>
+kubectl get pods -n kube-system | grep -E "(flannel|calico|cilium)"
+<h2>Test cross-node connectivity</h2>
+kubectl exec -it pod-on-node1 -- ping pod-ip-on-node2
+<h2>Check node routing</h2>
+ip route show | grep 10.244</code></pre>
+<h4>Problem 2: Network Policy Not Working</h4>
+<li><strong>Symptom:</strong> Traffic still flows despite network policy</li>
+<li><strong>Cause:</strong> CNI doesn't support network policies or policy misconfiguration</li>
+<li><strong>Solution:</strong> Verify CNI supports policies, check policy syntax and selectors</li>
+<pre><code><h2>Check if CNI supports network policies</h2>
+kubectl describe networkpolicy test-policy
+<h2>Test with simple deny-all policy</h2>
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+EOF</code></pre>
+<h4>Problem 3: DNS Resolution Failures</h4>
+<li><strong>Symptom:</strong> Services unreachable by name, only IP works</li>
+<li><strong>Cause:</strong> CoreDNS issues, incorrect DNS configuration, or network policies blocking DNS</li>
+<li><strong>Solution:</strong> Check CoreDNS status, verify DNS configuration, allow DNS traffic</li>
+<pre><code><h2>Check CoreDNS status</h2>
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+<h2>Test DNS resolution</h2>
+kubectl exec -it test-pod -- nslookup kubernetes.default.svc.cluster.local
+<h2>Check DNS configuration</h2>
+kubectl exec -it test-pod -- cat /etc/resolv.conf</code></pre>
+<h4>Problem 4: Ingress Not Accessible</h4>
+<li><strong>Symptom:</strong> External clients can't reach ingress controller</li>
+<li><strong>Cause:</strong> Ingress controller service misconfiguration or cloud load balancer issues</li>
+<li><strong>Solution:</strong> Check ingress controller service type and external IP assignment</li>
+<pre><code><h2>Check ingress controller service</h2>
+kubectl get svc -n ingress-nginx
+<h2>Check ingress controller pods</h2>
+kubectl get pods -n ingress-nginx
+<h2>Check ingress resource status</h2>
+kubectl describe ingress my-ingress</code></pre>
+<h4>Problem 5: High Network Latency</h4>
+<li><strong>Symptom:</strong> Slow pod-to-pod communication</li>
+<li><strong>Cause:</strong> Overlay network overhead, suboptimal routing, or resource constraints</li>
+<li><strong>Solution:</strong> Consider BGP-based CNI, optimize routing, check resource limits</li>
+<pre><code><h2>Test network latency between pods</h2>
+kubectl exec -it pod1 -- ping -c 10 pod2-ip
+<h2>Check network interface statistics</h2>
+kubectl exec -it pod1 -- cat /proc/net/dev
+<h2>Monitor network traffic</h2>
+kubectl top nodes
+kubectl top pods</code></pre>
+<h3>References / Further Reading</h3>
+<li>[Kubernetes Networking Concepts](https://kubernetes.io/docs/concepts/services-networking/)</li>
+<li>[CNI Specification](https://github.com/containernetworking/cni)</li>
+<li>[Network Policies Documentation](https://kubernetes.io/docs/concepts/services-networking/network-policies/)</li>
+<li>[Ingress Controllers Comparison](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)</li>
+<li>[CoreDNS Documentation](https://coredns.io/manual/toc/)</li>
+<li>[Calico Networking Guide](https://docs.projectcalico.org/networking/)</li>
+<li>[Flannel Networking Guide](https://github.com/flannel-io/flannel)</li>
+<li>[Cilium Documentation](https://docs.cilium.io/)</li>
+<li>[NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

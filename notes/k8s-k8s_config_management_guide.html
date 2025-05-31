@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Configuration Management: Complete Deep Technical Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Configuration Management: Complete Deep Technical Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">configmaps</span><span class="tag">secrets</span><span class="tag">environment-variables</span><span class="tag">helm</span><span class="tag">configuration</span><span class="tag">hot-reloading</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Configuration Management: Complete Deep Technical Guide</h2>
+<h3>Introduction to Configuration Management</h3>
+<p>Configuration management in Kubernetes is about <strong>separating application code from configuration data</strong>. This separation enables the same application image to run in different environments (dev, staging, production) with different configurations, without rebuilding the container image.</p>
+<h4>The Configuration Problem</h4>
+<strong>Without proper configuration management:</strong>
+<pre><code><h2>Bad: Configuration baked into image</h2>
+FROM node:16
+COPY app.js /app/
+COPY config-production.json /app/config.json  # ❌ Hard-coded for production
+CMD ["node", "/app/app.js"]
+<h2>Problems:</h2>
+<h2>1. Need different images for dev/staging/prod</h2>
+<h2>2. Secrets visible in image layers</h2>
+<h2>3. Can't change config without rebuilding image</h2>
+<h2>4. No way to update config at runtime</h2></code></pre>
+<strong>With Kubernetes configuration management:</strong>
+<pre><code><h2>Good: Generic image, config injected at runtime</h2>
+FROM node:16
+COPY app.js /app/
+CMD ["node", "/app/app.js"]
+<h2>Configuration comes from ConfigMaps, Secrets, and environment variables</h2></code></pre>
+<h4>Configuration Injection Methods</h4>
+<strong>Environment Variables</strong> - Simple key-value pairs injected into container environment
+<pre><code>env:
+<ul><li>name: DATABASE_HOST</li>
+  value: "postgres.database.svc.cluster.local"</code></pre>
+<strong>ConfigMaps</strong> - Non-sensitive configuration data as files or environment variables
+<pre><code>volumeMounts:
+<li>name: config-volume</li>
+  mountPath: /app/config
+volumes:
+<li>name: config-volume</li>
+  configMap:
+    name: app-config</code></pre>
+<strong>Secrets</strong> - Sensitive data with base64 encoding and additional security features
+<pre><code>env:
+<li>name: DATABASE_PASSWORD</li>
+  valueFrom:
+    secretKeyRef:
+      name: db-secret
+      key: password</code></pre>
+<h3>ConfigMaps Deep Dive</h3>
+<h4>What ConfigMaps Actually Are</h4>
+<strong>ConfigMaps</strong> store non-sensitive configuration data as key-value pairs. They provide a way to decouple configuration from application code, making applications more portable and manageable.
+<strong>ConfigMap Structure:</strong>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+data:
+  # Simple key-value pairs
+  database.host: "postgres.database.svc.cluster.local"
+  database.port: "5432"
+  log.level: "info"
+  
+  # Configuration files as values
+  app.properties: |
+    database.host=postgres.database.svc.cluster.local
+    database.port=5432
+    database.name=myapp
+    cache.enabled=true
+    cache.ttl=3600
+  
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name _;
+        
+        location / {
+            proxy_pass http://backend:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+        
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+        }
+    }</code></pre>
+<h4>Creating ConfigMaps</h4>
+<p>#### From Literal Values
+<pre><code><h2>Create ConfigMap from command line</h2>
+kubectl create configmap app-config \
+  --from-literal=database.host=postgres.example.com \
+  --from-literal=database.port=5432 \
+  --from-literal=log.level=debug</code></pre></p>
+<p>#### From Files
+<pre><code><h2>Create ConfigMap from files</h2>
+kubectl create configmap app-config \
+  --from-file=app.properties \
+  --from-file=nginx.conf \
+  --from-file=config-dir/</p>
+<h2>With custom key names</h2>
+kubectl create configmap app-config \
+  --from-file=application-config=app.properties \
+  --from-file=nginx-config=nginx.conf</code></pre>
+<p>#### From Environment File
+<pre><code><h2>Create from .env file</h2>
+cat > app.env << EOF
+DATABASE_HOST=postgres.example.com
+DATABASE_PORT=5432
+LOG_LEVEL=info
+CACHE_ENABLED=true
+EOF</p>
+<p>kubectl create configmap app-config --from-env-file=app.env</code></pre></p>
+<h4>Using ConfigMaps as Environment Variables</h4>
+<p>#### Single Environment Variable
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    env:
+    # Single value from ConfigMap
+    - name: DATABASE_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database.host
+    # Static environment variable
+    - name: APP_NAME
+      value: "MyApplication"</code></pre></p>
+<p>#### All ConfigMap Keys as Environment Variables
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    envFrom:
+    # Import all keys from ConfigMap as env vars
+    - configMapRef:
+        name: app-config
+    # Keys become: DATABASE_HOST, DATABASE_PORT, LOG_LEVEL, etc.</code></pre></p>
+<p>#### Multiple ConfigMaps
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    envFrom:
+    # Import from multiple ConfigMaps
+    - configMapRef:
+        name: app-config
+    - configMapRef:
+        name: database-config
+    - configMapRef:
+        name: cache-config
+    env:
+    # Override specific values
+    - name: LOG_LEVEL
+      value: "debug"  # Overrides value from ConfigMap</code></pre></p>
+<h4>Using ConfigMaps as Volume Mounts</h4>
+<p>#### Basic Volume Mount
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    volumeMounts:
+    - name: config-volume
+      mountPath: /app/config
+      readOnly: true
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-config</code></pre></p>
+<strong>Result in container:</strong>
+<pre><code>/app/config/
+├── database.host          # Contains: postgres.database.svc.cluster.local
+├── database.port          # Contains: 5432
+├── log.level             # Contains: info
+├── app.properties        # Contains: entire properties file
+└── nginx.conf            # Contains: entire nginx config</code></pre>
+<p>#### Selective Key Mounting
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    volumeMounts:
+    - name: config-volume
+      mountPath: /app/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-config
+      items:
+      # Only mount specific keys
+      - key: app.properties
+        path: application.properties  # Custom filename
+      - key: nginx.conf
+        path: nginx/nginx.conf        # Custom subdirectory
+        mode: 0644                    # Custom permissions</code></pre></p>
+<strong>Result in container:</strong>
+<pre><code>/app/config/
+├── application.properties
+└── nginx/
+    └── nginx.conf</code></pre>
+<p>#### SubPath Mounting
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    # Mount specific file to specific location
+    - name: nginx-config
+      mountPath: /etc/nginx/nginx.conf
+      subPath: nginx.conf  # Mount only this file, not entire ConfigMap
+  volumes:
+  - name: nginx-config
+    configMap:
+      name: nginx-configmap</code></pre></p>
+<h4>Advanced ConfigMap Patterns</h4>
+<p>#### Multi-Environment Configuration
+<pre><code><h2>Development ConfigMap</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: development
+data:
+  environment: "development"
+  database.host: "postgres.dev.internal"
+  database.name: "myapp_dev"
+  log.level: "debug"
+  cache.enabled: "false"
+  api.rate.limit: "1000"
+---
+<h2>Production ConfigMap  </h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+data:
+  environment: "production"
+  database.host: "postgres.prod.internal"
+  database.name: "myapp_prod"
+  log.level: "warn"
+  cache.enabled: "true"
+  api.rate.limit: "100"</code></pre></p>
+<p>#### Layered Configuration
+<pre><code><h2>Base configuration</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: base-config
+data:
+  app.name: "MyApplication"
+  app.version: "1.0.0"
+  log.format: "json"
+  metrics.enabled: "true"
+---
+<h2>Environment-specific overrides</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-config
+data:
+  log.level: "info"
+  database.pool.size: "10"
+---
+<h2>Feature-specific configuration</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: feature-config
+data:
+  feature.new_ui: "true"
+  feature.analytics: "false"
+---
+<h2>Pod using layered config</h2>
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    envFrom:
+    - configMapRef:
+        name: base-config
+    - configMapRef:
+        name: env-config
+    - configMapRef:
+        name: feature-config</code></pre></p>
+<p>#### ConfigMap with Binary Data
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: binary-config
+data:
+  # Text configuration
+  app.properties: |
+    server.port=8080
+    server.name=myapp
+binaryData:
+  # Binary files (base64 encoded)
+  logo.png: iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==
+  certificate.p12: MIIKPAIBAzCCCfwGCSqGSIb3DQEHAaCCCe0Eggn...</code></pre></p>
+<h3>Secrets Deep Dive</h3>
+<h4>Understanding Secret Types</h4>
+<p>Kubernetes provides several built-in secret types, each optimized for specific use cases:</p>
+<p>#### Opaque Secrets (Generic)
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: production
+type: Opaque
+data:
+  # Base64 encoded values
+  database-password: cGFzc3dvcmQxMjM=
+  api-key: YWJjZGVmZ2hpams=
+  encryption-key: bXlzdXBlcnNlY3JldGtleQ==
+stringData:
+  # Plain text values (automatically base64 encoded)
+  database-url: "postgresql://user:password@host:5432/db"
+  jwt-secret: "my-super-secret-jwt-key"</code></pre></p>
+<p>#### Docker Registry Secrets
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: registry-secret
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJyZWdpc3RyeS5jb21wYW55LmNvbSI6IHsKICAgICAgInVzZXJuYW1lIjogImRvY2tlcnVzZXIiLAogICAgICAicGFzc3dvcmQiOiAicGFzc3dvcmQxMjMiLAogICAgICAiYXV0aCI6ICJaRzlqYTJWeVkzVnpaWEk2Y0dGemMzZHZjbVF4TWpNPSIKICAgIH0KICB9Cn0=</code></pre></p>
+<strong>Creating Docker Registry Secret:</strong>
+<pre><code>kubectl create secret docker-registry registry-secret \
+  --docker-server=registry.company.com \
+  --docker-username=dockeruser \
+  --docker-password=password123 \
+  --docker-email=docker@company.com \
+  --namespace=production</code></pre>
+<p>#### TLS Secrets
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: tls-secret
+  namespace: production
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTi... # Base64 encoded certificate
+  tls.key: LS0tLS1CRUdJTi... # Base64 encoded private key</code></pre></p>
+<strong>Creating TLS Secret:</strong>
+<pre><code>kubectl create secret tls tls-secret \
+  --cert=path/to/cert.pem \
+  --key=path/to/key.pem \
+  --namespace=production</code></pre>
+<p>#### SSH Auth Secrets
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: ssh-secret
+type: kubernetes.io/ssh-auth
+data:
+  ssh-privatekey: LS0tLS1CRUdJTi... # Base64 encoded SSH private key</code></pre></p>
+<p>#### Basic Auth Secrets
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-auth-secret
+type: kubernetes.io/basic-auth
+data:
+  username: YWRtaW4=     # base64 encoded "admin"
+  password: cGFzc3dvcmQ= # base64 encoded "password"</code></pre></p>
+<h4>Using Secrets in Pods</h4>
+<p>#### Environment Variable Injection
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-secrets
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    env:
+    # Single secret value
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: database-password
+    # Multiple individual secret values
+    - name: API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: api-key
+    - name: JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: jwt-secret
+    # Mix with ConfigMap values
+    - name: DATABASE_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database.host</code></pre></p>
+<p>#### All Secret Keys as Environment Variables
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-all-secrets
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    envFrom:
+    # Import all secret keys as environment variables
+    - secretRef:
+        name: app-secrets
+    # Also import ConfigMap
+    - configMapRef:
+        name: app-config</code></pre></p>
+<p>#### Volume Mounting (More Secure)
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-secret-files
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    volumeMounts:
+    - name: secret-volume
+      mountPath: /etc/secrets
+      readOnly: true
+    # Application reads secrets from files:
+    # /etc/secrets/database-password
+    # /etc/secrets/api-key
+    # /etc/secrets/jwt-secret
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: app-secrets
+      defaultMode: 0400  # Read-only for owner</code></pre></p>
+<p>#### Selective Secret Mounting
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-specific-secrets
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    volumeMounts:
+    - name: db-credentials
+      mountPath: /etc/database
+      readOnly: true
+    - name: tls-certs
+      mountPath: /etc/ssl/certs
+      readOnly: true
+  volumes:
+  - name: db-credentials
+    secret:
+      secretName: app-secrets
+      items:
+      - key: database-password
+        path: password
+        mode: 0400
+      - key: database-url
+        path: connection-string
+        mode: 0400
+  - name: tls-certs
+    secret:
+      secretName: tls-secret
+      items:
+      - key: tls.crt
+        path: server.crt
+        mode: 0444
+      - key: tls.key
+        path: server.key
+        mode: 0400</code></pre></p>
+<h4>Secret Security Best Practices</h4>
+<p>#### Encryption at Rest
+<pre><code><h2>/etc/kubernetes/encryption-config.yaml</h2>
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+<li>resources:</li>
+  - secrets
+  providers:
+  - aescbc:
+      keys:
+      - name: key1
+        secret: c2VjcmV0IGlzIHNlY3VyZQ==
+  - identity: {}</code></pre></p>
+<strong>Enable in API Server:</strong>
+<pre><code><h2>Add to kube-apiserver flags</h2>
+--encryption-provider-config=/etc/kubernetes/encryption-config.yaml</code></pre>
+<p>#### Secret Rotation Strategy
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: secret-rotator
+spec:
+  schedule: "0 2 <em> </em> 0"  # Weekly
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: secret-rotator
+          containers:
+          - name: rotator
+            image: secret-rotator:latest
+            command:
+            - sh
+            - -c
+            - |
+              # Generate new password
+              NEW_PASSWORD=$(openssl rand -base64 32)
+              
+              # Update external system (database, API, etc.)
+              curl -X POST https://api.example.com/rotate-password \
+                -H "Authorization: Bearer $API_TOKEN" \
+                -d '{"new_password": "'$NEW_PASSWORD'"}'
+              
+              # Update Kubernetes secret
+              kubectl patch secret app-secrets -p='{"data":{"database-password":"'$(echo -n $NEW_PASSWORD | base64)'"}}'
+              
+              # Restart applications to pick up new secret
+              kubectl rollout restart deployment/myapp
+            env:
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: rotation-credentials
+                  key: api-token
+          restartPolicy: OnFailure</code></pre></p>
+<p>#### External Secret Management
+<pre><code><h2>Using External Secrets Operator with AWS Secrets Manager</h2>
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: aws-secrets-manager
+  namespace: production
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: us-west-2
+      auth:
+        secretRef:
+          accessKeyID:
+            name: aws-credentials
+            key: access-key-id
+          secretAccessKey:
+            name: aws-credentials
+            key: secret-access-key
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: database-secret
+  namespace: production
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: SecretStore
+  target:
+    name: database-credentials
+    creationPolicy: Owner
+  data:
+  - secretKey: password
+    remoteRef:
+      key: production/database
+      property: password
+  - secretKey: username
+    remoteRef:
+      key: production/database
+      property: username</code></pre></p>
+<h3>Environment Variables Deep Dive</h3>
+<h4>Direct Environment Variables</h4>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-env-vars
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    env:
+    # Static values
+    - name: APP_NAME
+      value: "MyApplication"
+    - name: APP_VERSION
+      value: "1.2.3"
+    - name: NODE_ENV
+      value: "production"
+    
+    # From ConfigMap
+    - name: DATABASE_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database.host
+    
+    # From Secret
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: database-password
+    
+    # From pod metadata
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    - name: POD_NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    
+    # From resource limits/requests
+    - name: CPU_REQUEST
+      valueFrom:
+        resourceFieldRef:
+          resource: requests.cpu
+    - name: MEMORY_LIMIT
+      valueFrom:
+        resourceFieldRef:
+          resource: limits.memory</code></pre>
+<h4>Environment Variable Sources Comparison</h4>
+<p>#### Static vs Dynamic Sources
+<pre><code>env:
+<h2>Static - set at pod creation, never changes</h2>
+<li>name: APP_VERSION</li>
+  value: "1.2.3"</p>
+<h2>Dynamic - can change when ConfigMap/Secret changes</h2>
+<li>name: LOG_LEVEL</li>
+  valueFrom:
+    configMapKeyRef:
+      name: app-config
+      key: log.level
+<h2>Metadata - reflects current pod state</h2>
+<li>name: NODE_NAME</li>
+  valueFrom:
+    fieldRef:
+      fieldPath: spec.nodeName</code></pre>
+<p>#### Precedence Rules
+<pre><code><h2>Environment variables have precedence order:</h2>
+envFrom:
+<li>configMapRef:</li>
+    name: base-config     # Lowest precedence
+<li>configMapRef:</li>
+    name: env-config      # Medium precedence
+env:
+<li>name: LOG_LEVEL</li>
+  value: "debug"          # Highest precedence - overrides ConfigMap values</code></pre></p>
+<h4>Complex Environment Configuration</h4>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multi-tier-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest
+        envFrom:
+        # Base configuration for all environments
+        - configMapRef:
+            name: app-base-config
+        # Environment-specific configuration
+        - configMapRef:
+            name: app-production-config
+        # Shared secrets
+        - secretRef:
+            name: app-shared-secrets
+        env:
+        # Override specific values
+        - name: LOG_LEVEL
+          value: "info"
+        # Computed values
+        - name: DATABASE_URL
+          value: "postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)"
+        # Pod-specific information
+        - name: INSTANCE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        # Resource information
+        - name: CPU_LIMIT
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.cpu
+        - name: MEMORY_REQUEST
+          valueFrom:
+            resourceFieldRef:
+              resource: requests.memory
+        
+        # Additional variables from other sources
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: password
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: host
+        - name: DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: port
+        - name: DATABASE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: name</code></pre>
+<h3>Configuration Hot-Reloading</h3>
+<h4>What is Hot-Reloading?</h4>
+<strong>Hot-reloading</strong> allows applications to detect and apply configuration changes without restarting. This enables zero-downtime configuration updates.
+<h4>File-Based Hot-Reloading</h4>
+<p>#### Application Implementation
+<pre><code>// Go example of file-based config watching
+package main</p>
+<p>import (
+    "fmt"
+    "log"
+    "time"
+    "github.com/fsnotify/fsnotify"
+    "gopkg.in/yaml.v2"
+    "io/ioutil"
+)</p>
+<p>type Config struct {
+    LogLevel string <code>yaml:"log_level"</code>
+    DatabaseHost string <code>yaml:"database_host"</code>
+    CacheEnabled bool <code>yaml:"cache_enabled"</code>
+}</p>
+<p>func watchConfig(configFile string, config *Config) {
+    watcher, err := fsnotify.NewWatcher()
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer watcher.Close()</p>
+<p>go func() {
+        for {
+            select {
+            case event, ok := <-watcher.Events:
+                if !ok {
+                    return
+                }
+                if event.Op&fsnotify.Write == fsnotify.Write {
+                    fmt.Println("Config file modified:", event.Name)
+                    loadConfig(configFile, config)
+                }
+            case err, ok := <-watcher.Errors:
+                if !ok {
+                    return
+                }
+                log.Println("Config watcher error:", err)
+            }
+        }
+    }()</p>
+<p>err = watcher.Add(configFile)
+    if err != nil {
+        log.Fatal(err)
+    }
+}</p>
+<p>func loadConfig(configFile string, config *Config) {
+    data, err := ioutil.ReadFile(configFile)
+    if err != nil {
+        log.Printf("Error reading config file: %v", err)
+        return
+    }
+    
+    err = yaml.Unmarshal(data, config)
+    if err != nil {
+        log.Printf("Error parsing config file: %v", err)
+        return
+    }
+    
+    fmt.Printf("Config reloaded: %+v\n", config)
+}</code></pre></p>
+<p>#### Kubernetes Configuration for Hot-Reloading
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  config.yaml: |
+    log_level: info
+    database_host: postgres.database.svc.cluster.local
+    cache_enabled: true
+    api_rate_limit: 1000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hot-reload-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: hot-reload-app:latest
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        env:
+        - name: CONFIG_FILE
+          value: "/app/config/config.yaml"
+        # Application watches CONFIG_FILE for changes
+      volumes:
+      - name: config-volume
+        configMap:
+          name: app-config</code></pre></p>
+<h4>Signal-Based Reloading</h4>
+<p>#### NGINX Configuration Reload
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+    http {
+        upstream backend {
+            server backend1:8080;
+            server backend2:8080;
+        }
+        server {
+            listen 80;
+            location / {
+                proxy_pass http://backend;
+            }
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-with-reload
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/usr/sbin/nginx", "-s", "quit"]
+      - name: config-reloader
+        image: config-reloader:latest
+        command:
+        - sh
+        - -c
+        - |
+          # Watch for config changes and reload nginx
+          inotifywait -m -e modify /etc/nginx/nginx.conf |
+          while read path action file; do
+            echo "Config changed, reloading nginx..."
+            nginx -t && nginx -s reload
+          done
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config</code></pre></p>
+<h4>Webhook-Based Configuration Updates</h4>
+<p>#### Configuration Webhook Server
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-with-webhook-reload
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: webhook
+          containerPort: 9090
+        env:
+        - name: CONFIG_WEBHOOK_PORT
+          value: "9090"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: app-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-webhook-service
+spec:
+  selector:
+    app: myapp
+  ports:
+  - name: webhook
+    port: 9090
+    targetPort: 9090</code></pre></p>
+<p>#### Configuration Update Script
+<pre><code>#!/bin/bash
+<h2>Script to update config and trigger reload</h2></p>
+<h2>Update ConfigMap</h2>
+kubectl patch configmap app-config -p='{"data":{"log_level":"debug","cache_enabled":"false"}}'
+<h2>Trigger reload via webhook</h2>
+kubectl get pods -l app=myapp -o jsonpath='{.items[*].status.podIP}' | \
+xargs -I {} curl -X POST http://{}:9090/reload-config</code></pre>
+<h4>Reloader Controller Pattern</h4>
+<p>#### Using Stakater Reloader
+<pre><code><h2>Install Stakater Reloader</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reloader
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+      - name: reloader
+        image: stakater/reloader:latest
+        # Reloader watches for ConfigMap/Secret changes
+        # and automatically restarts pods with annotations
+---
+<h2>Deployment with reloader annotations</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auto-reload-app
+  annotations:
+    # Restart when these ConfigMaps change
+    reloader.stakater.com/configmap: "app-config,database-config"
+    # Restart when these Secrets change
+    reloader.stakater.com/secret: "app-secrets"
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets</code></pre></p>
+<p>#### Custom Reloader Implementation
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: config-sync
+spec:
+  schedule: "<em>/5 </em> <em> </em> *"  # Every 5 minutes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: config-syncer
+          containers:
+          - name: sync
+            image: kubectl:latest
+            command:
+            - sh
+            - -c
+            - |
+              # Check if ConfigMap has changed
+              CURRENT_HASH=$(kubectl get configmap app-config -o jsonpath='{.metadata.resourceVersion}')
+              LAST_HASH=$(kubectl get deployment myapp -o jsonpath='{.metadata.annotations.config-hash}')
+              
+              if [ "$CURRENT_HASH" != "$LAST_HASH" ]; then
+                echo "ConfigMap changed, updating deployment..."
+                
+                # Update deployment annotation with new hash
+                kubectl annotate deployment myapp config-hash=$CURRENT_HASH --overwrite
+                
+                # Restart deployment
+                kubectl rollout restart deployment myapp
+                
+                echo "Deployment restarted due to config change"
+              else
+                echo "No config changes detected"
+              fi
+          restartPolicy: OnFailure</code></pre></p>
+<h3>Helm Templating Advanced</h3>
+<h4>Helm Template Functions</h4>
+<p>#### Built-in Functions
+<pre><code><h2>values.yaml</h2>
+app:
+  name: myapp
+  version: 1.2.3
+environment: production
+replicas: 3
+resources:
+  cpu: 500m
+  memory: 1Gi</p>
+<h2>templates/deployment.yaml</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.app.name }}
+  labels:
+    app: {{ .Values.app.name }}
+    version: {{ .Values.app.version | quote }}
+    environment: {{ .Values.environment }}
+    # String manipulation
+    app-upper: {{ .Values.app.name | upper }}
+    app-title: {{ .Values.app.name | title }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+        # Default values with fallback
+        version: {{ .Values.app.version | default "latest" }}
+    spec:
+      containers:
+      - name: {{ .Values.app.name }}
+        image: {{ .Values.app.name }}:{{ .Values.app.version }}
+        resources:
+          requests:
+            # Type conversion
+            cpu: {{ .Values.resources.cpu | quote }}
+            memory: {{ .Values.resources.memory | quote }}
+          limits:
+            cpu: {{ .Values.resources.cpu | quote }}
+            memory: {{ .Values.resources.memory | quote }}</code></pre>
+<p>#### Conditional Logic
+<pre><code><h2>templates/service.yaml</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.app.name }}
+  {{- if .Values.service.annotations }}
+  annotations:
+    {{- toYaml .Values.service.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  {{- if eq .Values.service.type "LoadBalancer" }}
+  {{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+    {{- toYaml .Values.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if and (eq .Values.service.type "NodePort") .Values.service.nodePort }}
+  nodePort: {{ .Values.service.nodePort }}
+  {{- end }}
+  ports:
+  - port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort | default .Values.service.port }}
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ .Values.app.name }}</code></pre></p>
+<p>#### Loops and Iteration
+<pre><code><h2>values.yaml</h2>
+services:
+  - name: web
+    port: 80
+    targetPort: 8080
+  - name: api
+    port: 8080
+    targetPort: 3000
+  - name: metrics
+    port: 9090
+    targetPort: 9090</p>
+<p>configMaps:
+  app-config:
+    database.host: postgres.example.com
+    database.port: "5432"
+  cache-config:
+    redis.host: redis.example.com
+    redis.port: "6379"</p>
+<h2>templates/services.yaml</h2>
+{{- range .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Values.app.name }}-{{ .name }}
+spec:
+  selector:
+    app: {{ $.Values.app.name }}
+  ports:
+  - port: {{ .port }}
+    targetPort: {{ .targetPort }}
+    name: {{ .name }}
+{{- end }}
+<h2>templates/configmaps.yaml</h2>
+{{- range $name, $data := .Values.configMaps }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}
+data:
+  {{- range $key, $value := $data }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}</code></pre>
+<h4>Advanced Helm Patterns</h4>
+<p>#### Helper Templates (_helpers.tpl)
+<pre><code><h2>templates/_helpers.tpl</h2>
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "myapp.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}</p>
+<p>{{/*
+Create a default fully qualified app name.
+*/}}
+{{- define "myapp.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}</p>
+<p>{{/*
+Common labels
+*/}}
+{{- define "myapp.labels" -}}
+helm.sh/chart: {{ include "myapp.chart" . }}
+{{ include "myapp.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}</p>
+<p>{{/*
+Selector labels
+*/}}
+{{- define "myapp.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "myapp.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}</p>
+<p>{{/*
+Database URL builder
+*/}}
+{{- define "myapp.databaseUrl" -}}
+{{- if .Values.database.existingSecret }}
+{{- printf "postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@%s:%d/%s" .Values.database.host (.Values.database.port | int) .Values.database.name }}
+{{- else }}
+{{- printf "postgresql://%s:%s@%s:%d/%s" .Values.database.user .Values.database.password .Values.database.host (.Values.database.port | int) .Values.database.name }}
+{{- end }}
+{{- end }}</p>
+<h2>templates/deployment.yaml using helpers</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "myapp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "myapp.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        env:
+        - name: DATABASE_URL
+          value: {{ include "myapp.databaseUrl" . | quote }}</code></pre>
+<p>#### Multi-Environment Values Structure
+<pre><code><h2>values.yaml (default/development)</h2>
+global:
+  imageRegistry: ""
+  imagePullSecrets: []</p>
+<p>app:
+  name: myapp
+  version: latest</p>
+<p>environment: development</p>
+<p>database:
+  host: postgres.dev.internal
+  port: 5432
+  name: myapp_dev
+  user: dev_user
+  password: dev_password</p>
+<p>resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi</p>
+<h2>values-production.yaml</h2>
+environment: production
+<p>database:
+  host: postgres.prod.internal
+  name: myapp_prod
+  existingSecret: database-credentials</p>
+<p>resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 1000m
+    memory: 2Gi</p>
+<p>autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70</p>
+<h2>values-staging.yaml</h2>
+environment: staging
+<p>database:
+  host: postgres.staging.internal
+  name: myapp_staging</p>
+<p>resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi</code></pre></p>
+<p>#### Conditional Resource Creation
+<pre><code><h2>templates/hpa.yaml</h2>
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "myapp.fullname" . }}
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "myapp.fullname" . }}
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}</p>
+<h2>templates/pdb.yaml</h2>
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "myapp.fullname" . }}
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "myapp.selectorLabels" . | nindent 6 }}
+{{- end }}</code></pre>
+<p>#### Complex Configuration Templating
+<pre><code><h2>templates/configmap.yaml</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "myapp.fullname" . }}-config
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+data:
+  app.properties: |
+    # Application configuration
+    app.name={{ .Values.app.name }}
+    app.version={{ .Values.app.version }}
+    app.environment={{ .Values.environment }}
+    
+    # Database configuration
+    {{- if .Values.database.existingSecret }}
+    database.url=${DATABASE_URL}
+    {{- else }}
+    database.host={{ .Values.database.host }}
+    database.port={{ .Values.database.port }}
+    database.name={{ .Values.database.name }}
+    database.user={{ .Values.database.user }}
+    database.password={{ .Values.database.password }}
+    {{- end }}
+    
+    # Feature flags
+    {{- range $key, $value := .Values.features }}
+    feature.{{ $key }}={{ $value }}
+    {{- end }}
+    
+    # Environment-specific settings
+    {{- if eq .Values.environment "production" }}
+    log.level=warn
+    cache.enabled=true
+    metrics.enabled=true
+    {{- else if eq .Values.environment "staging" }}
+    log.level=info
+    cache.enabled=true
+    metrics.enabled=true
+    {{- else }}
+    log.level=debug
+    cache.enabled=false
+    metrics.enabled=false
+    {{- end }}
+  
+  {{- if .Values.customConfig }}
+  custom.properties: |
+    {{- .Values.customConfig | nindent 4 }}
+  {{- end }}</code></pre></p>
+<h4>Helm Hooks</h4>
+<p>#### Pre-Install Database Migration
+<pre><code><h2>templates/pre-install-job.yaml</h2>
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "myapp.fullname" . }}-migration
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ include "myapp.fullname" . }}-migration
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: migration
+        image: {{ .Values.migration.image.repository }}:{{ .Values.migration.image.tag }}
+        command: ["./migrate", "up"]
+        env:
+        - name: DATABASE_URL
+          value: {{ include "myapp.databaseUrl" . | quote }}</code></pre></p>
+<p>#### Post-Install Testing
+<pre><code><h2>templates/post-install-test.yaml</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "myapp.fullname" . }}-test
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+  - name: test
+    image: curlimages/curl:latest
+    command:
+    - sh
+    - -c
+    - |
+      # Wait for service to be ready
+      until curl -f http://{{ include "myapp.fullname" . }}:{{ .Values.service.port }}/health; do
+        echo "Waiting for service to be ready..."
+        sleep 5
+      done
+      echo "Service is ready!"
+      
+      # Run additional tests
+      curl -f http://{{ include "myapp.fullname" . }}:{{ .Values.service.port }}/api/status
+      echo "All tests passed!"</code></pre></p>
+<h3>Key Concepts Summary</h3>
+<li><strong>ConfigMaps</strong> - Non-sensitive configuration data stored as key-value pairs or files</li>
+<li><strong>Secrets</strong> - Sensitive data with base64 encoding and additional security features</li>
+<li><strong>Environment Variables</strong> - Direct injection from static values, ConfigMaps, Secrets, or pod metadata</li>
+<li><strong>Volume Mounting</strong> - Mounting configuration as files with selective key mounting and custom paths</li>
+<li><strong>Hot-Reloading</strong> - Applications detecting and applying configuration changes without restarts</li>
+<li><strong>Helm Templates</strong> - Dynamic YAML generation with conditionals, loops, and helper functions</li>
+<li><strong>Multi-Environment</strong> - Different configurations for development, staging, and production</li>
+<li><strong>External Secrets</strong> - Integration with external secret management systems</li>
+<li><strong>Configuration Layering</strong> - Combining multiple ConfigMaps and Secrets with precedence rules</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Separate sensitive from non-sensitive data</strong> - Use ConfigMaps for config, Secrets for credentials
+2. <strong>Use volume mounts for large configs</strong> - Better than environment variables for files
+3. <strong>Implement configuration validation</strong> - Validate config format and values at startup
+4. <strong>Use external secret management</strong> - HashiCorp Vault, AWS Secrets Manager for production
+5. <strong>Enable encryption at rest</strong> - Encrypt secrets in etcd using EncryptionConfiguration
+6. <strong>Implement secret rotation</strong> - Regularly rotate credentials and API keys
+7. <strong>Use Helm for multi-environment</strong> - Template-based configuration management
+8. <strong>Design for hot-reloading</strong> - Build applications that can reload config without restart
+9. <strong>Document configuration</strong> - Maintain clear documentation of all configuration options
+10. <strong>Monitor configuration changes</strong> - Track and audit configuration modifications</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: ConfigMap/Secret Not Updating in Pod</h4>
+<li><strong>Symptom:</strong> Pod environment variables don't reflect ConfigMap/Secret changes</li>
+<li><strong>Cause:</strong> Environment variables are set at pod creation time, not updated dynamically</li>
+<li><strong>Solution:</strong> Use volume mounts or restart pods to get updated configuration</li>
+<pre><code><h2>Check ConfigMap content</h2>
+kubectl get configmap app-config -o yaml
+<h2>Restart deployment to pick up changes</h2>
+kubectl rollout restart deployment/myapp
+<h2>Use volume mounts for dynamic updates</h2></code></pre>
+<h4>Problem 2: Secret Data Not Base64 Encoded Properly</h4>
+<li><strong>Symptom:</strong> Secret values appear garbled or cause application errors</li>
+<li><strong>Cause:</strong> Incorrect base64 encoding or using data instead of stringData</li>
+<li><strong>Solution:</strong> Use stringData for plain text or verify base64 encoding</li>
+<pre><code><h2>Check secret content</h2>
+kubectl get secret app-secret -o jsonpath='{.data.password}' | base64 -d
+<h2>Create secret with proper encoding</h2>
+kubectl create secret generic app-secret --from-literal=password=mypassword</code></pre>
+<h4>Problem 3: Helm Template Rendering Errors</h4>
+<li><strong>Symptom:</strong> Helm install/upgrade fails with template errors</li>
+<li><strong>Cause:</strong> Syntax errors, missing values, or incorrect logic in templates</li>
+<li><strong>Solution:</strong> Use helm template command to debug and validate values</li>
+<pre><code><h2>Debug template rendering</h2>
+helm template myapp ./chart -f values-production.yaml
+<h2>Validate with dry-run</h2>
+helm install myapp ./chart --dry-run --debug
+<h2>Check specific template</h2>
+helm template myapp ./chart -s templates/deployment.yaml</code></pre>
+<h4>Problem 4: Configuration Hot-Reload Not Working</h4>
+<li><strong>Symptom:</strong> Application doesn't pick up configuration changes</li>
+<li><strong>Cause:</strong> Application not watching for file changes or incorrect file paths</li>
+<li><strong>Solution:</strong> Verify file watching implementation and mount paths</li>
+<pre><code><h2>Check if files are being updated</h2>
+kubectl exec -it pod-name -- ls -la /app/config
+<h2>Test file watching</h2>
+kubectl exec -it pod-name -- inotifywait -m /app/config</code></pre>
+<h4>Problem 5: Environment Variable Precedence Issues</h4>
+<li><strong>Symptom:</strong> Wrong configuration values being used</li>
+<li><strong>Cause:</strong> Environment variable precedence not understood</li>
+<li><strong>Solution:</strong> Check variable precedence and explicit overrides</li>
+<pre><code><h2>Check environment variables in pod</h2>
+kubectl exec -it pod-name -- env | sort
+<h2>Check pod configuration</h2>
+kubectl describe pod pod-name</code></pre>
+<h3>References / Further Reading</h3>
+<li>[Kubernetes ConfigMaps Documentation](https://kubernetes.io/docs/concepts/configuration/configmap/)</li>
+<li>[Kubernetes Secrets Documentation](https://kubernetes.io/docs/concepts/configuration/secret/)</li>
+<li>[Helm Templating Guide](https://helm.sh/docs/chart_template_guide/)</li>
+<li>[External Secrets Operator](https://external-secrets.io/)</li>
+<li>[Stakater Reloader](https://github.com/stakater/Reloader)</li>
+<li>[Kubernetes Configuration Best Practices](https://kubernetes.io/docs/concepts/configuration/overview/)</li>
+<li>[Helm Values Files](https://helm.sh/docs/chart_template_guide/values_files/)</li>
+<li>[Configuration Hot Reloading Patterns](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

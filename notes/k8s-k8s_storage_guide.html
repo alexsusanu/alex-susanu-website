@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Storage: Complete Deep Technical Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Storage: Complete Deep Technical Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                DevOps (k8s) • Updated May 31, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">kubernetes</span><span class="tag">storage</span><span class="tag">persistent-volumes</span><span class="tag">pvc</span><span class="tag">storage-classes</span><span class="tag">statefulsets</span><span class="tag">volumes</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Storage: Complete Deep Technical Guide</h2>
+<h3>Introduction to Kubernetes Storage</h3>
+<p>Kubernetes storage solves the fundamental problem that <strong>containers are ephemeral</strong> - when a container restarts, all data inside it is lost. Storage in Kubernetes provides ways to persist data beyond the container lifecycle and share data between containers.</p>
+<h4>The Container Storage Problem</h4>
+<strong>Without Persistent Storage:</strong>
+<pre><code>Container starts → Creates data → Container dies → Data is LOST forever</code></pre>
+<strong>With Persistent Storage:</strong>
+<pre><code>Container starts → Mounts persistent volume → Creates data → Container dies → Data SURVIVES
+New container starts → Mounts same volume → Sees previous data → Continues working</code></pre>
+<h4>Kubernetes Storage Concepts Hierarchy</h4>
+<pre><code>Physical Storage (Disk, NFS, Cloud Storage)
+↓
+Persistent Volume (PV) - Cluster resource representing actual storage
+↓
+Persistent Volume Claim (PVC) - User's request for storage
+↓
+Pod Volume Mount - How pods access the claimed storage</code></pre>
+<strong>Key Insight:</strong> Kubernetes separates the <strong>implementation</strong> (how storage actually works) from the <strong>interface</strong> (how users request storage). This allows the same application to work with different storage backends.
+<h3>Persistent Volumes (PV) Deep Dive</h3>
+<h4>What Persistent Volumes Actually Are</h4>
+<p>A <strong>Persistent Volume (PV)</strong> is a Kubernetes API object that represents a piece of actual storage that exists somewhere - on a local disk, network file system, or cloud storage service. Think of it like a "storage ID card" that tells Kubernetes where to find real storage.</p>
+<strong>PV vs Actual Storage:</strong>
+<ul><li><strong>Actual Storage</strong> - The real disk/SSD/NFS share that stores bytes</li>
+<li><strong>Persistent Volume</strong> - Kubernetes object that points to that storage and describes its properties</li>
+<strong>What PVs Contain:</strong>
+<li><strong>Capacity</strong> - How much storage space is available</li>
+<li><strong>Access Modes</strong> - How the storage can be accessed (read-write, read-only, etc.)</li>
+<li><strong>Volume Plugin</strong> - Which technology provides the storage (NFS, AWS EBS, etc.)</li>
+<li><strong>Connection Details</strong> - How to actually connect to the storage</li>
+<li><strong>Reclaim Policy</strong> - What happens to data when PV is released</li>
+<h4>PV Lifecycle States</h4>
+<strong>Available</strong> - PV exists and is ready to be claimed
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+status:
+  phase: Available  # Ready for use, no PVC bound to it</code></pre>
+<strong>Bound</strong> - PV is claimed by a PVC and in use
+<pre><code>status:
+  phase: Bound
+  claimRef:
+    name: my-pvc
+    namespace: production</code></pre>
+<strong>Released</strong> - PVC was deleted but PV still contains data
+<pre><code>status:
+  phase: Released  # PVC gone, but data still exists</code></pre>
+<strong>Failed</strong> - PV has a problem and can't be used
+<pre><code>status:
+  phase: Failed
+  message: "Failed to mount volume"</code></pre>
+<h4>Access Modes Explained</h4>
+<strong>ReadWriteOnce (RWO)</strong> - Can be mounted read-write by <strong>one node only</strong>
+<li>Most common for databases, single-instance applications</li>
+<li>Examples: AWS EBS, Google Persistent Disk, Azure Disk</li>
+<li><strong>Important:</strong> "One node" not "one pod" - multiple pods on same node can share</li>
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: database-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+  - ReadWriteOnce  # Only one node can mount this
+  awsElasticBlockStore:
+    volumeID: vol-12345678
+    fsType: ext4</code></pre>
+<strong>ReadOnlyMany (ROX)</strong> - Can be mounted read-only by <strong>multiple nodes</strong>
+<li>Good for static content, configuration files, shared data</li>
+<li>Examples: NFS, CephFS (read-only mode)</li>
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: static-content-pv
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+  - ReadOnlyMany  # Multiple nodes can read
+  nfs:
+    server: nfs-server.company.com
+    path: /exports/static-content</code></pre>
+<strong>ReadWriteMany (RWX)</strong> - Can be mounted read-write by <strong>multiple nodes</strong>
+<li>Required for shared file systems, multi-writer scenarios</li>
+<li>Examples: NFS, CephFS, Azure Files</li>
+<li><strong>Warning:</strong> Not all storage types support this!</li>
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: shared-data-pv
+spec:
+  capacity:
+    storage: 200Gi
+  accessModes:
+  - ReadWriteMany  # Multiple nodes can read AND write
+  nfs:
+    server: nfs-server.company.com
+    path: /exports/shared-data</code></pre>
+<strong>ReadWriteOncePod (RWOP)</strong> - Can be mounted read-write by <strong>one pod only</strong>
+<li>Newest access mode, strictest restriction</li>
+<li>Ensures only one pod can write at a time</li>
+<li>Good for databases that can't handle multiple writers</li>
+<h4>Reclaim Policies Explained</h4>
+<strong>Retain</strong> - Keep data when PVC is deleted (manual cleanup required)
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: important-data-pv
+spec:
+  persistentVolumeReclaimPolicy: Retain  # Data survives PVC deletion
+  capacity:
+    storage: 100Gi
+  # When PVC is deleted:
+  # 1. PV status becomes "Released"
+  # 2. Data still exists on storage
+  # 3. Admin must manually clean up and make PV "Available" again</code></pre>
+<strong>Delete</strong> - Delete underlying storage when PVC is deleted
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: temp-data-pv
+spec:
+  persistentVolumeReclaimPolicy: Delete  # Storage gets deleted too
+  capacity:
+    storage: 50Gi
+  # When PVC is deleted:
+  # 1. PV gets deleted
+  # 2. Underlying storage (AWS EBS, etc.) gets deleted
+  # 3. Data is PERMANENTLY LOST</code></pre>
+<strong>Recycle</strong> - Wipe data and make PV available again (deprecated)
+<pre><code><h2>DON'T USE - deprecated and dangerous</h2>
+persistentVolumeReclaimPolicy: Recycle  # Runs "rm -rf" on data</code></pre>
+<h4>PV Examples by Storage Type</h4>
+<p>#### Local Storage PV
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-storage-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage
+  local:
+    path: /mnt/ssd1  # Path on the node
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-node-1  # Only available on this specific node</code></pre></p>
+<p>#### NFS PV
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+  - ReadWriteMany  # NFS supports multiple writers
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: 192.168.1.100
+    path: /exports/kubernetes-data
+  mountOptions:
+  - hard
+  - nfsvers=4.1
+  - rsize=1048576
+  - wsize=1048576</code></pre></p>
+<p>#### AWS EBS PV
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aws-ebs-pv
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+  - ReadWriteOnce  # EBS only supports single node
+  persistentVolumeReclaimPolicy: Delete
+  awsElasticBlockStore:
+    volumeID: vol-0123456789abcdef0
+    fsType: ext4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: failure-domain.beta.kubernetes.io/zone
+          operator: In
+          values:
+          - us-west-2a  # EBS volumes are zone-specific</code></pre></p>
+<p>#### Google Persistent Disk PV
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gcp-disk-pv
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  gcePersistentDisk:
+    pdName: my-data-disk
+    fsType: ext4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: failure-domain.beta.kubernetes.io/zone
+          operator: In
+          values:
+          - us-central1-a</code></pre></p>
+<h3>Persistent Volume Claims (PVC) Deep Dive</h3>
+<h4>What PVCs Actually Do</h4>
+<p>A <strong>Persistent Volume Claim (PVC)</strong> is a user's request for storage. It's like going to a restaurant and saying "I want a table for 4 people" - you're not specifying which exact table, just your requirements. Kubernetes finds a PV that matches your requirements and "binds" it to your PVC.</p>
+<strong>PVC as Storage Request:</strong>
+<li>"I need 10GB of storage"</li>
+<li>"I need ReadWriteOnce access"</li>
+<li>"I need fast SSD storage class"</li>
+<li>"Find me a PV that matches these requirements"</li>
+<strong>Binding Process:</strong>
+1. <strong>User creates PVC</strong> - Specifies storage requirements
+2. <strong>Kubernetes searches</strong> - Looks for PV that matches requirements
+3. <strong>Binding occurs</strong> - PVC gets connected to suitable PV
+4. <strong>Pod uses PVC</strong> - Pod mounts the claimed storage
+5. <strong>Exclusive relationship</strong> - One PVC can only bind to one PV
+<h4>PVC Binding Requirements</h4>
+<p>For a PVC to bind to a PV, <strong>ALL</strong> of these must match:</p>
+<strong>Storage Capacity</strong> - PV must have at least as much capacity as requested
+<pre><code><h2>PVC requests 10Gi</h2>
+spec:
+  resources:
+    requests:
+      storage: 10Gi
+<h2>PV has 20Gi - MATCH (PV has enough)</h2>
+spec:
+  capacity:
+    storage: 20Gi
+<h2>PV has 5Gi - NO MATCH (PV too small)</h2></code></pre>
+<strong>Access Modes</strong> - PV must support requested access mode
+<pre><code><h2>PVC wants ReadWriteOnce</h2>
+spec:
+  accessModes:
+  - ReadWriteOnce
+<h2>PV supports ReadWriteOnce - MATCH</h2>
+spec:
+  accessModes:
+  - ReadWriteOnce
+<h2>PV only supports ReadOnlyMany - NO MATCH</h2></code></pre>
+<strong>Storage Class</strong> - Must match (or both empty)
+<pre><code><h2>PVC requests specific storage class</h2>
+spec:
+  storageClassName: fast-ssd
+<h2>PV has same storage class - MATCH</h2>
+spec:
+  storageClassName: fast-ssd
+<h2>PV has different storage class - NO MATCH</h2></code></pre>
+<strong>Node Affinity</strong> - Pod's node must be able to access the PV
+<pre><code><h2>PV only available on specific node</h2>
+spec:
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-node-1
+<h2>Pod scheduled on worker-node-1 - MATCH</h2>
+<h2>Pod scheduled on worker-node-2 - NO MATCH</h2></code></pre>
+<h4>Static vs Dynamic Provisioning</h4>
+<p>#### Static Provisioning - Pre-Created PVs</p>
+<strong>How it works:</strong> Administrator creates PVs in advance, users claim them with PVCs.
+<strong>Example Workflow:</strong>
+<pre><code><h2>1. Admin creates PV</h2>
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: manual-pv-1
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  nfs:
+    server: nfs-server.company.com
+    path: /exports/pv-1
+---
+<h2>2. User creates PVC</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-storage-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+<h2>3. Kubernetes binds PVC to PV automatically</h2></code></pre>
+<strong>When to use static provisioning:</strong>
+<li>Small clusters with predictable storage needs</li>
+<li>Using storage systems that don't support dynamic provisioning</li>
+<li>Need specific configuration or pre-created storage</li>
+<li>Maximum control over storage allocation</li>
+<p>#### Dynamic Provisioning - Automatic PV Creation</p>
+<strong>How it works:</strong> When PVC is created, Kubernetes automatically creates a matching PV using a StorageClass.
+<strong>Example Workflow:</strong>
+<pre><code><h2>1. User creates PVC with storageClassName</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: aws-ebs-gp2  # Tells K8s how to create PV
+<h2>2. Kubernetes automatically creates PV using StorageClass</h2>
+<h2>3. PVC gets bound to the new PV</h2>
+<h2>4. Underlying storage (AWS EBS volume) gets created</h2></code></pre>
+<strong>Benefits of dynamic provisioning:</strong>
+<li>No pre-planning required</li>
+<li>Storage created on-demand</li>
+<li>Right-sized storage (no waste)</li>
+<li>Scales automatically</li>
+<h4>PVC Examples</h4>
+<p>#### Basic Application Storage
+<pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: webapp-storage
+  namespace: production
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: fast-ssd
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+spec:
+  replicas: 1  # Only 1 replica because RWO
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest
+        volumeMounts:
+        - name: app-data
+          mountPath: /var/lib/app
+      volumes:
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: webapp-storage</code></pre></p>
+<p>#### Database Storage with Specific Requirements
+<pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-storage
+  namespace: database
+  labels:
+    app: postgres
+    tier: database
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: high-iops-ssd
+  selector:
+    matchLabels:
+      type: database-storage  # Only bind to PVs with this label
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14
+        env:
+        - name: POSTGRES_DB
+          value: myapp
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-storage</code></pre></p>
+<p>#### Shared Storage for Multiple Pods
+<pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-files
+  namespace: production
+spec:
+  accessModes:
+  - ReadWriteMany  # Multiple pods can mount
+  resources:
+    requests:
+      storage: 200Gi
+  storageClassName: nfs-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-processors
+spec:
+  replicas: 3  # Multiple replicas can share RWX volume
+  template:
+    spec:
+      containers:
+      - name: processor
+        image: file-processor:latest
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+      volumes:
+      - name: shared-data
+        persistentVolumeClaim:
+          claimName: shared-files</code></pre></p>
+<h3>Storage Classes Deep Dive</h3>
+<h4>What Storage Classes Actually Do</h4>
+<p>A <strong>StorageClass</strong> is like a "storage profile" that defines how to dynamically create storage when needed. It's a template that tells Kubernetes:
+<li>What storage technology to use (AWS EBS, GCP Persistent Disk, etc.)</li>
+<li>What parameters to use (disk type, replication, encryption, etc.)</li>
+<li>How fast or durable the storage should be</li></p>
+<strong>StorageClass as Storage Menu:</strong>
+Think of StorageClasses like a restaurant menu:
+<li>"fast-ssd" = Premium option, expensive but fast</li>
+<li>"standard-disk" = Regular option, balanced price/performance  </li>
+<li>"slow-archive" = Budget option, slow but cheap</li>
+<h4>Dynamic Provisioning Process</h4>
+<strong>Complete Dynamic Provisioning Flow:</strong>
+1. <strong>User creates PVC</strong> with <code>storageClassName: fast-ssd</code>
+2. <strong>Kubernetes finds StorageClass</strong> named "fast-ssd"
+3. <strong>StorageClass calls provisioner</strong> (e.g., AWS EBS CSI driver)
+4. <strong>Provisioner creates actual storage</strong> (e.g., creates AWS EBS volume)
+5. <strong>Kubernetes creates PV</strong> representing the new storage
+6. <strong>PVC binds to new PV</strong> automatically
+7. <strong>Pod can mount the storage</strong> through PVC
+<strong>Example with real AWS resources:</strong>
+<pre><code><h2>1. StorageClass defines how to create storage</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: aws-ebs-gp3
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  iops: "3000"
+  throughput: "125"
+  encrypted: "true"
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+---
+<h2>2. PVC requests storage using this class</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-app-storage
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: aws-ebs-gp3
+<h2>3. Result: AWS EBS GP3 volume gets created automatically</h2>
+<h2>- Type: gp3</h2>
+<h2>- Size: 50GB</h2>
+<h2>- IOPS: 3000</h2>
+<h2>- Throughput: 125 MiB/s</h2>
+<h2>- Encrypted: Yes</h2></code></pre>
+<h4>StorageClass Parameters by Provider</h4>
+<p>#### AWS EBS StorageClass Examples
+<pre><code><h2>High Performance SSD</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: aws-ebs-io1-high-perf
+provisioner: ebs.csi.aws.com
+parameters:
+  type: io1          # Provisioned IOPS SSD
+  iopsPerGB: "50"    # 50 IOPS per GB
+  encrypted: "true"
+  kmsKeyId: "arn:aws:kms:us-west-2:123456789:key/12345678-1234-1234-1234-123456789012"
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+---
+<h2>Balanced Performance</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: aws-ebs-gp3-standard
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  iops: "3000"       # Baseline IOPS
+  throughput: "125"  # MiB/s
+  encrypted: "true"
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+---
+<h2>Budget Option</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: aws-ebs-gp2-budget
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp2          # Previous generation, cheaper
+  encrypted: "false"
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true</code></pre></p>
+<p>#### Google Cloud StorageClass Examples
+<pre><code><h2>High Performance Regional SSD</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gcp-ssd-regional
+provisioner: pd.csi.storage.gke.io
+parameters:
+  type: pd-ssd
+  replication-type: regional-pd  # Replicated across zones
+  zones: us-central1-a,us-central1-b,us-central1-c
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+---
+<h2>Standard Persistent Disk</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gcp-standard
+provisioner: pd.csi.storage.gke.io
+parameters:
+  type: pd-standard  # Traditional spinning disks
+  replication-type: none
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true</code></pre></p>
+<p>#### Azure StorageClass Examples
+<pre><code><h2>Premium SSD</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azure-premium-ssd
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Premium_LRS  # Premium Locally Redundant Storage
+  kind: Managed
+  cachingmode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+---
+<h2>Standard HDD</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azure-standard-hdd
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: Managed
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true</code></pre></p>
+<p>#### NFS StorageClass Example
+<pre><code>apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
+parameters:
+  server: nfs-server.company.com
+  path: /exports/kubernetes
+  archiveOnDelete: "true"  # Move to archive instead of delete
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: false  # NFS doesn't support expansion</code></pre></p>
+<h4>Volume Binding Modes</h4>
+<p>#### Immediate Binding
+<pre><code>apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: immediate-binding
+provisioner: ebs.csi.aws.com
+volumeBindingMode: Immediate  # Create volume as soon as PVC is created
+<h2>Pros: Fast PVC binding</h2>
+<h2>Cons: Volume might be created in wrong availability zone</h2></code></pre></p>
+<strong>Immediate binding process:</strong>
+1. PVC created → Storage provisioned immediately
+2. Pod scheduled → Might be in different zone than storage
+3. Pod fails to start → Storage and pod in different zones
+<p>#### WaitForFirstConsumer Binding
+<pre><code>apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: wait-for-consumer
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer  # Wait for pod to be scheduled
+<h2>Pros: Storage created in same zone as pod</h2>
+<h2>Cons: Slightly slower pod startup</h2></code></pre></p>
+<strong>WaitForFirstConsumer process:</strong>
+1. PVC created → Storage NOT provisioned yet
+2. Pod scheduled → Kubernetes knows which zone pod will run in
+3. Storage provisioned → Created in same zone as pod
+4. Pod starts successfully → Storage and pod in same zone
+<h4>Default StorageClass</h4>
+<strong>Setting Default StorageClass:</strong>
+<pre><code>apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: default-storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"  # Makes this default
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3</code></pre>
+<strong>How Default Works:</strong>
+<pre><code><h2>PVC without storageClassName</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: auto-storage
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+  # No storageClassName specified - uses default StorageClass</code></pre>
+<h3>StatefulSets Storage Deep Dive</h3>
+<h4>Why StatefulSets Need Special Storage</h4>
+<strong>StatefulSets</strong> are designed for applications that need:
+<li><strong>Stable storage identity</strong> - Each pod gets its own persistent storage</li>
+<li><strong>Ordered deployment</strong> - Pods start and stop in sequence</li>
+<li><strong>Stable network identity</strong> - Predictable DNS names</li>
+<strong>Problem with Deployments and Storage:</strong>
+<pre><code><h2>This DOESN'T WORK for databases</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+spec:
+  replicas: 3  # 3 database pods
+  template:
+    spec:
+      volumes:
+      - name: db-data
+        persistentVolumeClaim:
+          claimName: shared-db-storage  # ALL pods share same storage!</code></pre>
+<strong>Problems:</strong>
+<li>All 3 database pods write to same storage = corruption</li>
+<li>Pods have random names = can't identify which is primary</li>
+<li>Pods can start in any order = split-brain scenarios</li>
+<h4>StatefulSet Storage Architecture</h4>
+<strong>How StatefulSets Solve Storage:</strong>
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: database
+spec:
+  serviceName: database
+  replicas: 3
+  volumeClaimTemplates:  # Creates separate PVC for each pod
+  - metadata:
+      name: db-data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: fast-ssd
+  template:
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/postgresql/data</code></pre>
+<strong>What StatefulSet Creates:</strong>
+<pre><code>database-0 pod → db-data-database-0 PVC → PV-1 → Storage-1
+database-1 pod → db-data-database-1 PVC → PV-2 → Storage-2  
+database-2 pod → db-data-database-2 PVC → PV-3 → Storage-3</code></pre>
+<strong>Storage Identity Properties:</strong>
+<li><strong>Each pod gets unique storage</strong> - database-0 has different storage than database-1</li>
+<li><strong>Storage survives pod restart</strong> - If database-0 pod dies, new database-0 pod gets same storage</li>
+<li><strong>Ordered scaling</strong> - database-1 won't start until database-0 is ready</li>
+<li><strong>Stable storage names</strong> - db-data-database-0 PVC name never changes</li>
+<h4>VolumeClaimTemplates Explained</h4>
+<strong>VolumeClaimTemplate</strong> is like a PVC factory - it creates a new PVC for each StatefulSet pod using the same template.
+<strong>Template Expansion:</strong>
+<pre><code><h2>StatefulSet has this template:</h2>
+volumeClaimTemplates:
+<li>metadata:</li>
+    name: data-volume
+  spec:
+    accessModes: [ReadWriteOnce]
+    resources:
+      requests:
+        storage: 50Gi
+<h2>Kubernetes creates these actual PVCs:</h2>
+<h2>data-volume-myapp-0 (for pod myapp-0)</h2>
+<h2>data-volume-myapp-1 (for pod myapp-1)  </h2>
+<h2>data-volume-myapp-2 (for pod myapp-2)</h2></code></pre>
+<strong>PVC Naming Pattern:</strong>
+<pre><code>{volumeClaimTemplate.name}-{statefulset.name}-{ordinal}
+<p>Examples:
+data-volume-postgres-0
+data-volume-postgres-1
+logs-volume-elasticsearch-0
+config-volume-kafka-2</code></pre></p>
+<h4>StatefulSet Storage Examples</h4>
+<p>#### PostgreSQL Primary-Replica Cluster
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-cluster
+  namespace: database
+spec:
+  serviceName: postgres-cluster
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  volumeClaimTemplates:
+  # Main database storage
+  - metadata:
+      name: postgres-data
+      labels:
+        app: postgres
+        type: data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 200Gi
+      storageClassName: high-iops-ssd
+  # Write-Ahead Log storage (separate for performance)
+  - metadata:
+      name: postgres-wal
+      labels:
+        app: postgres
+        type: wal
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 50Gi
+      storageClassName: ultra-fast-ssd
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14
+        env:
+        - name: POSTGRES_DB
+          value: myapp
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-wal
+          mountPath: /var/lib/postgresql/wal
+        # Configuration based on pod ordinal
+        command:
+        - sh
+        - -c
+        - |
+          if [ "$HOSTNAME" = "postgres-cluster-0" ]; then
+            # This is the primary
+            echo "Starting as primary"
+            postgres -c wal_level=replica -c max_wal_senders=3
+          else
+            # This is a replica
+            echo "Starting as replica"
+            pg_basebackup -h postgres-cluster-0 -D /var/lib/postgresql/data -U postgres -v -P -W
+            postgres -c hot_standby=on
+          fi</code></pre></p>
+<p>#### Elasticsearch Cluster with Different Storage Types
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: search
+spec:
+  serviceName: elasticsearch
+  replicas: 3
+  selector:
+    matchLabels:
+      app: elasticsearch
+  volumeClaimTemplates:
+  # Fast storage for Elasticsearch data
+  - metadata:
+      name: es-data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 500Gi
+      storageClassName: nvme-ssd
+  # Separate storage for logs
+  - metadata:
+      name: es-logs
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: standard-ssd
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      initContainers:
+      # Set proper permissions
+      - name: fix-permissions
+        image: busybox
+        command: ["sh", "-c", "chown -R 1000:1000 /usr/share/elasticsearch/data"]
+        volumeMounts:
+        - name: es-data
+          mountPath: /usr/share/elasticsearch/data
+      containers:
+      - name: elasticsearch
+        image: elasticsearch:8.5.0
+        env:
+        - name: cluster.name
+          value: "elasticsearch-cluster"
+        - name: node.name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: discovery.seed_hosts
+          value: "elasticsearch-0.elasticsearch,elasticsearch-1.elasticsearch,elasticsearch-2.elasticsearch"
+        - name: cluster.initial_master_nodes
+          value: "elasticsearch-0,elasticsearch-1,elasticsearch-2"
+        - name: ES_JAVA_OPTS
+          value: "-Xms2g -Xmx2g"
+        volumeMounts:
+        - name: es-data
+          mountPath: /usr/share/elasticsearch/data
+        - name: es-logs
+          mountPath: /usr/share/elasticsearch/logs
+        resources:
+          requests:
+            memory: 4Gi
+            cpu: 1000m
+          limits:
+            memory: 4Gi
+            cpu: 2000m</code></pre></p>
+<p>#### Kafka Cluster with Separate Log Storage
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: messaging
+spec:
+  serviceName: kafka
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kafka
+  volumeClaimTemplates:
+  # Kafka log segments (the actual message data)
+  - metadata:
+      name: kafka-logs
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 1Ti
+      storageClassName: high-throughput-ssd
+  # Kafka metadata and configuration
+  - metadata:
+      name: kafka-data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 50Gi
+      storageClassName: standard-ssd
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+      - name: kafka
+        image: confluentinc/cp-kafka:7.0.1
+        env:
+        - name: KAFKA_BROKER_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: "zookeeper:2181"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://$(POD_NAME).kafka:9092"
+        - name: KAFKA_LOG_DIRS
+          value: "/var/kafka-logs"
+        - name: KAFKA_LOG_RETENTION_HOURS
+          value: "168"  # 1 week
+        - name: KAFKA_LOG_SEGMENT_BYTES
+          value: "1073741824"  # 1GB segments
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: kafka-logs
+          mountPath: /var/kafka-logs
+        - name: kafka-data
+          mountPath: /var/kafka-data
+        ports:
+        - containerPort: 9092
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 500m
+          limits:
+            memory: 4Gi
+            cpu: 1000m</code></pre></p>
+<h4>StatefulSet Storage Scaling</h4>
+<p>#### Scaling Up (Adding Pods)
+<pre><code><h2>Scale from 3 to 5 replicas</h2>
+kubectl scale statefulset postgres-cluster --replicas=5</p>
+<h2>What happens:</h2>
+<h2>1. postgres-cluster-3 pod created with new PVC: postgres-data-postgres-cluster-3</h2>
+<h2>2. postgres-cluster-4 pod created with new PVC: postgres-data-postgres-cluster-4</h2>
+<h2>3. New pods start in order: 3 then 4</h2></code></pre>
+<p>#### Scaling Down (Removing Pods)
+<pre><code><h2>Scale from 5 to 3 replicas</h2>
+kubectl scale statefulset postgres-cluster --replicas=3</p>
+<h2>What happens:</h2>
+<h2>1. postgres-cluster-4 pod deleted (highest ordinal first)</h2>
+<h2>2. postgres-cluster-3 pod deleted</h2>
+<h2>3. PVCs postgres-data-postgres-cluster-3 and postgres-data-postgres-cluster-4 remain!</h2>
+<h2>   (Data is preserved even though pods are gone)</h2></code></pre>
+<strong>Important:</strong> PVCs are NOT automatically deleted when scaling down StatefulSets. This prevents accidental data loss.
+<p>#### Manual PVC Cleanup
+<pre><code><h2>After scaling down, manually delete PVCs if you want to free storage</h2>
+kubectl delete pvc postgres-data-postgres-cluster-3
+kubectl delete pvc postgres-data-postgres-cluster-4</p>
+<h2>Or delete all PVCs for a StatefulSet (DANGEROUS!)</h2>
+kubectl delete pvc -l app=postgres</code></pre>
+<h3>Volume Types Deep Dive</h3>
+<h4>emptyDir - Temporary Shared Storage</h4>
+<strong>What emptyDir Actually Is:</strong>
+<li>Temporary directory created when pod starts</li>
+<li>Shared between all containers in the pod</li>
+<li>Deleted when pod is removed from node</li>
+<li>Can be stored on disk or in memory (tmpfs)</li>
+<strong>emptyDir Storage Location:</strong>
+<pre><code>Default: /var/lib/kubelet/pods/{pod-uid}/volumes/kubernetes.io~empty-dir/{volume-name}
+Memory: tmpfs mounted in RAM</code></pre>
+<p>#### Disk-Based emptyDir
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-storage-pod
+spec:
+  containers:
+  - name: writer
+    image: busybox
+    command: ["sh", "-c", "while true; do echo $(date) >> /shared/log.txt; sleep 5; done"]
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared
+  - name: reader
+    image: busybox
+    command: ["sh", "-c", "while true; do tail -f /shared/log.txt; done"]
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared
+  volumes:
+  - name: shared-data
+    emptyDir: {}  # Stored on node's disk</code></pre></p>
+<p>#### Memory-Based emptyDir (tmpfs)
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-cache-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    volumeMounts:
+    - name: cache-volume
+      mountPath: /tmp/cache
+  volumes:
+  - name: cache-volume
+    emptyDir:
+      medium: Memory  # Stored in RAM
+      sizeLimit: 1Gi  # Limit memory usage</code></pre></p>
+<strong>When to use emptyDir:</strong>
+<li>Temporary file processing</li>
+<li>Cache that doesn't need to persist</li>
+<li>Communication between containers in same pod</li>
+<li>Scratch space for applications</li>
+<h4>hostPath - Direct Node Access</h4>
+<strong>What hostPath Does:</strong>
+Mounts a file or directory from the node's filesystem directly into the pod. The data persists on the node even when pods are deleted.
+<strong>Security Warning:</strong> hostPath gives pods direct access to the node's filesystem, which can be a security risk.
+<p>#### Basic hostPath Examples
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-pod
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - name: host-data
+      mountPath: /host-data
+    - name: host-logs
+      mountPath: /var/log/host
+  volumes:
+  # Mount directory from node
+  - name: host-data
+    hostPath:
+      path: /data/app-storage
+      type: DirectoryOrCreate  # Create directory if it doesn't exist
+  # Mount existing file from node
+  - name: host-logs
+    hostPath:
+      path: /var/log/messages
+      type: File  # Must be an existing file</code></pre></p>
+<p>#### hostPath Types
+<pre><code>volumes:
+<li>name: example-volume</li>
+  hostPath:
+    path: /path/on/node
+    type: Directory         # Must be existing directory
+    # type: DirectoryOrCreate # Create directory if missing
+    # type: File              # Must be existing file
+    # type: FileOrCreate      # Create file if missing
+    # type: Socket            # Must be existing Unix socket
+    # type: CharDevice        # Must be existing character device
+    # type: BlockDevice       # Must be existing block device</code></pre></p>
+<p>#### Common hostPath Use Cases</p>
+<strong>Docker Socket Access (for Docker-in-Docker):</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: docker-client
+spec:
+  containers:
+  - name: docker
+    image: docker:20.10
+    command: ["docker", "ps"]  # List containers on node
+    volumeMounts:
+    - name: docker-socket
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: docker-socket
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket</code></pre>
+<strong>System Monitoring (Access to /proc and /sys):</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: node-monitor
+spec:
+  containers:
+  - name: monitor
+    image: monitoring-agent:latest
+    volumeMounts:
+    - name: proc
+      mountPath: /host/proc
+      readOnly: true
+    - name: sys
+      mountPath: /host/sys
+      readOnly: true
+  volumes:
+  - name: proc
+    hostPath:
+      path: /proc
+      type: Directory
+  - name: sys
+    hostPath:
+      path: /sys
+      type: Directory</code></pre>
+<h4>ConfigMap and Secret Volumes</h4>
+<p>#### ConfigMap Volumes
+<strong>How ConfigMap volumes work:</strong> Mount configuration data as files in the pod.</p>
+<pre><code><h2>Create ConfigMap with configuration files</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  app.properties: |
+    database.host=postgres.database.svc.cluster.local
+    database.port=5432
+    log.level=INFO
+  nginx.conf: |
+    server {
+        listen 80;
+        location / {
+            proxy_pass http://backend:8080;
+        }
+    }
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-config
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-config
+      items:  # Optional: map specific keys to specific paths
+      - key: app.properties
+        path: application.properties
+      - key: nginx.conf
+        path: nginx/nginx.conf</code></pre>
+<strong>Result in pod:</strong>
+<pre><code>/etc/config/
+├── application.properties  (content from app.properties key)
+└── nginx/
+    └── nginx.conf         (content from nginx.conf key)</code></pre>
+<p>#### Secret Volumes
+<strong>How Secret volumes work:</strong> Mount sensitive data as files, with additional security features.</p>
+<pre><code><h2>Create Secret with sensitive data</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+type: Opaque
+data:
+  database-password: cGFzc3dvcmQxMjM=  # base64 encoded "password123"
+  api-key: YWJjZGVmZ2hpams=            # base64 encoded "abcdefghijk"
+stringData:
+  ssl-cert.pem: |
+    -----BEGIN CERTIFICATE-----
+    MIIDXTCCAkWgAwIBAgIJAKlwmMhJlJb...
+    -----END CERTIFICATE-----
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-secrets
+spec:
+  containers:
+  - name: app
+    image: myapp:latest
+    volumeMounts:
+    - name: secret-volume
+      mountPath: /etc/secrets
+      readOnly: true  # Secrets should be read-only
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: app-secrets
+      defaultMode: 0400  # Read-only for owner only
+      items:
+      - key: database-password
+        path: db-password
+        mode: 0400
+      - key: ssl-cert.pem
+        path: ssl/cert.pem
+        mode: 0444</code></pre>
+<strong>Result in pod:</strong>
+<pre><code>/etc/secrets/
+├── db-password     (contains "password123", mode 0400)
+└── ssl/
+    └── cert.pem    (contains SSL certificate, mode 0444)</code></pre>
+<h4>Network Storage Types</h4>
+<p>#### NFS (Network File System)
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+  - ReadWriteMany  # NFS supports multiple writers
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: nfs-server.company.com
+    path: /exports/shared-data
+  mountOptions:
+  - hard           # Hard mount (retries on failure)
+  - nfsvers=4.1    # Use NFSv4.1
+  - rsize=1048576  # Read buffer size
+  - wsize=1048576  # Write buffer size
+  - timeo=600      # Timeout in deciseconds (60 seconds)
+  - retrans=2      # Number of retries</code></pre></p>
+<p>#### CephFS (Ceph File System)
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cephfs-pv
+spec:
+  capacity:
+    storage: 200Gi
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  cephfs:
+    monitors:
+    - 192.168.1.10:6789
+    - 192.168.1.11:6789
+    - 192.168.1.12:6789
+    path: /kubernetes-volumes
+    user: admin
+    secretRef:
+      name: ceph-secret
+    readOnly: false</code></pre></p>
+<p>#### iSCSI Storage
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: iscsi-pv
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+  - ReadWriteOnce  # iSCSI typically single-writer
+  persistentVolumeReclaimPolicy: Retain
+  iscsi:
+    targetPortal: 192.168.1.100:3260
+    iqn: iqn.2019-04.com.company:storage.target01
+    lun: 0
+    fsType: ext4
+    readOnly: false
+    chapAuthDiscovery: true
+    chapAuthSession: true
+    secretRef:
+      name: iscsi-chap-secret</code></pre></p>
+<h3>Volume Snapshots Deep Dive</h3>
+<h4>What Volume Snapshots Actually Are</h4>
+<strong>Volume Snapshots</strong> are point-in-time copies of persistent volumes. Think of them like "save points" in a video game - you can create a snapshot of your data and restore back to that exact state later.
+<strong>Snapshot vs Backup:</strong>
+<li><strong>Snapshot</strong> - Point-in-time copy, usually stored on same storage system</li>
+<li><strong>Backup</strong> - Copy moved to different storage system/location</li>
+<h4>Snapshot API Objects</h4>
+<p>#### VolumeSnapshotClass
+<strong>Defines how snapshots are created:</strong>
+<pre><code>apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: aws-ebs-snapshot-class
+driver: ebs.csi.aws.com  # CSI driver that handles snapshots
+deletionPolicy: Delete   # Delete snapshot when VolumeSnapshot is deleted
+parameters:
+  encrypted: "true"      # Driver-specific parameters</code></pre></p>
+<p>#### VolumeSnapshot
+<strong>Request to create a snapshot:</strong>
+<pre><code>apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: database-snapshot-20240101
+  namespace: production
+spec:
+  volumeSnapshotClassName: aws-ebs-snapshot-class
+  source:
+    persistentVolumeClaimName: postgres-data-pvc  # PVC to snapshot</code></pre></p>
+<p>#### VolumeSnapshotContent
+<strong>Represents the actual snapshot (like PV for snapshots):</strong>
+<pre><code>apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotContent
+metadata:
+  name: snapcontent-12345
+spec:
+  deletionPolicy: Delete
+  driver: ebs.csi.aws.com
+  source:
+    snapshotHandle: snap-0123456789abcdef0  # Actual cloud snapshot ID
+  volumeSnapshotRef:
+    name: database-snapshot-20240101
+    namespace: production</code></pre></p>
+<h4>Snapshot Workflow Examples</h4>
+<p>#### Manual Database Backup
+<pre><code><h2>1. Create snapshot before maintenance</h2>
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: postgres-before-upgrade
+  namespace: database
+spec:
+  volumeSnapshotClassName: fast-snapshot-class
+  source:
+    persistentVolumeClaimName: postgres-data-postgres-0
+---
+<h2>2. Wait for snapshot to be ready</h2>
+<h2>kubectl wait --for=condition=ReadyToUse volumesnapshot/postgres-before-upgrade --timeout=300s</h2></p>
+<h2>3. Perform maintenance/upgrade</h2>
+<h2>kubectl apply -f new-postgres-version.yaml</h2>
+<h2>4. If something goes wrong, restore from snapshot</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-restored-data
+  namespace: database
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+  dataSource:
+    name: postgres-before-upgrade  # Restore from snapshot
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io</code></pre>
+<p>#### Automated Backup with CronJob
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+  namespace: database
+spec:
+  schedule: "0 2 <em> </em> *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccount: snapshot-creator
+          containers:
+          - name: backup
+            image: kubectl:latest
+            command:
+            - sh
+            - -c
+            - |
+              TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+              SNAPSHOT_NAME="postgres-backup-${TIMESTAMP}"
+              
+              # Create snapshot
+              kubectl apply -f - <<EOF
+              apiVersion: snapshot.storage.k8s.io/v1
+              kind: VolumeSnapshot
+              metadata:
+                name: ${SNAPSHOT_NAME}
+                namespace: database
+                labels:
+                  backup-type: automated
+                  backup-date: $(date +%Y-%m-%d)
+              spec:
+                volumeSnapshotClassName: aws-ebs-snapshot-class
+                source:
+                  persistentVolumeClaimName: postgres-data-postgres-0
+              EOF
+              
+              # Wait for snapshot to complete
+              kubectl wait --for=condition=ReadyToUse \
+                volumesnapshot/${SNAPSHOT_NAME} --timeout=600s
+              
+              # Clean up old snapshots (keep last 7 days)
+              kubectl get volumesnapshot -l backup-type=automated \
+                --sort-by=.metadata.creationTimestamp \
+                -o name | head -n -7 | xargs -r kubectl delete
+          restartPolicy: OnFailure
+---
+<h2>RBAC for snapshot creation</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: snapshot-creator
+  namespace: database
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: snapshot-manager
+  namespace: database
+rules:
+<li>apiGroups: ["snapshot.storage.k8s.io"]</li>
+  resources: ["volumesnapshots"]
+  verbs: ["create", "get", "list", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: snapshot-creator-binding
+  namespace: database
+subjects:
+<li>kind: ServiceAccount</li>
+  name: snapshot-creator
+  namespace: database
+roleRef:
+  kind: Role
+  name: snapshot-manager
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<p>#### Cross-Namespace Restore
+<pre><code><h2>Snapshot in production namespace</h2>
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: production-data-snapshot
+  namespace: production
+spec:
+  volumeSnapshotClassName: aws-ebs-snapshot-class
+  source:
+    persistentVolumeClaimName: app-data-pvc
+---
+<h2>Restore in staging namespace for testing</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: staging-data-from-prod
+  namespace: staging
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: standard-ssd  # Can use different storage class
+  dataSource:
+    name: production-data-snapshot
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+    namespace: production  # Cross-namespace reference</code></pre></p>
+<h4>CSI Driver Support</h4>
+<p>#### AWS EBS CSI Driver Snapshots
+<pre><code>apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-with-snapshots
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  encrypted: "true"
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: ebs-snapshot-class
+driver: ebs.csi.aws.com
+deletionPolicy: Delete
+parameters:
+  encrypted: "true"
+  # AWS-specific: copy snapshot to different region
+  # sourceRegion: us-west-2
+  # destinationRegion: us-east-1</code></pre></p>
+<p>#### Google Cloud Persistent Disk Snapshots
+<pre><code>apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: gcp-snapshot-class
+driver: pd.csi.storage.gke.io
+deletionPolicy: Retain  # Keep snapshots even if VolumeSnapshot is deleted
+parameters:
+  storage-locations: us-central1  # Store snapshot in specific region
+  snapshot-type: regional        # Regional snapshot for durability</code></pre></p>
+<p>#### Azure Disk Snapshots
+<pre><code>apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: azure-snapshot-class
+driver: disk.csi.azure.com
+deletionPolicy: Delete
+parameters:
+  incremental: "true"  # Use incremental snapshots to save space</code></pre></p>
+<h3>Key Concepts Summary</h3>
+<li><strong>Persistent Volumes (PV)</strong> - Cluster resources representing actual storage with capacity, access modes, and connection details</li>
+<li><strong>Persistent Volume Claims (PVC)</strong> - User requests for storage that get bound to matching PVs</li>
+<li><strong>Storage Classes</strong> - Templates for dynamic storage provisioning with cloud provider integration</li>
+<li><strong>Static Provisioning</strong> - Admin pre-creates PVs, users claim them with PVCs</li>
+<li><strong>Dynamic Provisioning</strong> - Storage automatically created when PVC is created using StorageClass</li>
+<li><strong>StatefulSets</strong> - Workloads requiring stable storage identity with VolumeClaimTemplates</li>
+<li><strong>Access Modes</strong> - RWO (single node), ROX (multiple read-only), RWX (multiple read-write), RWOP (single pod)</li>
+<li><strong>Volume Types</strong> - emptyDir (temporary), hostPath (node access), ConfigMap/Secret (configuration), network storage (NFS, iSCSI)</li>
+<li><strong>Volume Snapshots</strong> - Point-in-time copies for backup and restore operations</li>
+<h3>Best Practices / Tips</h3>
+<p>1. <strong>Choose appropriate access modes</strong> - Use RWO for most applications, RWX only when truly needed
+2. <strong>Set reclaim policies carefully</strong> - Use Retain for important data, Delete for temporary storage
+3. <strong>Use StorageClasses for dynamic provisioning</strong> - More flexible than static PVs
+4. <strong>Plan storage capacity</strong> - Include growth projections and snapshot space
+5. <strong>Implement backup strategy</strong> - Use volume snapshots or external backup tools
+6. <strong>Monitor storage performance</strong> - Watch IOPS, throughput, and latency metrics
+7. <strong>Use appropriate storage types</strong> - Match storage performance to application needs
+8. <strong>Configure volume binding mode</strong> - Use WaitForFirstConsumer for zone-aware scheduling
+9. <strong>Set resource limits</strong> - Prevent storage exhaustion with quotas and limits
+10. <strong>Document storage architecture</strong> - Maintain clear documentation of storage design and dependencies</p>
+<h3>Common Issues / Troubleshooting</h3>
+<h4>Problem 1: PVC Stuck in Pending</h4>
+<li><strong>Symptom:</strong> PVC remains in "Pending" status indefinitely</li>
+<li><strong>Cause:</strong> No PV matches requirements, or storage provisioning failed</li>
+<li><strong>Solution:</strong> Check PV availability, StorageClass configuration, and node affinity</li>
+<pre><code><h2>Check PVC status and events</h2>
+kubectl describe pvc my-pvc
+<h2>Check available PVs</h2>
+kubectl get pv
+<h2>Check StorageClass</h2>
+kubectl describe storageclass my-storage-class
+<h2>Check CSI driver pods</h2>
+kubectl get pods -n kube-system | grep csi</code></pre>
+<h4>Problem 2: Pod Can't Mount Volume</h4>
+<li><strong>Symptom:</strong> Pod stuck in "ContainerCreating" with volume mount errors</li>
+<li><strong>Cause:</strong> Storage not accessible from node, permission issues, or driver problems</li>
+<li><strong>Solution:</strong> Check node affinity, CSI driver status, and storage permissions</li>
+<pre><code><h2>Check pod events</h2>
+kubectl describe pod my-pod
+<h2>Check node where pod is scheduled</h2>
+kubectl get pod my-pod -o wide
+<h2>Check if storage is in same zone as node</h2>
+kubectl get node NODE_NAME --show-labels</code></pre>
+<h4>Problem 3: Volume Snapshot Failing</h4>
+<li><strong>Symptom:</strong> VolumeSnapshot stuck in "Pending" or "Error" state</li>
+<li><strong>Cause:</strong> CSI driver doesn't support snapshots, or cloud provider issues</li>
+<li><strong>Solution:</strong> Verify snapshot support and check CSI driver logs</li>
+<pre><code><h2>Check snapshot status</h2>
+kubectl describe volumesnapshot my-snapshot
+<h2>Check if CSI driver supports snapshots</h2>
+kubectl get csidriver -o yaml
+<h2>Check snapshot controller</h2>
+kubectl get pods -n kube-system | grep snapshot</code></pre>
+<h4>Problem 4: StatefulSet Volume Not Persistent</h4>
+<li><strong>Symptom:</strong> StatefulSet pod data lost when pod restarts</li>
+<li><strong>Cause:</strong> Using emptyDir instead of PVC, or PVC not properly configured</li>
+<li><strong>Solution:</strong> Verify VolumeClaimTemplates and PVC binding</li>
+<pre><code><h2>Check StatefulSet volume configuration</h2>
+kubectl describe statefulset my-statefulset
+<h2>Check PVCs created by StatefulSet</h2>
+kubectl get pvc -l app=my-statefulset
+<h2>Verify PVC is bound</h2>
+kubectl describe pvc my-pvc</code></pre>
+<h4>Problem 5: Performance Issues</h4>
+<li><strong>Symptom:</strong> Slow storage I/O affecting application performance</li>
+<li><strong>Cause:</strong> Wrong storage type, insufficient IOPS, or network bottlenecks</li>
+<li><strong>Solution:</strong> Use appropriate storage class and monitor storage metrics</li>
+<pre><code><h2>Check storage class parameters</h2>
+kubectl describe storageclass my-storage-class
+<h2>Monitor pod resource usage</h2>
+kubectl top pod my-pod
+<h2>Check node disk usage</h2>
+kubectl exec -it my-pod -- df -h</code></pre>
+<h3>References / Further Reading</h3>
+<li>[Kubernetes Storage Documentation](https://kubernetes.io/docs/concepts/storage/)</li>
+<li>[Persistent Volumes Guide](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)</li>
+<li>[Storage Classes Documentation](https://kubernetes.io/docs/concepts/storage/storage-classes/)</li>
+<li>[StatefulSets Documentation](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)</li>
+<li>[Volume Snapshots Guide](https://kubernetes.io/docs/concepts/storage/volume-snapshots/)</li>
+<li>[CSI Drivers List](https://kubernetes-csi.github.io/docs/drivers.html)</li>
+<li>[AWS EBS CSI Driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver)</li>
+<li>[Google Cloud Storage CSI](https://github.com/kubernetes-sigs/gcp-compute-persistent-disk-csi-driver)</li>
+<li>[Azure Disk CSI Driver](https://github.com/kubernetes-sigs/azuredisk-csi-driver)</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
