@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Common Kubernetes Errors - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Common Kubernetes Errors</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 01, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Common Kubernetes Errors</h2>
+<h3>Pod Errors</h3>
+<pre><code>ImagePullBackOff
+<h2>Pod cannot pull the specified container image from registry</h2>
+<h2>WHY: Image doesn't exist, wrong registry URL, authentication issues, or network problems</h2>
+<h2>WHERE TO LOOK: Registry settings, image tags, pull secrets, network connectivity</h2>
+<p>ErrImagePull
+<h2>Initial failure to pull container image</h2>
+<h2>WHY: Same as ImagePullBackOff but first attempt failure</h2>
+<h2>WHERE TO LOOK: Registry credentials, image name/tag, network policies</h2></p>
+<p>CrashLoopBackOff
+<h2>Pod keeps crashing and restarting repeatedly</h2>
+<h2>WHY: Application fails to start, exits immediately, or has fatal errors</h2>
+<h2>WHERE TO LOOK: Application logs, container startup commands, resource limits</h2></p>
+<p>CreateContainerConfigError
+<h2>Pod cannot create container due to configuration issues</h2>
+<h2>WHY: Invalid ConfigMap/Secret references, malformed environment variables</h2>
+<h2>WHERE TO LOOK: ConfigMaps, Secrets, environment variable definitions</h2></p>
+<p>InvalidImageName
+<h2>Container image name format is invalid</h2>
+<h2>WHY: Image name contains illegal characters or wrong format</h2>
+<h2>WHERE TO LOOK: Pod spec image field, naming conventions</h2></p>
+<p>CreateContainerError
+<h2>Failed to create container due to runtime issues</h2>
+<h2>WHY: Container runtime problems, insufficient permissions, or resource constraints</h2>
+<h2>WHERE TO LOOK: Container runtime logs, node resources, security contexts</h2></p>
+<p>RunContainerError
+<h2>Container failed to start or run properly</h2>
+<h2>WHY: Command/entrypoint issues, missing dependencies, permission problems</h2>
+<h2>WHERE TO LOOK: Container command/args, file permissions, security policies</h2></p>
+<p>KillContainerError
+<h2>Failed to terminate container gracefully</h2>
+<h2>WHY: Process not responding to signals, zombie processes</h2>
+<h2>WHERE TO LOOK: Application signal handling, process management</h2></p>
+<p>VerifyNonRootError
+<h2>Container trying to run as root when security policy forbids it</h2>
+<h2>WHY: Security context conflicts with pod security policies</h2>
+<h2>WHERE TO LOOK: Security contexts, pod security policies, runAsUser settings</h2></p>
+<p>PostStartHookError
+<h2>Container's postStart lifecycle hook failed</h2>
+<h2>WHY: PostStart command failed or timed out</h2>
+<h2>WHERE TO LOOK: Lifecycle hook definitions, command execution logs</h2></p>
+<p>PreStopHookError
+<h2>Container's preStop lifecycle hook failed</h2>
+<h2>WHY: PreStop command failed or timed out</h2>
+<h2>WHERE TO LOOK: Lifecycle hook definitions, graceful shutdown logic</h2></code></pre></p>
+<h3>Resource Errors</h3>
+<pre><code>Insufficient cpu
+<h2>Node doesn't have enough CPU resources to schedule pod</h2>
+<h2>WHY: Pod CPU requests exceed available CPU on all nodes</h2>
+<h2>WHERE TO LOOK: Resource requests/limits, node capacity, cluster autoscaling</h2>
+<p>Insufficient memory
+<h2>Node doesn't have enough memory resources to schedule pod</h2>
+<h2>WHY: Pod memory requests exceed available memory on all nodes</h2>
+<h2>WHERE TO LOOK: Memory requests/limits, node capacity, memory usage patterns</h2></p>
+<p>Insufficient pods
+<h2>Node has reached maximum pod limit</h2>
+<h2>WHY: Node's maximum pod capacity reached (default ~110 pods per node)</h2>
+<h2>WHERE TO LOOK: Node configuration, kubelet settings, cluster scaling</h2></p>
+<p>PodExceedsFreeCPU
+<h2>Pod's CPU request exceeds available CPU on node</h2>
+<h2>WHY: CPU request too high for remaining node capacity</h2>
+<h2>WHERE TO LOOK: CPU resource requests, node CPU allocation</h2></p>
+<p>PodExceedsFreeMemory
+<h2>Pod's memory request exceeds available memory on node</h2>
+<h2>WHY: Memory request too high for remaining node capacity</h2>
+<h2>WHERE TO LOOK: Memory resource requests, node memory allocation</h2></p>
+<p>FailedScheduling
+<h2>Scheduler cannot find suitable node for pod placement</h2>
+<h2>WHY: No nodes meet pod's requirements (resources, affinity, taints)</h2>
+<h2>WHERE TO LOOK: Node selectors, affinity rules, taints/tolerations, resource requests</h2></p>
+<p>NodeNotReady
+<h2>Target node is not in ready state for scheduling</h2>
+<h2>WHY: Node has issues with kubelet, network, or system resources</h2>
+<h2>WHERE TO LOOK: Node status, kubelet logs, system health</h2></p>
+<p>Unschedulable
+<h2>Pod cannot be scheduled due to constraints or resource limits</h2>
+<h2>WHY: Pod requirements don't match any available nodes</h2>
+<h2>WHERE TO LOOK: Scheduling constraints, node labels, resource availability</h2></code></pre></p>
+<h3>Storage Errors</h3>
+<pre><code>FailedMount
+<h2>Volume failed to mount to pod</h2>
+<h2>WHY: Volume doesn't exist, permission issues, or mount path conflicts</h2>
+<h2>WHERE TO LOOK: Volume definitions, mount paths, file system permissions</h2>
+<p>VolumeFailedMount
+<h2>Persistent volume failed to attach to node</h2>
+<h2>WHY: Storage backend issues, node accessibility, or volume already in use</h2>
+<h2>WHERE TO LOOK: Storage class, PV status, node-volume compatibility</h2></p>
+<p>PersistentVolumeClaimNotFound
+<h2>Referenced PVC does not exist</h2>
+<h2>WHY: PVC name mismatch or PVC not created in correct namespace</h2>
+<h2>WHERE TO LOOK: PVC names, namespaces, volume claim references</h2></p>
+<p>VolumeMountFailed
+<h2>Volume mount operation failed during pod creation</h2>
+<h2>WHY: File system issues, incorrect mount options, or storage driver problems</h2>
+<h2>WHERE TO LOOK: Mount options, storage driver logs, file system status</h2></p>
+<p>FailedAttachVolume
+<h2>Volume failed to attach to node</h2>
+<h2>WHY: Node can't access storage, volume limits exceeded, or driver issues</h2>
+<h2>WHERE TO LOOK: Node-storage connectivity, volume attachment limits, CSI drivers</h2></p>
+<p>FailedDetachVolume
+<h2>Volume failed to detach from node</h2>
+<h2>WHY: Volume still in use, storage backend issues, or forced detachment needed</h2>
+<h2>WHERE TO LOOK: Pod termination status, volume usage, storage backend health</h2></p>
+<p>VolumeNotFound
+<h2>Referenced volume does not exist</h2>
+<h2>WHY: Volume deleted, wrong volume name, or storage backend unavailable</h2>
+<h2>WHERE TO LOOK: Volume names, storage backend status, PV definitions</h2></p>
+<p>StorageClassNotFound
+<h2>Specified storage class does not exist</h2>
+<h2>WHY: Storage class name mismatch or not installed in cluster</h2>
+<h2>WHERE TO LOOK: Storage class names, dynamic provisioning setup</h2></code></pre></p>
+<h3>Network Errors</h3>
+<pre><code>FailedCreatePodSandBox
+<h2>Failed to create network sandbox for pod</h2>
+<h2>WHY: CNI plugin issues, network configuration problems, or IP exhaustion</h2>
+<h2>WHERE TO LOOK: CNI plugin logs, network configuration, IP address pools</h2>
+<p>NetworkNotReady
+<h2>Cluster network is not ready or configured</h2>
+<h2>WHY: CNI not installed, network plugin misconfiguration, or node network issues</h2>
+<h2>WHERE TO LOOK: CNI installation, network plugin status, node connectivity</h2></p>
+<p>CNINetworkError
+<h2>Container Network Interface plugin error</h2>
+<h2>WHY: CNI plugin failures, network policy conflicts, or configuration errors</h2>
+<h2>WHERE TO LOOK: CNI plugin logs, network policies, plugin configuration</h2></p>
+<p>ServiceUnavailable
+<h2>Service endpoints are not available</h2>
+<h2>WHY: No healthy pods backing the service or selector mismatch</h2>
+<h2>WHERE TO LOOK: Pod readiness, service selectors, endpoint status</h2></p>
+<p>EndpointNotFound
+<h2>Service has no available endpoints</h2>
+<h2>WHY: No pods match service selector or all pods are unhealthy</h2>
+<h2>WHERE TO LOOK: Service selectors, pod labels, pod health checks</h2></p>
+<p>NetworkPolicyViolation
+<h2>Traffic blocked by network policy rules</h2>
+<h2>WHY: Network policies blocking required communication paths</h2>
+<h2>WHERE TO LOOK: Network policy rules, pod labels, traffic patterns</h2></p>
+<p>DNSResolutionFailed
+<h2>Pod cannot resolve DNS names</h2>
+<h2>WHY: DNS service issues, wrong DNS configuration, or network problems</h2>
+<h2>WHERE TO LOOK: DNS service status, resolv.conf, network connectivity</h2></p>
+<p>PortConflict
+<h2>Requested port is already in use</h2>
+<h2>WHY: Multiple services trying to use same port or host port conflicts</h2>
+<h2>WHERE TO LOOK: Service port definitions, host port usage, port allocation</h2></code></pre></p>
+<h3>Authentication/Authorization Errors</h3>
+<pre><code>Forbidden
+<h2>User/service account lacks required permissions</h2>
+<h2>WHY: RBAC rules don't grant necessary permissions for the operation</h2>
+<h2>WHERE TO LOOK: RBAC roles, role bindings, service account permissions</h2>
+<p>Unauthorized
+<h2>Authentication failed or credentials invalid</h2>
+<h2>WHY: Invalid credentials, expired tokens, or authentication provider issues</h2>
+<h2>WHERE TO LOOK: Authentication configuration, tokens, user credentials</h2></p>
+<p>TokenExpired
+<h2>Service account token has expired</h2>
+<h2>WHY: Token TTL exceeded or token rotation issues</h2>
+<h2>WHERE TO LOOK: Token expiration settings, service account configuration</h2></p>
+<p>RoleBindingNotFound
+<h2>Required role binding does not exist</h2>
+<h2>WHY: RBAC binding missing or wrong namespace/cluster scope</h2>
+<h2>WHERE TO LOOK: Role bindings, namespaces, RBAC configuration</h2></p>
+<p>ServiceAccountNotFound
+<h2>Referenced service account does not exist</h2>
+<h2>WHY: Service account name mismatch or not created in namespace</h2>
+<h2>WHERE TO LOOK: Service account names, namespace scope, account creation</h2></p>
+<p>ClusterRoleNotFound
+<h2>Referenced cluster role does not exist</h2>
+<h2>WHY: Cluster role name mismatch or not installed</h2>
+<h2>WHERE TO LOOK: Cluster role definitions, RBAC setup</h2></p>
+<p>InsufficientPermissions
+<h2>Current user lacks required RBAC permissions</h2>
+<h2>WHY: User's roles don't include necessary verbs for resources</h2>
+<h2>WHERE TO LOOK: User role assignments, required permissions, RBAC policies</h2></code></pre></p>
+<h3>Configuration Errors</h3>
+<pre><code>InvalidConfiguration
+<h2>Resource configuration is malformed or invalid</h2>
+<h2>WHY: YAML syntax errors, wrong API version, or invalid field combinations</h2>
+<h2>WHERE TO LOOK: YAML syntax, API documentation, field validation</h2>
+<p>MissingRequiredField
+<h2>Required field is missing from resource definition</h2>
+<h2>WHY: Mandatory fields not specified in resource manifest</h2>
+<h2>WHERE TO LOOK: API reference, required fields, resource schema</h2></p>
+<p>InvalidFieldValue
+<h2>Field contains invalid or unsupported value</h2>
+<h2>WHY: Value doesn't match expected format, range, or enum options</h2>
+<h2>WHERE TO LOOK: Field constraints, valid values, API specification</h2></p>
+<p>ConfigMapNotFound
+<h2>Referenced ConfigMap does not exist</h2>
+<h2>WHY: ConfigMap name mismatch or not created in correct namespace</h2>
+<h2>WHERE TO LOOK: ConfigMap names, namespaces, volume/env references</h2></p>
+<p>SecretNotFound
+<h2>Referenced Secret does not exist</h2>
+<h2>WHY: Secret name mismatch or not created in correct namespace</h2>
+<h2>WHERE TO LOOK: Secret names, namespaces, volume/env references</h2></p>
+<p>InvalidResourceName
+<h2>Resource name doesn't follow naming conventions</h2>
+<h2>WHY: Name contains invalid characters or exceeds length limits</h2>
+<h2>WHERE TO LOOK: Naming conventions, character restrictions, length limits</h2></p>
+<p>NamespaceNotFound
+<h2>Referenced namespace does not exist</h2>
+<h2>WHY: Namespace name mismatch or namespace not created</h2>
+<h2>WHERE TO LOOK: Namespace names, namespace creation, resource scope</h2></p>
+<p>ValidationError
+<h2>Resource failed Kubernetes validation rules</h2>
+<h2>WHY: Resource doesn't meet API server validation requirements</h2>
+<h2>WHERE TO LOOK: Validation rules, admission controllers, resource constraints</h2></code></pre></p>
+<h3>API Errors</h3>
+<pre><code>NotFound
+<h2>Requested resource does not exist</h2>
+<h2>WHY: Resource deleted, wrong name/namespace, or never created</h2>
+<h2>WHERE TO LOOK: Resource names, namespaces, resource existence</h2>
+<p>AlreadyExists
+<h2>Resource with same name already exists</h2>
+<h2>WHY: Duplicate resource creation in same namespace</h2>
+<h2>WHERE TO LOOK: Existing resources, naming conflicts, namespace scope</h2></p>
+<p>Conflict
+<h2>Resource update conflicts with current state</h2>
+<h2>WHY: Resource modified between read and update operations</h2>
+<h2>WHERE TO LOOK: Resource version, concurrent modifications, update timing</h2></p>
+<p>BadRequest
+<h2>Request format or content is invalid</h2>
+<h2>WHY: Malformed request, invalid parameters, or wrong API usage</h2>
+<h2>WHERE TO LOOK: Request format, API documentation, parameter validation</h2></p>
+<p>InternalError
+<h2>Kubernetes API server internal error</h2>
+<h2>WHY: API server bugs, database issues, or system problems</h2>
+<h2>WHERE TO LOOK: API server logs, cluster health, system resources</h2></p>
+<p>Timeout
+<h2>Request exceeded configured timeout</h2>
+<h2>WHY: Operation took too long, slow backend, or resource contention</h2>
+<h2>WHERE TO LOOK: Timeout settings, operation complexity, system performance</h2></p>
+<p>TooManyRequests
+<h2>Rate limit exceeded for API requests</h2>
+<h2>WHY: Too many requests in short time period</h2>
+<h2>WHERE TO LOOK: Request rate, client behavior, rate limiting configuration</h2></p>
+<p>ServerUnavailable
+<h2>Kubernetes API server is unavailable</h2>
+<h2>WHY: API server down, network issues, or cluster problems</h2>
+<h2>WHERE TO LOOK: API server status, cluster connectivity, control plane health</h2></code></pre></p>
+<h3>Node Errors</h3>
+<pre><code>NodeNotFound
+<h2>Referenced node does not exist in cluster</h2>
+<h2>WHY: Node removed from cluster, name mismatch, or node registration issues</h2>
+<h2>WHERE TO LOOK: Node names, cluster membership, node registration</h2>
+<p>NodeUnreachable
+<h2>Node is not responding to cluster communication</h2>
+<h2>WHY: Network issues, node shutdown, or kubelet problems</h2>
+<h2>WHERE TO LOOK: Network connectivity, kubelet status, node health</h2></p>
+<p>NodeOutOfDisk
+<h2>Node has insufficient disk space</h2>
+<h2>WHY: Disk space exhausted by pods, logs, or system processes</h2>
+<h2>WHERE TO LOOK: Disk usage, log rotation, storage cleanup</h2></p>
+<p>NodeMemoryPressure
+<h2>Node is under memory pressure</h2>
+<h2>WHY: High memory usage by pods or system processes</h2>
+<h2>WHERE TO LOOK: Memory usage, pod resource limits, system processes</h2></p>
+<p>NodeDiskPressure
+<h2>Node is under disk pressure</h2>
+<h2>WHY: Disk space or inodes running low</h2>
+<h2>WHERE TO LOOK: Disk space, inode usage, storage allocation</h2></p>
+<p>NodePIDPressure
+<h2>Node is under process ID pressure</h2>
+<h2>WHY: Too many processes running on node</h2>
+<h2>WHERE TO LOOK: Process count, PID limits, resource management</h2></p>
+<p>NodeNetworkUnavailable
+<h2>Node's network is not properly configured</h2>
+<h2>WHY: Network plugin issues, CNI problems, or network configuration errors</h2>
+<h2>WHERE TO LOOK: Network configuration, CNI setup, network plugin status</h2></code></pre></p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

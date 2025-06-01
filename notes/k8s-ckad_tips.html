@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKAD Essential Tips & Commands - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKAD Essential Tips & Commands</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 01, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKAD Essential Tips & Commands</h2>
+<h3>What's Available in the Exam</h3>
+<pre><code><h2>These are typically pre-configured in the exam environment:</h2>
+alias k=kubectl
+export do="--dry-run=client -o yaml"
+export now="--force --grace-period 0"
+<h2>Check what's available when you start:</h2>
+alias
+env | grep -i kubectl</code></pre>
+<h3>Quick Setup (If Needed)</h3>
+<pre><code><h2>Only set essential ones if not already there:</h2>
+alias k=kubectl
+export do="--dry-run=client -o yaml"
+<h2>Don't waste time on more - just use these two!</h2></code></pre>
+<h3>Essential Must-Know Commands (Use 'k' instead of 'kubectl')</h3>
+<pre><code><h2>Quick pod creation</h2>
+k run nginx --image=nginx $do > pod.yaml
+<h2>Quick deployment creation</h2>
+k create deploy nginx --image=nginx $do > deploy.yaml
+<h2>Quick service exposure</h2>
+k expose pod nginx --port=80 --target-port=80 $do > svc.yaml
+<h2>Quick configmap creation</h2>
+k create cm myconfig --from-literal=key=value $do > cm.yaml
+<h2>Quick secret creation</h2>
+k create secret generic mysecret --from-literal=password=123 $do > secret.yaml
+<h2>Quick job creation</h2>
+k create job myjob --image=busybox -- /bin/sh -c "sleep 30" $do > job.yaml
+<h2>Quick cronjob creation</h2>
+k create cj mycron --image=busybox --schedule="<em>/1 </em> <em> </em> *" -- /bin/sh -c "date" $do > cj.yaml</code></pre>
+<h3>Exam Speed Tips</h3>
+<h4>1. Always Use Dry-Run First</h4>
+<pre><code><h2>Generate YAML then edit instead of writing from scratch</h2>
+k run pod1 --image=nginx $do > pod.yaml
+vim pod.yaml
+k apply -f pod.yaml</code></pre>
+<h4>2. Use Tab Completion</h4>
+<pre><code><h2>The exam environment supports tab completion</h2>
+k get po<TAB>    # Completes to 'pods'
+k get pods nginx<TAB>  # Completes pod names
+k -n kube-sys<TAB>     # Completes namespace names</code></pre>
+<h4>3. Quick Resource Management</h4>
+<pre><code><h2>Scale quickly</h2>
+k scale deploy nginx --replicas=3
+<h2>Delete quickly  </h2>
+k delete pod nginx $now
+<h2>Get all resources</h2>
+k get all
+<h2>Wide output for more info</h2>
+k get pods -o wide
+<h2>Immediate commands (no YAML needed)</h2>
+k run test --image=nginx --rm -it --restart=Never -- /bin/sh</code></pre>
+<h3>Common Exam Scenarios</h3>
+<h4>Multi-Container Pods</h4>
+<pre><code><h2>Remember: containers share network and storage</h2>
+<h2>Use localhost for inter-container communication</h2>
+<h2>Check container logs: k logs podname -c containername</h2></code></pre>
+<h4>Resource Limits</h4>
+<pre><code><h2>Always remember the format:</h2>
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "250m"
+  limits:
+    memory: "128Mi"
+    cpu: "500m"</code></pre>
+<h4>Environment Variables</h4>
+<pre><code><h2>From literal</h2>
+env:
+<ul><li>name: ENV_VAR</li>
+  value: "myvalue"
+<h2>From ConfigMap</h2>
+env:
+<li>name: ENV_VAR</li>
+  valueFrom:
+    configMapKeyRef:
+      name: myconfigmap
+      key: mykey
+<h2>From Secret</h2>
+env:
+<li>name: PASSWORD</li>
+  valueFrom:
+    secretKeyRef:
+      name: mysecret
+      key: password</code></pre>
+<h4>Volume Mounts</h4>
+<pre><code><h2>Remember the pattern:</h2>
+volumeMounts:
+<li>name: myvolume</li>
+  mountPath: /data
+volumes:
+<li>name: myvolume</li>
+  emptyDir: {}
+<h2>OR</h2>
+<li>name: myvolume</li>
+  configMap:
+    name: myconfigmap</code></pre>
+<h3>Troubleshooting Quick Checks</h3>
+<pre><code><h2>Pod not starting? Check these in order:</h2>
+k describe pod podname     # Check events
+k logs podname            # Check application logs
+k get events --sort-by=.metadata.creationTimestamp
+k get pod podname -o yaml # Check full configuration</code></pre>
+<h3>Quick Reference Patterns</h3>
+<h4>Liveness/Readiness Probes</h4>
+<pre><code>livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+<p>readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5</code></pre></p>
+<h4>Security Context</h4>
+<pre><code>securityContext:
+  runAsUser: 1000
+  runAsGroup: 3000
+  fsGroup: 2000
+  capabilities:
+    add: ["NET_ADMIN"]
+    drop: ["ALL"]</code></pre>
+<h4>Service Types</h4>
+<pre><code><h2>ClusterIP (default) - internal only</h2>
+<h2>NodePort - external via node port</h2>
+<h2>LoadBalancer - external via cloud LB</h2></code></pre>
+<h3>Memory Tricks</h3>
+<h4>Port Numbers</h4>
+<li>HTTP: 80</li>
+<li>HTTPS: 443</li>
+<li>SSH: 22</li>
+<li>Common app ports: 8080, 3000, 5000</li>
+<h4>Resource Units</h4>
+<li>CPU: 1000m = 1 core</li>
+<li>Memory: 1Gi = 1024Mi</li>
+<h4>Restart Policies</h4>
+<li>Always (default for Deployments)</li>
+<li>OnFailure (good for Jobs)</li>
+<li>Never (good for one-time tasks)</li>
+<h3>Exam Day Strategy (CRITICAL!)</h3>
+1. <strong>First 2 minutes</strong>: Check if <code>k</code> alias exists, if not: <code>alias k=kubectl</code>
+2. <strong>Set namespace immediately</strong> if specified: <code>k config set-context --current --namespace=exam</code>
+3. <strong>Don't waste time on complex aliases</strong> - just use <code>k</code> and muscle memory
+4. Read question completely first
+5. Use dry-run to generate YAML: <code>k run test --image=nginx $do > test.yaml</code>
+6. Edit YAML file instead of writing from scratch
+7. Test with <code>k apply -f file.yaml</code>
+8. Verify with <code>k get</code> and <code>k describe</code>
+9. Move to next question if stuck (mark and return)
+<h3>Time Management</h3>
+<li><strong>2 hours for ~15-20 questions</strong> = 6-8 minutes per question max</li>
+<li>Don't spend more than 5-7 minutes per question initially</li>
+<li>Mark difficult questions and return later  </li>
+<li><strong>Always verify your solution works before moving on</strong></li>
+<li>Use <code>k get all</code> to see what you created</li>
+<li><strong>Speed comes from muscle memory, not fancy aliases</strong></li>
+<h3>What You MUST Memorize (No Time to Look Up)</h3>
+<pre><code><h2>These commands must be automatic:</h2>
+k run name --image=nginx $do > file.yaml
+k create deploy name --image=nginx $do > file.yaml  
+k expose pod name --port=80 $do > file.yaml
+k create cm name --from-literal=key=value $do > file.yaml
+k create secret generic name --from-literal=key=value $do > file.yaml
+k create job name --image=busybox -- command $do > file.yaml
+k create cj name --image=busybox --schedule="<em> </em> <em> </em> *" -- command $do > file.yaml
+<h2>Quick checks:</h2>
+k get pods -o wide
+k describe pod name
+k logs name
+k delete pod name --force --grace-period=0</code></pre>
+<h3>Reality Check for Exam</h3>
+<h4>What's Usually Pre-Configured</h4>
+<li><code>alias k=kubectl</code> (but verify!)</li>
+<li>Basic bash completion</li>
+<li>Standard Linux utilities</li>
+<h4>What You Must Type/Remember</h4>
+<li><code>export do="--dry-run=client -o yaml"</code> (if not set)</li>
+<li>All kubectl commands and options</li>
+<li>YAML structure and indentation</li>
+<li>Resource field names and values</li>
+<h4>Don't Waste Time On</h4>
+<li>Complex aliases (you won't remember them under pressure)</li>
+<li>Bashrc modifications</li>
+<li>Multiple export variables</li></ul>
+<strong>Bottom Line</strong>: Practice with just <code>k</code> alias and <code>$do</code> variable. That's all you realistically have time to set up.
+<h3>Quick Debugging (Memorize These Patterns)</h3>
+<pre><code><h2>Pod stuck in Pending?</h2>
+k describe pod podname | grep -i events
+<h2>Pod crashing?</h2>
+k logs podname --previous
+<h2>Service not working?</h2>
+k get endpoints servicename
+<h2>Can't schedule?</h2>
+k get nodes
+k describe node nodename
+<h2>Quick health check sequence:</h2>
+k get pods                    # Overview
+k describe pod podname        # Detailed events
+k logs podname               # Application logs  
+k get events --sort-by=.metadata.creationTimestamp  # Recent events</code></pre>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
