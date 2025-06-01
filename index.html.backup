@@ -326,6 +326,16 @@
             
         </div>
     </div>
+    <div class="note-card" data-tags="ckad,kubernetes,exam,kubectl,certification" onclick="window.location.href='notes/k8s-ckad_tips_tricks.html'">
+        <h3>CKAD Exam Tips & Tricks</h3>
+        <div class="note-meta">Kubernetes Certification (k8s) • May 31, 2025</div>
+        <div class="note-preview">
+            <p>USE WHEN: Question asks for sidecar, logging, or monitoring containers USE WHEN: Question involves configuration data, properties files, or environ...</p>
+        </div>
+        <div class="note-tags">
+            <span class="tag">ckad</span><span class="tag">kubernetes</span><span class="tag">exam</span><span class="tag">kubectl</span><span class="tag">certification</span>
+        </div>
+    </div>
     <div class="note-card" data-tags="kubernetes,initcontainers,pods,orchestration,containers" onclick="window.location.href='notes/k8s-k8s-initcontainers-note.html'">
         <h3>Understanding `initContainers` in Kubernetes</h3>
         <div class="note-meta">DevOps (k8s) • May 29, 2025</div>

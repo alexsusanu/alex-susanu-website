@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKAD Commands with Explanations - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKAD Commands with Explanations</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 01, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKAD Commands with Explanations</h2>
+<h3>Pods</h3>
+<pre><code>kubectl run nginx --image=nginx
+<h2>Creates a pod named nginx with nginx image</h2>
+<p>kubectl run nginx --image=nginx --dry-run=client -o yaml
+<h2>Generates YAML for a pod without creating it</h2></p>
+<p>kubectl run nginx --image=nginx --restart=Never
+<h2>Creates a pod (not deployment) that won't restart on failure</h2></p>
+<p>kubectl run nginx --image=nginx --rm -it --restart=Never -- /bin/sh
+<h2>Creates a temporary interactive pod that gets deleted after exit</h2></p>
+<p>kubectl get pods
+<h2>Lists all pods in current namespace</h2></p>
+<p>kubectl get pods -o wide
+<h2>Lists pods with additional info like node and IP</h2></p>
+<p>kubectl get pods --show-labels
+<h2>Lists pods with their labels displayed</h2></p>
+<p>kubectl get pods -l app=nginx
+<h2>Lists pods filtered by label selector</h2></p>
+<p>kubectl describe pod nginx
+<h2>Shows detailed information about a specific pod</h2></p>
+<p>kubectl delete pod nginx
+<h2>Deletes a specific pod</h2></p>
+<p>kubectl delete pods --all
+<h2>Deletes all pods in current namespace</h2></p>
+<p>kubectl logs nginx
+<h2>Shows logs from a pod</h2></p>
+<p>kubectl logs nginx -f
+<h2>Follows/streams logs from a pod in real-time</h2></p>
+<p>kubectl logs nginx --previous
+<h2>Shows logs from previous container instance</h2></p>
+<p>kubectl exec nginx -- ls
+<h2>Executes a command inside a pod</h2></p>
+<p>kubectl exec -it nginx -- /bin/sh
+<h2>Opens interactive shell inside a pod</h2></p>
+<p>kubectl port-forward nginx 8080:80
+<h2>Forwards local port 8080 to pod port 80</h2></p>
+<p>kubectl cp nginx:/etc/passwd ./passwd
+<h2>Copies file from pod to local machine</h2></p>
+<p>kubectl apply -f pod.yaml
+<h2>Creates or updates resources from YAML file</h2></p>
+<p>kubectl create -f pod.yaml
+<h2>Creates resources from YAML file (fails if exists)</h2></p>
+<p>kubectl replace -f pod.yaml
+<h2>Replaces existing resource with YAML definition</h2></p>
+<p>kubectl patch pod nginx -p '{"spec":{"containers":[{"name":"nginx","image":"nginx:1.20"}]}}'
+<h2>Updates specific fields of a pod using JSON patch</h2></code></pre></p>
+<h3>Deployments</h3>
+<pre><code>kubectl create deployment nginx --image=nginx
+<h2>Creates a deployment with specified image</h2>
+<p>kubectl create deployment nginx --image=nginx --dry-run=client -o yaml
+<h2>Generates deployment YAML without creating it</h2></p>
+<p>kubectl get deployments
+<h2>Lists all deployments in current namespace</h2></p>
+<p>kubectl get deploy
+<h2>Short form to list deployments</h2></p>
+<p>kubectl describe deployment nginx
+<h2>Shows detailed information about a deployment</h2></p>
+<p>kubectl delete deployment nginx
+<h2>Deletes a deployment and its pods</h2></p>
+<p>kubectl scale deployment nginx --replicas=3
+<h2>Scales deployment to specified number of replicas</h2></p>
+<p>kubectl autoscale deployment nginx --min=2 --max=10 --cpu-percent=80
+<h2>Creates horizontal pod autoscaler for deployment</h2></p>
+<p>kubectl rollout status deployment nginx
+<h2>Shows rollout status of deployment</h2></p>
+<p>kubectl rollout history deployment nginx
+<h2>Shows rollout history of deployment</h2></p>
+<p>kubectl rollout undo deployment nginx
+<h2>Rolls back deployment to previous revision</h2></p>
+<p>kubectl rollout undo deployment nginx --to-revision=2
+<h2>Rolls back deployment to specific revision</h2></p>
+<p>kubectl set image deployment nginx nginx=nginx:1.20
+<h2>Updates container image in deployment</h2></p>
+<p>kubectl edit deployment nginx
+<h2>Opens deployment in editor for modification</h2></p>
+<p>kubectl expose deployment nginx --port=80 --target-port=80
+<h2>Creates service to expose deployment</h2></code></pre></p>
+<h3>Services</h3>
+<pre><code>kubectl create service clusterip nginx --tcp=80:80
+<h2>Creates ClusterIP service for internal access</h2>
+<p>kubectl create service nodeport nginx --tcp=80:80
+<h2>Creates NodePort service for external access via node port</h2></p>
+<p>kubectl create service loadbalancer nginx --tcp=80:80
+<h2>Creates LoadBalancer service for external access via load balancer</h2></p>
+<p>kubectl expose pod nginx --port=80 --target-port=80
+<h2>Creates service to expose a pod</h2></p>
+<p>kubectl expose deployment nginx --port=80 --target-port=80 --type=NodePort
+<h2>Creates NodePort service to expose deployment</h2></p>
+<p>kubectl get services
+<h2>Lists all services in current namespace</h2></p>
+<p>kubectl get svc
+<h2>Short form to list services</h2></p>
+<p>kubectl describe service nginx
+<h2>Shows detailed information about a service</h2></p>
+<p>kubectl delete service nginx
+<h2>Deletes a service</h2></p>
+<p>kubectl get endpoints
+<h2>Lists all endpoints (backend pods for services)</h2></code></pre></p>
+<h3>ConfigMaps</h3>
+<pre><code>kubectl create configmap nginx-config --from-literal=key1=value1
+<h2>Creates configmap from literal key-value pairs</h2>
+<p>kubectl create configmap nginx-config --from-file=config.txt
+<h2>Creates configmap from a file</h2></p>
+<p>kubectl create configmap nginx-config --from-file=configs/
+<h2>Creates configmap from all files in directory</h2></p>
+<p>kubectl create configmap nginx-config --from-env-file=config.env
+<h2>Creates configmap from environment file</h2></p>
+<p>kubectl get configmaps
+<h2>Lists all configmaps in current namespace</h2></p>
+<p>kubectl get cm
+<h2>Short form to list configmaps</h2></p>
+<p>kubectl describe configmap nginx-config
+<h2>Shows detailed information about a configmap</h2></p>
+<p>kubectl delete configmap nginx-config
+<h2>Deletes a configmap</h2></code></pre></p>
+<h3>Secrets</h3>
+<pre><code>kubectl create secret generic nginx-secret --from-literal=username=admin
+<h2>Creates secret from literal key-value pairs</h2>
+<p>kubectl create secret generic nginx-secret --from-file=secret.txt
+<h2>Creates secret from a file</h2></p>
+<p>kubectl create secret docker-registry regcred --docker-server=myregistry.com --docker-username=user --docker-password=pass
+<h2>Creates docker registry secret for private images</h2></p>
+<p>kubectl create secret tls tls-secret --cert=cert.crt --key=cert.key
+<h2>Creates TLS secret from certificate files</h2></p>
+<p>kubectl get secrets
+<h2>Lists all secrets in current namespace</h2></p>
+<p>kubectl describe secret nginx-secret
+<h2>Shows detailed information about a secret (values hidden)</h2></p>
+<p>kubectl delete secret nginx-secret
+<h2>Deletes a secret</h2></code></pre></p>
+<h3>Jobs and CronJobs</h3>
+<pre><code>kubectl create job nginx-job --image=nginx
+<h2>Creates a one-time job</h2>
+<p>kubectl create job nginx-job --image=nginx --dry-run=client -o yaml
+<h2>Generates job YAML without creating it</h2></p>
+<p>kubectl create cronjob nginx-cron --image=nginx --schedule="0 0 <em> </em> *"
+<h2>Creates scheduled job that runs daily at midnight</h2></p>
+<p>kubectl create cronjob nginx-cron --image=nginx --schedule="0 0 <em> </em> *" --dry-run=client -o yaml
+<h2>Generates cronjob YAML without creating it</h2></p>
+<p>kubectl get jobs
+<h2>Lists all jobs in current namespace</h2></p>
+<p>kubectl get cronjobs
+<h2>Lists all cronjobs in current namespace</h2></p>
+<p>kubectl get cj
+<h2>Short form to list cronjobs</h2></p>
+<p>kubectl describe job nginx-job
+<h2>Shows detailed information about a job</h2></p>
+<p>kubectl describe cronjob nginx-cron
+<h2>Shows detailed information about a cronjob</h2></p>
+<p>kubectl delete job nginx-job
+<h2>Deletes a job</h2></p>
+<p>kubectl delete cronjob nginx-cron
+<h2>Deletes a cronjob</h2></code></pre></p>
+<h3>Namespaces</h3>
+<pre><code>kubectl create namespace dev
+<h2>Creates a new namespace</h2>
+<p>kubectl get namespaces
+<h2>Lists all namespaces in cluster</h2></p>
+<p>kubectl get ns
+<h2>Short form to list namespaces</h2></p>
+<p>kubectl describe namespace dev
+<h2>Shows detailed information about a namespace</h2></p>
+<p>kubectl delete namespace dev
+<h2>Deletes a namespace and all resources in it</h2></p>
+<p>kubectl config set-context --current --namespace=dev
+<h2>Sets default namespace for current context</h2></code></pre></p>
+<h3>Resource Management</h3>
+<pre><code>kubectl top nodes
+<h2>Shows CPU and memory usage of nodes</h2>
+<p>kubectl top pods
+<h2>Shows CPU and memory usage of pods</h2></p>
+<p>kubectl get all
+<h2>Lists all common resources in current namespace</h2></p>
+<p>kubectl get all -n kube-system
+<h2>Lists all resources in kube-system namespace</h2></p>
+<p>kubectl api-resources
+<h2>Lists all available resource types</h2></p>
+<p>kubectl api-versions
+<h2>Lists all available API versions</h2></p>
+<p>kubectl explain pod
+<h2>Shows documentation for pod resource</h2></p>
+<p>kubectl explain pod.spec
+<h2>Shows documentation for pod spec field</h2></p>
+<p>kubectl explain pod.spec.containers
+<h2>Shows documentation for containers field in pod spec</h2></code></pre></p>
+<h3>Labels and Annotations</h3>
+<pre><code>kubectl label pod nginx env=prod
+<h2>Adds or updates label on a pod</h2>
+<p>kubectl label pod nginx env-
+<h2>Removes label from a pod</h2></p>
+<p>kubectl annotate pod nginx description="web server"
+<h2>Adds or updates annotation on a pod</h2></p>
+<p>kubectl annotate pod nginx description-
+<h2>Removes annotation from a pod</h2></p>
+<p>kubectl get pods --show-labels
+<h2>Lists pods with all labels displayed</h2></p>
+<p>kubectl get pods -l env=prod
+<h2>Lists pods with specific label</h2></p>
+<p>kubectl get pods -l 'env in (prod,dev)'
+<h2>Lists pods with label value in specified set</h2></p>
+<p>kubectl get pods -l env!=prod
+<h2>Lists pods without specific label value</h2></code></pre></p>
+<h3>Troubleshooting</h3>
+<pre><code>kubectl get events
+<h2>Lists events in current namespace</h2>
+<p>kubectl get events --sort-by=.metadata.creationTimestamp
+<h2>Lists events sorted by creation time</h2></p>
+<p>kubectl cluster-info
+<h2>Shows cluster endpoint information</h2></p>
+<p>kubectl cluster-info dump
+<h2>Dumps cluster state for debugging</h2></p>
+<p>kubectl version
+<h2>Shows kubectl and cluster version</h2></p>
+<p>kubectl get componentstatuses
+<h2>Shows health of cluster components</h2></p>
+<p>kubectl get cs
+<h2>Short form to check component status</h2></code></pre></p>
+<h3>Networking</h3>
+<pre><code>kubectl get networkpolicies
+<h2>Lists all network policies in current namespace</h2>
+<p>kubectl get netpol
+<h2>Short form to list network policies</h2></p>
+<p>kubectl describe networkpolicy deny-all
+<h2>Shows detailed information about a network policy</h2></p>
+<p>kubectl delete networkpolicy deny-all
+<h2>Deletes a network policy</h2></code></pre></p>
+<h3>Persistent Volumes</h3>
+<pre><code>kubectl get persistentvolumes
+<h2>Lists all persistent volumes in cluster</h2>
+<p>kubectl get pv
+<h2>Short form to list persistent volumes</h2></p>
+<p>kubectl get persistentvolumeclaims
+<h2>Lists all persistent volume claims in current namespace</h2></p>
+<p>kubectl get pvc
+<h2>Short form to list persistent volume claims</h2></p>
+<p>kubectl describe pv pv-name
+<h2>Shows detailed information about a persistent volume</h2></p>
+<p>kubectl describe pvc pvc-name
+<h2>Shows detailed information about a persistent volume claim</h2></p>
+<p>kubectl delete pvc pvc-name
+<h2>Deletes a persistent volume claim</h2></code></pre></p>
+<h3>Context and Config</h3>
+<pre><code>kubectl config view
+<h2>Shows current kubectl configuration</h2>
+<p>kubectl config get-contexts
+<h2>Lists all available contexts</h2></p>
+<p>kubectl config current-context
+<h2>Shows currently active context</h2></p>
+<p>kubectl config use-context context-name
+<h2>Switches to specified context</h2></p>
+<p>kubectl config set-context context-name --namespace=namespace-name
+<h2>Sets namespace for a context</h2></code></pre></p>
+<h3>Output Formats</h3>
+<pre><code>kubectl get pods -o json
+<h2>Outputs pods in JSON format</h2>
+<p>kubectl get pods -o yaml
+<h2>Outputs pods in YAML format</h2></p>
+<p>kubectl get pods -o wide
+<h2>Outputs pods with additional columns</h2></p>
+<p>kubectl get pods -o name
+<h2>Outputs only pod names</h2></p>
+<p>kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+<h2>Extracts specific fields using JSONPath</h2></p>
+<p>kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
+<h2>Formats JSONPath output with line breaks</h2></p>
+<p>kubectl get pods --sort-by=.metadata.name
+<h2>Sorts output by pod name</h2></p>
+<p>kubectl get pods --sort-by=.metadata.creationTimestamp
+<h2>Sorts output by creation timestamp</h2></code></pre></p>
+<h3>Imperative Commands</h3>
+<pre><code>kubectl run nginx --image=nginx --port=80 --expose
+<h2>Creates pod and service in one command</h2>
+<p>kubectl run nginx --image=nginx --env="VAR1=value1"
+<h2>Creates pod with environment variable</h2></p>
+<p>kubectl run nginx --image=nginx --command -- /bin/sh -c "sleep 3600"
+<h2>Creates pod with custom command</h2></p>
+<p>kubectl run nginx --image=nginx --requests="cpu=100m,memory=128Mi"
+<h2>Creates pod with resource requests</h2></p>
+<p>kubectl run nginx --image=nginx --limits="cpu=200m,memory=256Mi"
+<h2>Creates pod with resource limits</h2></p>
+<p>kubectl run nginx --image=nginx --restart=OnFailure
+<h2>Creates job that restarts on failure</h2></p>
+<p>kubectl run nginx --image=nginx --schedule="0 0 <em> </em> *"
+<h2>Creates cronjob with specified schedule</h2></code></pre></p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

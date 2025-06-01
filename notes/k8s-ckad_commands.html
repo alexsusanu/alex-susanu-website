@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKAD Commands - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKAD Commands</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 01, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKAD Commands</h2>
+<h3>Pods</h3>
+<pre><code>kubectl run nginx --image=nginx
+kubectl run nginx --image=nginx --dry-run=client -o yaml
+kubectl run nginx --image=nginx --restart=Never
+kubectl run nginx --image=nginx --rm -it --restart=Never -- /bin/sh
+kubectl get pods
+kubectl get pods -o wide
+kubectl get pods --show-labels
+kubectl get pods -l app=nginx
+kubectl describe pod nginx
+kubectl delete pod nginx
+kubectl delete pods --all
+kubectl logs nginx
+kubectl logs nginx -f
+kubectl logs nginx --previous
+kubectl exec nginx -- ls
+kubectl exec -it nginx -- /bin/sh
+kubectl port-forward nginx 8080:80
+kubectl cp nginx:/etc/passwd ./passwd
+kubectl apply -f pod.yaml
+kubectl create -f pod.yaml
+kubectl replace -f pod.yaml
+kubectl patch pod nginx -p '{"spec":{"containers":[{"name":"nginx","image":"nginx:1.20"}]}}'</code></pre>
+<h3>Deployments</h3>
+<pre><code>kubectl create deployment nginx --image=nginx
+kubectl create deployment nginx --image=nginx --dry-run=client -o yaml
+kubectl get deployments
+kubectl get deploy
+kubectl describe deployment nginx
+kubectl delete deployment nginx
+kubectl scale deployment nginx --replicas=3
+kubectl autoscale deployment nginx --min=2 --max=10 --cpu-percent=80
+kubectl rollout status deployment nginx
+kubectl rollout history deployment nginx
+kubectl rollout undo deployment nginx
+kubectl rollout undo deployment nginx --to-revision=2
+kubectl set image deployment nginx nginx=nginx:1.20
+kubectl edit deployment nginx
+kubectl expose deployment nginx --port=80 --target-port=80</code></pre>
+<h3>Services</h3>
+<pre><code>kubectl create service clusterip nginx --tcp=80:80
+kubectl create service nodeport nginx --tcp=80:80
+kubectl create service loadbalancer nginx --tcp=80:80
+kubectl expose pod nginx --port=80 --target-port=80
+kubectl expose deployment nginx --port=80 --target-port=80 --type=NodePort
+kubectl get services
+kubectl get svc
+kubectl describe service nginx
+kubectl delete service nginx
+kubectl get endpoints</code></pre>
+<h3>ConfigMaps</h3>
+<pre><code>kubectl create configmap nginx-config --from-literal=key1=value1
+kubectl create configmap nginx-config --from-file=config.txt
+kubectl create configmap nginx-config --from-file=configs/
+kubectl create configmap nginx-config --from-env-file=config.env
+kubectl get configmaps
+kubectl get cm
+kubectl describe configmap nginx-config
+kubectl delete configmap nginx-config</code></pre>
+<h3>Secrets</h3>
+<pre><code>kubectl create secret generic nginx-secret --from-literal=username=admin
+kubectl create secret generic nginx-secret --from-file=secret.txt
+kubectl create secret docker-registry regcred --docker-server=myregistry.com --docker-username=user --docker-password=pass
+kubectl create secret tls tls-secret --cert=cert.crt --key=cert.key
+kubectl get secrets
+kubectl describe secret nginx-secret
+kubectl delete secret nginx-secret</code></pre>
+<h3>Jobs and CronJobs</h3>
+<pre><code>kubectl create job nginx-job --image=nginx
+kubectl create job nginx-job --image=nginx --dry-run=client -o yaml
+kubectl create cronjob nginx-cron --image=nginx --schedule="0 0 <em> </em> *"
+kubectl create cronjob nginx-cron --image=nginx --schedule="0 0 <em> </em> *" --dry-run=client -o yaml
+kubectl get jobs
+kubectl get cronjobs
+kubectl get cj
+kubectl describe job nginx-job
+kubectl describe cronjob nginx-cron
+kubectl delete job nginx-job
+kubectl delete cronjob nginx-cron</code></pre>
+<h3>Namespaces</h3>
+<pre><code>kubectl create namespace dev
+kubectl get namespaces
+kubectl get ns
+kubectl describe namespace dev
+kubectl delete namespace dev
+kubectl config set-context --current --namespace=dev</code></pre>
+<h3>Resource Management</h3>
+<pre><code>kubectl top nodes
+kubectl top pods
+kubectl get all
+kubectl get all -n kube-system
+kubectl api-resources
+kubectl api-versions
+kubectl explain pod
+kubectl explain pod.spec
+kubectl explain pod.spec.containers</code></pre>
+<h3>Labels and Annotations</h3>
+<pre><code>kubectl label pod nginx env=prod
+kubectl label pod nginx env-
+kubectl annotate pod nginx description="web server"
+kubectl annotate pod nginx description-
+kubectl get pods --show-labels
+kubectl get pods -l env=prod
+kubectl get pods -l 'env in (prod,dev)'
+kubectl get pods -l env!=prod</code></pre>
+<h3>Troubleshooting</h3>
+<pre><code>kubectl get events
+kubectl get events --sort-by=.metadata.creationTimestamp
+kubectl cluster-info
+kubectl cluster-info dump
+kubectl version
+kubectl get componentstatuses
+kubectl get cs</code></pre>
+<h3>Networking</h3>
+<pre><code>kubectl get networkpolicies
+kubectl get netpol
+kubectl describe networkpolicy deny-all
+kubectl delete networkpolicy deny-all</code></pre>
+<h3>Persistent Volumes</h3>
+<pre><code>kubectl get persistentvolumes
+kubectl get pv
+kubectl get persistentvolumeclaims
+kubectl get pvc
+kubectl describe pv pv-name
+kubectl describe pvc pvc-name
+kubectl delete pvc pvc-name</code></pre>
+<h3>Context and Config</h3>
+<pre><code>kubectl config view
+kubectl config get-contexts
+kubectl config current-context
+kubectl config use-context context-name
+kubectl config set-context context-name --namespace=namespace-name</code></pre>
+<h3>Output Formats</h3>
+<pre><code>kubectl get pods -o json
+kubectl get pods -o yaml
+kubectl get pods -o wide
+kubectl get pods -o name
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
+kubectl get pods --sort-by=.metadata.name
+kubectl get pods --sort-by=.metadata.creationTimestamp</code></pre>
+<h3>Imperative Commands</h3>
+<pre><code>kubectl run nginx --image=nginx --port=80 --expose
+kubectl run nginx --image=nginx --env="VAR1=value1"
+kubectl run nginx --image=nginx --command -- /bin/sh -c "sleep 3600"
+kubectl run nginx --image=nginx --requests="cpu=100m,memory=128Mi"
+kubectl run nginx --image=nginx --limits="cpu=200m,memory=256Mi"
+kubectl run nginx --image=nginx --restart=OnFailure
+kubectl run nginx --image=nginx --schedule="0 0 <em> </em> *"</code></pre>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
