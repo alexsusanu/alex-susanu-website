@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pod Lifecycle - Comprehensive Study Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Pod Lifecycle - Comprehensive Study Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Pod Lifecycle - Comprehensive Study Guide</h2>
+<h3>WHY Pod Lifecycle Matters (Conceptual Foundation)</h3>
+<h4>Pods as the Atomic Unit of Kubernetes</h4>
+Understanding pod lifecycle is understanding <strong>how Kubernetes actually runs your applications</strong>:
+<ul><li><strong>Atomic Deployment Unit</strong> - Pods are the smallest deployable units, not containers</li>
+<li><strong>Shared Execution Context</strong> - Containers in a pod share network, storage, and lifecycle</li>
+<li><strong>State Transition System</strong> - Pods move through predictable phases with clear triggers</li>
+<li><strong>Resource Management Boundary</strong> - Scheduling, networking, and storage happen at pod level</li>
+<li><strong>Failure and Recovery Model</strong> - Pod restarts, rescheduling, and health management patterns</li>
+<h4>Exam Context: Why Pod Lifecycle Mastery is Critical</h4>
+<li><strong>Debugging foundation</strong> - 80% of application issues manifest in pod lifecycle</li>
+<li><strong>Networking troubleshooting</strong> - Pod-to-pod, pod-to-service communication</li>
+<li><strong>Storage management</strong> - Volume mounting, persistent storage, data persistence</li>
+<li><strong>Performance optimization</strong> - Resource requests, limits, quality of service</li>
+<li><strong>Security implementation</strong> - Pod security contexts, network policies, RBAC</li>
+<strong>Key Insight</strong>: Every Kubernetes abstraction (Deployments, Services, Jobs) ultimately manages pods. Understanding pod lifecycle means understanding how Kubernetes works at the foundational level.
+<p>---</p>
+<h3>Pod Lifecycle Overview</h3>
+<h4>The Complete Pod Journey</h4>
+<pre><code>┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   kubectl   │───▶│ API Server  │───▶│  Scheduler  │───▶│   kubelet   │
+│   apply     │    │ Validation  │    │ Node Select │    │ Container   │
+│             │    │ Admission   │    │             │    │ Runtime     │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+                           │                                       │
+                           ▼                                       ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         etcd                                        │
+│  Pod Object: spec.nodeName = ""  → spec.nodeName = "worker-1"      │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+<h4>Pod Phases and States</h4>
+<pre><code><h2>Pod status progression</h2>
+apiVersion: v1
+kind: Pod
+status:
+  phase: Pending     # → Running → Succeeded/Failed
+  conditions:        # Detailed state information
+  - type: PodScheduled
+    status: "True"
+    lastTransitionTime: "2024-01-15T10:00:00Z"
+  - type: Initialized
+    status: "True"
+    lastTransitionTime: "2024-01-15T10:00:15Z"
+  - type: ContainersReady
+    status: "True"
+    lastTransitionTime: "2024-01-15T10:00:30Z"
+  - type: Ready
+    status: "True"
+    lastTransitionTime: "2024-01-15T10:00:30Z"
+  containerStatuses:
+  - name: nginx
+    state:
+      running:
+        startedAt: "2024-01-15T10:00:25Z"
+    ready: true
+    restartCount: 0</code></pre>
+<strong>Phase Definitions</strong>:
+<li><strong>Pending</strong>: Pod accepted but containers not yet created</li>
+<li><strong>Running</strong>: Pod bound to node, at least one container running</li>
+<li><strong>Succeeded</strong>: All containers terminated successfully (exit 0)</li>
+<li><strong>Failed</strong>: All containers terminated, at least one failed</li>
+<li><strong>Unknown</strong>: Pod state cannot be determined (node communication issues)</li>
+<p>---</p>
+<h3>Pod Creation Process (Deep Dive)</h3>
+<h4>1. Client Request and API Server Processing</h4>
+<p>#### kubectl to API Server
+<pre><code><h2>This simple command triggers a complex workflow</h2>
+kubectl run nginx --image=nginx</p>
+<h2>Equivalent REST API call</h2>
+curl -X POST \
+  https://kube-apiserver:6443/api/v1/namespaces/default/pods \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {"name": "nginx"},
+    "spec": {
+      "containers": [{"name": "nginx", "image": "nginx"}]
+    }
+  }'</code></pre>
+<p>#### API Server Validation and Admission
+<pre><code><h2>API Server processing steps:</h2>
+<h2>1. Authentication: Is the user who they claim to be?</h2>
+<h2>2. Authorization: Can this user create pods in this namespace?</h2>
+<h2>3. Admission Controllers: Policy enforcement and resource mutation</h2></p>
+<h2>Example admission controller effects:</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  namespace: default
+spec:
+  serviceAccountName: default  # ← Added by ServiceAccount admission controller
+  containers:
+  - name: nginx
+    image: nginx
+    resources: {}              # ← May be modified by LimitRanger
+    securityContext:           # ← Added by PodSecurityPolicy
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true</code></pre>
+<h4>2. Storage in etcd</h4>
+<p>#### Pod Object Storage
+<pre><code><h2>Pod stored in etcd at this path</h2>
+/registry/pods/default/nginx</p>
+<h2>Initial pod object (spec.nodeName is empty)</h2>
+{
+  "apiVersion": "v1",
+  "kind": "Pod",
+  "metadata": {
+    "name": "nginx",
+    "namespace": "default",
+    "uid": "12345678-1234-1234-1234-123456789abc",
+    "creationTimestamp": "2024-01-15T10:00:00Z"
+  },
+  "spec": {
+    "containers": [...],
+    "nodeName": ""  # ← Empty until scheduled
+  },
+  "status": {
+    "phase": "Pending"
+  }
+}</code></pre>
+<h4>3. Scheduler Assignment</h4>
+<p>#### Scheduler Decision Process
+<pre><code><h2>Scheduler filtering and scoring</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+  # ↓ After scheduling
+  nodeName: "worker-2"  # ← Scheduler adds this field</code></pre></p>
+<p>#### Scheduling Constraints Example
+<pre><code><h2>Complex scheduling scenario</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: complex-pod
+spec:
+  nodeSelector:               # Basic node filtering
+    disktype: ssd
+  affinity:
+    nodeAffinity:            # Advanced node selection
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values: ["amd64"]
+    podAntiAffinity:         # Avoid co-location
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values: ["database"]
+          topologyKey: kubernetes.io/hostname
+  tolerations:               # Tolerate taints
+  - key: "special"
+    operator: "Equal"
+    value: "gpu"
+    effect: "NoSchedule"
+  containers:
+  - name: app
+    image: myapp
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+        nvidia.com/gpu: 1    # GPU requirement
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+        nvidia.com/gpu: 1</code></pre></p>
+<h4>4. kubelet Takes Over</h4>
+<p>#### kubelet Pod Management
+<pre><code><h2>kubelet workflow on assigned node:</h2>
+<h2>1. Watch API server for pods with nodeName matching this node</h2>
+<h2>2. Pull container images</h2>
+<h2>3. Create container runtime objects</h2>
+<h2>4. Set up networking (CNI)</h2>
+<h2>5. Mount volumes</h2>
+<h2>6. Start containers</h2>
+<h2>7. Monitor container health</h2>
+<h2>8. Report status back to API server</h2></code></pre></p>
+<p>#### Container Creation Process
+<pre><code><h2>kubelet → container runtime interaction</h2>
+<h2>Example with containerd/CRI-O:</h2></p>
+<h2>1. Image pulling</h2>
+<h2>kubelet calls: ImageService.PullImage()</h2>
+<h2>Status: spec.containers[0].image: "nginx" → "nginx:latest"</h2>
+<h2>2. Container creation</h2>
+<h2>kubelet calls: RuntimeService.CreateContainer()</h2>
+<h2>With pod sandbox (shared network/IPC namespace)</h2>
+<h2>3. Container start</h2>
+<h2>kubelet calls: RuntimeService.StartContainer()</h2>
+<h2>Updates pod status: containerStatuses[0].state.running.startedAt</h2></code></pre>
+<p>---</p>
+<h3>Pod Networking (Complete Model)</h3>
+<h4>1. Pod Network Model Fundamentals</h4>
+<p>#### The Kubernetes Network Model
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Cluster Network                         │
+│                                                             │
+│  ┌─────────────┐           ┌─────────────┐                 │
+│  │   Node-1    │           │   Node-2    │                 │
+│  │ 10.244.1.0  │           │ 10.244.2.0  │                 │
+│  │             │           │             │                 │
+│  │ ┌─────────┐ │           │ ┌─────────┐ │                 │
+│  │ │ Pod A   │ │           │ │ Pod C   │ │                 │
+│  │ │10.244.1.│ │           │ │10.244.2.│ │                 │
+│  │ │    10   │ │           │ │    15   │ │                 │
+│  │ └─────────┘ │           │ └─────────┘ │                 │
+│  │ ┌─────────┐ │           │ ┌─────────┐ │                 │
+│  │ │ Pod B   │ │           │ │ Pod D   │ │                 │
+│  │ │10.244.1.│ │◀─────────▶│ │10.244.2.│ │                 │
+│  │ │    20   │ │           │ │    25   │ │                 │
+│  │ └─────────┘ │           │ └─────────┘ │                 │
+│  └─────────────┘           └─────────────┘                 │
+└─────────────────────────────────────────────────────────────┘</p>
+<h2>Network principles:</h2>
+<h2>1. Every pod gets a unique IP address</h2>
+<h2>2. Pods can communicate with all other pods without NAT</h2>
+<h2>3. Nodes can communicate with all pods without NAT</h2>
+<h2>4. The IP that a pod sees itself as is the same IP others see it as</h2></code></pre>
+<p>#### Pod Networking Setup Process
+<pre><code><h2>When kubelet creates a pod:</h2></p>
+<h2>1. Create network namespace for pod</h2>
+ip netns add pod-namespace-12345
+<h2>2. Call CNI (Container Network Interface) plugin</h2>
+<h2>/opt/cni/bin/bridge < CNI_CONFIG</h2>
+<h2>CNI plugin configures:</h2>
+<h2>- Virtual ethernet pair (veth)</h2>
+<h2>- Bridge connection</h2>
+<h2>- IP address assignment</h2>
+<h2>- Route configuration</h2>
+<h2>3. Result: Pod has network connectivity</h2>
+<h2>Pod can reach: other pods, services, external networks</h2></code></pre>
+<h4>2. Container-to-Container Communication (Same Pod)</h4>
+<p>#### Shared Network Namespace
+<pre><code><h2>Multi-container pod networking</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-network-pod
+spec:
+  containers:
+  - name: web
+    image: nginx
+    ports:
+    - containerPort: 80
+  - name: sidecar
+    image: busybox
+    command: ["sleep", "3600"]
+---
+<h2>Inside the pod:</h2>
+<h2>Both containers share the same network interface</h2>
+<h2>web container binds to 0.0.0.0:80</h2>
+<h2>sidecar can reach web via localhost:80</h2>
+<h2>External clients see both containers at same pod IP</h2></code></pre></p>
+<p>#### Localhost Communication Example
+<pre><code><h2>From sidecar container:</h2>
+kubectl exec shared-network-pod -c sidecar -- wget -qO- localhost:80
+<h2>↑ This works because containers share network namespace</h2></p>
+<h2>Port conflicts within pod:</h2>
+<h2>If both containers try to bind to port 80 → conflict!</h2>
+<h2>Solution: Use different ports per container</h2></code></pre>
+<h4>3. Pod-to-Pod Communication</h4>
+<p>#### Direct IP Communication
+<pre><code><h2>Pod A wants to communicate with Pod B</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client-pod
+spec:
+  containers:
+  - name: client
+    image: busybox
+    command: ["sleep", "3600"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: server-pod
+spec:
+  containers:
+  - name: server
+    image: nginx
+    ports:
+    - containerPort: 80</code></pre></p>
+<pre><code><h2>Get pod IPs</h2>
+kubectl get pods -o wide
+<h2>NAME         READY   STATUS    RESTARTS   AGE   IP            NODE</h2>
+<h2>client-pod   1/1     Running   0          1m    10.244.1.10   worker-1</h2>
+<h2>server-pod   1/1     Running   0          1m    10.244.2.15   worker-2</h2>
+<h2>Direct pod-to-pod communication</h2>
+kubectl exec client-pod -- wget -qO- 10.244.2.15:80
+<h2>↑ This works across nodes due to CNI networking</h2></code></pre>
+<p>#### Service Discovery and DNS
+<pre><code><h2>Service for stable endpoint</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+  labels:
+    app: web
+spec:
+  containers:
+  - name: nginx
+    image: nginx</code></pre></p>
+<pre><code><h2>DNS-based service discovery</h2>
+kubectl exec client-pod -- nslookup web-service
+<h2>Returns: web-service.default.svc.cluster.local → 10.96.55.123</h2>
+<h2>Service communication</h2>
+kubectl exec client-pod -- wget -qO- web-service:80
+kubectl exec client-pod -- wget -qO- web-service.default.svc.cluster.local:80</code></pre>
+<h4>4. Network Troubleshooting</h4>
+<p>#### Common Network Issues and Diagnostics
+<pre><code><h2>1. Pod cannot reach external internet</h2>
+kubectl exec test-pod -- nslookup google.com
+kubectl exec test-pod -- wget -qO- https://google.com</p>
+<h2>2. Pod-to-pod communication failure</h2>
+kubectl exec pod-a -- ping <pod-b-ip>
+kubectl exec pod-a -- telnet <pod-b-ip> 80
+<h2>3. Service discovery not working</h2>
+kubectl exec test-pod -- nslookup kubernetes
+kubectl exec test-pod -- nslookup web-service
+<h2>4. CNI plugin issues</h2>
+kubectl describe pod test-pod  # Look for network setup errors
+kubectl logs -n kube-system <cni-pod>
+<h2>5. DNS resolution problems</h2>
+kubectl exec test-pod -- cat /etc/resolv.conf
+kubectl get svc -n kube-system kube-dns</code></pre>
+<p>#### Network Policy Impact
+<pre><code><h2>Network policies can block communication</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+spec:
+  podSelector: {}  # Applies to all pods in namespace
+  policyTypes:
+  - Ingress
+  - Egress
+  # No ingress/egress rules = deny all traffic
+---
+<h2>Allow specific communication</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-traffic
+spec:
+  podSelector:
+    matchLabels:
+      app: web
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: 80</code></pre></p>
+<p>---</p>
+<h3>Pod Storage (Volumes and Persistence)</h3>
+<h4>1. Volume Types and Use Cases</h4>
+<p>#### Temporary Storage (emptyDir)
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-storage-pod
+spec:
+  containers:
+  - name: writer
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo $(date) >> /shared/output.log; sleep 5; done"]
+    volumeMounts:
+    - name: shared-volume
+      mountPath: /shared
+  - name: reader
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "tail -f /shared/output.log"]
+    volumeMounts:
+    - name: shared-volume
+      mountPath: /shared
+  volumes:
+  - name: shared-volume
+    emptyDir:
+      sizeLimit: 1Gi  # Optional size limit</code></pre></p>
+<p>#### Host Path Volumes
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-pod
+spec:
+  containers:
+  - name: app
+    image: nginx
+    volumeMounts:
+    - name: host-logs
+      mountPath: /var/log/nginx
+    - name: host-config
+      mountPath: /etc/nginx/conf.d
+      readOnly: true
+  volumes:
+  - name: host-logs
+    hostPath:
+      path: /var/log/nginx  # Node filesystem path
+      type: DirectoryOrCreate
+  - name: host-config
+    hostPath:
+      path: /etc/nginx/conf.d
+      type: Directory
+  nodeSelector:
+    kubernetes.io/hostname: specific-node  # Pin to specific node</code></pre></p>
+<strong>Gotcha</strong>: hostPath volumes tie pods to specific nodes and pose security risks.
+<p>#### ConfigMap and Secret Volumes
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  config.yaml: |
+    server:
+      port: 8080
+      debug: true
+    database:
+      host: db.example.com
+      port: 5432
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+type: Opaque
+data:
+  username: YWRtaW4=  # admin (base64)
+  password: cGFzc3dvcmQ=  # password (base64)
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-pod
+spec:
+  containers:
+  - name: app
+    image: myapp
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+      readOnly: true
+    - name: secret-volume
+      mountPath: /etc/secrets
+      readOnly: true
+    env:
+    - name: CONFIG_FILE
+      value: /etc/config/config.yaml
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-config
+      defaultMode: 0644
+  - name: secret-volume
+    secret:
+      secretName: app-secrets
+      defaultMode: 0400  # Read-only for owner only</code></pre></p>
+<h4>2. Persistent Storage</h4>
+<p>#### PersistentVolume and PersistentVolumeClaim
+<pre><code><h2>Cluster administrator creates PV</h2>
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv-1
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /mnt/disks/vol1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-node-1
+---
+<h2>User requests storage via PVC</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-storage
+---
+<h2>Pod uses PVC</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: persistent-pod
+spec:
+  containers:
+  - name: app
+    image: postgres:13
+    env:
+    - name: POSTGRES_DB
+      value: myapp
+    - name: PGDATA
+      value: /var/lib/postgresql/data/pgdata
+    volumeMounts:
+    - name: postgres-storage
+      mountPath: /var/lib/postgresql/data
+  volumes:
+  - name: postgres-storage
+    persistentVolumeClaim:
+      claimName: app-storage</code></pre></p>
+<p>#### Storage Classes and Dynamic Provisioning
+<pre><code><h2>StorageClass for dynamic provisioning</h2>
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-ssd
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp3
+  iops: "3000"
+  encrypted: "true"
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+---
+<h2>PVC using StorageClass</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd  # Triggers dynamic provisioning</code></pre></p>
+<h4>3. Volume Mounting and Lifecycle</h4>
+<p>#### Volume Mount Options and Behavior
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: mount-options-pod
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - name: data-volume
+      mountPath: /data
+      readOnly: false
+      subPath: app-data      # Mount subdirectory only
+    - name: config-volume
+      mountPath: /etc/config
+      readOnly: true
+    - name: shared-volume
+      mountPath: /shared
+      mountPropagation: HostToContainer  # Propagate host mounts
+  volumes:
+  - name: data-volume
+    persistentVolumeClaim:
+      claimName: app-data
+  - name: config-volume
+    configMap:
+      name: app-config
+      items:  # Mount specific keys only
+      - key: config.yaml
+        path: app.yaml
+        mode: 0644
+  - name: shared-volume
+    hostPath:
+      path: /mnt/shared</code></pre></p>
+<p>#### Init Containers and Volume Preparation
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: init-volume-pod
+spec:
+  initContainers:
+  - name: volume-setup
+    image: busybox
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      mkdir -p /data/app /data/logs
+      chown 1000:1000 /data/app /data/logs
+      chmod 755 /data/app /data/logs
+    volumeMounts:
+    - name: app-data
+      mountPath: /data
+  containers:
+  - name: app
+    image: myapp
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+    volumeMounts:
+    - name: app-data
+      mountPath: /app/data
+      subPath: app
+    - name: app-data
+      mountPath: /app/logs
+      subPath: logs
+  volumes:
+  - name: app-data
+    persistentVolumeClaim:
+      claimName: app-storage</code></pre></p>
+<p>---</p>
+<h3>Pod Logging (Complete Logging Strategy)</h3>
+<h4>1. Container Log Management</h4>
+<p>#### Standard Output/Error Logging
+<pre><code><h2>Application logging to stdout/stderr</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: logging-pod
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      while true; do
+        echo "$(date): INFO - Application is running" >&1
+        echo "$(date): ERROR - Something went wrong" >&2
+        sleep 10
+      done</code></pre></p>
+<pre><code><h2>Accessing container logs</h2>
+kubectl logs logging-pod
+kubectl logs logging-pod --previous  # Previous container instance
+kubectl logs logging-pod --since=1h  # Time-based filtering
+kubectl logs logging-pod --tail=50   # Last N lines
+kubectl logs logging-pod -f          # Follow real-time
+<h2>Multi-container pod logs</h2>
+kubectl logs logging-pod -c app      # Specific container
+kubectl logs logging-pod --all-containers=true  # All containers</code></pre>
+<p>#### Log Rotation and Retention
+<pre><code><h2>kubelet log rotation configuration</h2>
+<h2>/var/lib/kubelet/config.yaml</h2>
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+logging:
+  format: json
+containerLogMaxSize: "10Mi"     # Rotate when log file reaches 10MB
+containerLogMaxFiles: 5         # Keep 5 rotated files</code></pre></p>
+<pre><code><h2>Container log files on node</h2>
+ls -la /var/log/pods/default_logging-pod_*/app/
+<h2>0.log      (current log file)</h2>
+<h2>0.log.1    (rotated log file)</h2>
+<h2>0.log.2    (older rotated log file)</h2></code></pre>
+<h4>2. Sidecar Logging Patterns</h4>
+<p>#### Log Aggregation Sidecar
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-logging-pod
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      while true; do
+        echo "$(date): Application log entry" >> /var/log/app.log
+        sleep 5
+      done
+    volumeMounts:
+    - name: log-volume
+      mountPath: /var/log
+  - name: log-shipper
+    image: fluent/fluent-bit:latest
+    volumeMounts:
+    - name: log-volume
+      mountPath: /var/log
+      readOnly: true
+    - name: fluent-config
+      mountPath: /fluent-bit/etc
+  volumes:
+  - name: log-volume
+    emptyDir: {}
+  - name: fluent-config
+    configMap:
+      name: fluent-bit-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+data:
+  fluent-bit.conf: |
+    [INPUT]
+        Name tail
+        Path /var/log/app.log
+        Tag app.logs
+    [OUTPUT]
+        Name forward
+        Match *
+        Host logging-server.monitoring.svc.cluster.local
+        Port 24224</code></pre></p>
+<p>#### Multi-Stream Logging
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-stream-logging
+spec:
+  containers:
+  - name: app
+    image: myapp
+    volumeMounts:
+    - name: log-volume
+      mountPath: /var/log
+  # Separate sidecar for each log stream
+  - name: access-log-streamer
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "tail -f /var/log/access.log"]
+    volumeMounts:
+    - name: log-volume
+      mountPath: /var/log
+      readOnly: true
+  - name: error-log-streamer
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "tail -f /var/log/error.log"]
+    volumeMounts:
+    - name: log-volume
+      mountPath: /var/log
+      readOnly: true
+  volumes:
+  - name: log-volume
+    emptyDir: {}</code></pre></p>
+<h4>3. Centralized Logging Architecture</h4>
+<p>#### ELK Stack Integration
+<pre><code><h2>Filebeat DaemonSet for log collection</h2>
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: filebeat
+  namespace: logging
+spec:
+  selector:
+    matchLabels:
+      app: filebeat
+  template:
+    metadata:
+      labels:
+        app: filebeat
+    spec:
+      containers:
+      - name: filebeat
+        image: elastic/filebeat:8.5.0
+        volumeMounts:
+        - name: config
+          mountPath: /usr/share/filebeat/filebeat.yml
+          subPath: filebeat.yml
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: varlogpods
+          mountPath: /var/log/pods
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: filebeat-config
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: varlogpods
+        hostPath:
+          path: /var/log/pods</code></pre></p>
+<h4>4. Log Troubleshooting</h4>
+<p>#### Common Logging Issues
+<pre><code><h2>1. Pod logs not appearing</h2>
+kubectl describe pod problematic-pod
+<h2>Check: Events section for container creation issues</h2></p>
+<h2>2. Container keeps restarting</h2>
+kubectl logs problematic-pod --previous
+<h2>Previous instance logs often show crash cause</h2>
+<h2>3. Log volume full</h2>
+kubectl exec -it pod-name -- df -h /var/log
+<h2>Check volume usage in pod</h2>
+<h2>4. Log rotation not working</h2>
+<h2>Check kubelet configuration and node disk space</h2>
+df -h /var/log/pods/
+<h2>5. Sidecar not collecting logs</h2>
+kubectl logs pod-name -c sidecar-container
+<h2>Check sidecar container for collection errors</h2></code></pre>
+<p>#### Log Analysis Patterns
+<pre><code><h2>Search for specific patterns</h2>
+kubectl logs app-pod | grep "ERROR"
+kubectl logs app-pod | grep -E "(ERROR|WARN|FATAL)"</p>
+<h2>Time-based analysis</h2>
+kubectl logs app-pod --since=2h | grep "database"
+kubectl logs app-pod --since-time="2024-01-15T10:00:00Z"
+<h2>Multi-pod log aggregation</h2>
+for pod in $(kubectl get pods -l app=web -o name); do
+  echo "=== $pod ==="
+  kubectl logs $pod --tail=10
+done</code></pre>
+<p>---</p>
+<h3>Pod Health and Monitoring</h3>
+<h4>1. Health Probes</h4>
+<p>#### Liveness, Readiness, and Startup Probes
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: health-check-pod
+spec:
+  containers:
+  - name: web
+    image: nginx
+    ports:
+    - containerPort: 80
+    # Startup probe - initial health check
+    startupProbe:
+      httpGet:
+        path: /health
+        port: 80
+      failureThreshold: 30    # Allow 30 * 10 = 300 seconds for startup
+      periodSeconds: 10
+    # Liveness probe - restart container if unhealthy
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 80
+        httpHeaders:
+        - name: Custom-Header
+          value: health-check
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    # Readiness probe - remove from service if not ready
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+      successThreshold: 1
+    # Resource limits affect scheduling and QoS
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"</code></pre></p>
+<p>#### Probe Types and Examples
+<pre><code><h2>HTTP GET probe</h2>
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+    scheme: HTTPS</p>
+<h2>TCP socket probe</h2>
+livenessProbe:
+  tcpSocket:
+    port: 3306
+<h2>Command execution probe</h2>
+livenessProbe:
+  exec:
+    command:
+    - cat
+    - /tmp/healthy</code></pre>
+<h4>2. Resource Management and QoS</h4>
+<p>#### Quality of Service Classes
+<pre><code><h2>Guaranteed QoS (highest priority)</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: guaranteed-pod
+spec:
+  containers:
+  - name: app
+    image: nginx
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"    # requests == limits
+        cpu: "500m"      # requests == limits
+---
+<h2>Burstable QoS (medium priority)</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: burstable-pod
+spec:
+  containers:
+  - name: app
+    image: nginx
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"    # limits > requests
+        cpu: "1000m"     # limits > requests
+---
+<h2>BestEffort QoS (lowest priority)</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: besteffort-pod
+spec:
+  containers:
+  - name: app
+    image: nginx
+    # No resource requests or limits specified</code></pre></p>
+<h4>3. Pod Disruption and Termination</h4>
+<p>#### Graceful Termination Process
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: graceful-termination-pod
+spec:
+  containers:
+  - name: app
+    image: nginx
+    lifecycle:
+      preStop:  # Hook executed before SIGTERM
+        exec:
+          command:
+          - /bin/sh
+          - -c
+          - |
+            echo "Graceful shutdown initiated"
+            nginx -s quit  # Graceful nginx shutdown
+            sleep 5
+  terminationGracePeriodSeconds: 30  # Time allowed for graceful shutdown</code></pre></p>
+<pre><code><h2>Pod termination sequence:</h2>
+<h2>1. Pod marked for deletion (grace period starts)</h2>
+<h2>2. Pod removed from service endpoints</h2>
+<h2>3. preStop hook executed (if defined)</h2>
+<h2>4. SIGTERM sent to main container process</h2>
+<h2>5. Grace period countdown (terminationGracePeriodSeconds)</h2>
+<h2>6. SIGKILL sent if process still running after grace period</h2></code></pre>
+<p>#### Pod Disruption Budgets
+<pre><code>apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-pdb
+spec:
+  minAvailable: 2  # or maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: web</code></pre></p>
+<p>---</p>
+<h3>Exam-Specific Pod Scenarios</h3>
+<h4>1. Common Exam Tasks</h4>
+<p>#### Multi-Container Pod Creation
+<pre><code><h2>Create pod with specific requirements</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: exam-pod
+  labels:
+    app: exam-app
+spec:
+  containers:
+  - name: main
+    image: nginx:1.20
+    ports:
+    - containerPort: 80
+    env:
+    - name: ENV_VAR
+      value: "production"
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+  - name: sidecar
+    image: busybox
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+  restartPolicy: Always
+  nodeSelector:
+    disktype: ssd</code></pre></p>
+<p>#### Troubleshooting Failed Pods
+<pre><code><h2>Systematic troubleshooting approach</h2>
+<h2>1. Check pod status and events</h2>
+kubectl get pods
+kubectl describe pod <pod-name></p>
+<h2>2. Check container logs</h2>
+kubectl logs <pod-name>
+kubectl logs <pod-name> --previous
+<h2>3. Check resource availability</h2>
+kubectl describe nodes
+kubectl top nodes
+kubectl top pods
+<h2>4. Check image and registry issues</h2>
+kubectl get events --sort-by='.lastTimestamp'
+<h2>5. Interactive debugging</h2>
+kubectl exec -it <pod-name> -- /bin/sh</code></pre>
+<h4>2. Pod Security and Best Practices</h4>
+<p>#### Security Context Implementation
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: secure-app
+    image: nginx
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE
+    volumeMounts:
+    - name: tmp-volume
+      mountPath: /tmp
+    - name: var-cache-nginx
+      mountPath: /var/cache/nginx
+    - name: var-run
+      mountPath: /var/run
+  volumes:
+  - name: tmp-volume
+    emptyDir: {}
+  - name: var-cache-nginx
+    emptyDir: {}
+  - name: var-run
+    emptyDir: {}</code></pre></p>
+<p>---</p>
+<h3>Conceptual Mastery Framework</h3>
+<h4>Pod Lifecycle State Machine</h4>
+Understanding pods as <strong>state machines</strong> that transition through phases:
+1. <strong>Pending</strong> → API accepted, awaiting scheduling
+2. <strong>Running</strong> → At least one container running
+3. <strong>Succeeded/Failed</strong> → Terminal states
+4. <strong>Unknown</strong> → Communication failure with node
+<h4>Resource Allocation and Scheduling</h4>
+Pods are <strong>resource consumption units</strong> where:
+<li><strong>Requests</strong> = guaranteed resources for scheduling</li>
+<li><strong>Limits</strong> = maximum allowed resource usage</li>
+<li><strong>QoS classes</strong> = eviction priority during resource pressure</li>
+<h4>Networking and Communication</h4>
+Pods are <strong>network endpoints</strong> with:
+<li><strong>Unique IP addresses</strong> within cluster network</li>
+<li><strong>Shared network namespace</strong> between containers</li>
+<li><strong>Service discovery</strong> through DNS and environment variables</li>
+<h4>Storage and Data Management</h4>
+Pods are <strong>data processing units</strong> with:
+<li><strong>Ephemeral storage</strong> for temporary data</li>
+<li><strong>Volume mounts</strong> for shared data between containers</li>
+<li><strong>Persistent volumes</strong> for data that survives pod restarts</li></ul>
+<p>---</p>
+<h3>Troubleshooting Decision Tree</h3>
+<pre><code>Pod Issue?
+├── Not Starting?
+│   ├── Check: kubectl describe pod
+│   ├── Look for: Image pull errors, resource constraints
+│   └── Fix: Verify image, node resources, scheduling constraints
+├── Running but Not Working?
+│   ├── Check: kubectl logs pod
+│   ├── Look for: Application errors, configuration issues
+│   └── Fix: Review config, environment variables, volumes
+├── Networking Issues?
+│   ├── Check: kubectl exec pod -- ping/telnet
+│   ├── Look for: CNI issues, NetworkPolicy blocks
+│   └── Fix: Verify CNI, check policies, test connectivity
+└── Performance Issues?
+    ├── Check: kubectl top pods
+    ├── Look for: Resource limits, node capacity
+    └── Fix: Adjust requests/limits, scale resources</code></pre>
+<p>---</p>
+<h3>Conceptual Mastery Checklist</h3>
+<p>✅ <strong>Understand pods as atomic scheduling and execution units</strong>
+✅ <strong>Master the pod lifecycle from creation to termination</strong>
+✅ <strong>Comprehend networking model and communication patterns</strong>
+✅ <strong>Know volume types and persistent storage strategies</strong>
+✅ <strong>Practice logging collection and troubleshooting workflows</strong>
+✅ <strong>Internalize health checking and monitoring approaches</strong>
+✅ <strong>Understand resource management and QoS implications</strong></p>
+<p>---</p>
+<em>Mastering pod lifecycle means understanding how Kubernetes transforms your application definitions into running, networked, monitored workloads. Every other Kubernetes concept builds upon this foundational understanding of how pods actually work.</em>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

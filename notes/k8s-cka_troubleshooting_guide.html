@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Guide: Kubernetes Troubleshooting - Systematic Debugging and Problem Resolution - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Guide: Kubernetes Troubleshooting - Systematic Debugging and Problem Resolution</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Guide: Kubernetes Troubleshooting - Systematic Debugging and Problem Resolution</h2>
+<h3>Fundamental Conceptual Understanding</h3>
+<h4>The Philosophy of Systematic Troubleshooting</h4>
+<strong>The Scientific Method Applied to Debugging:</strong>
+<pre><code>Traditional Debugging (Chaotic):
+├── Random changes based on hunches
+├── Multiple simultaneous modifications
+├── No hypothesis or prediction
+├── Emotional decision making under pressure
+└── No learning from failure patterns
+<p>Scientific Debugging (Systematic):
+├── Observe symptoms and gather data
+├── Form hypothesis about root cause
+├── Design experiment to test hypothesis
+├── Implement single change and measure result
+├── Document findings and update mental models
+└── Build knowledge base for future issues</code></pre></p>
+<strong>The Debugging Information Hierarchy:</strong>
+<pre><code>Level 4: Business Impact (Why it matters)
+├── User experience degradation
+├── Revenue/SLA impact
+├── Customer satisfaction metrics
+└── Business process disruption
+<p>Level 3: Application Behavior (What's wrong)
+├── Error rates and response times
+├── Feature functionality issues
+├── Data consistency problems
+└── Performance degradation</p>
+<p>Level 2: System State (How it's failing)
+├── Pod states and events
+├── Resource utilization
+├── Network connectivity
+├── Storage accessibility
+└── Service discovery issues</p>
+<p>Level 1: Infrastructure Health (Root causes)
+├── Node resource exhaustion
+├── Control plane component health
+├── Network infrastructure issues
+├── Storage backend problems
+└── Configuration inconsistencies</code></pre></p>
+<h4>Kubernetes Troubleshooting Mental Model</h4>
+<strong>The Dependency Stack:</strong>
+<pre><code>Application Layer:     Business logic, application configuration
+├── Container Layer:   Image, runtime, resource limits, env vars
+│   ├── Pod Layer:     Scheduling, networking, storage, lifecycle
+│   │   ├── Node Layer: Kubelet, container runtime, OS, resources
+│   │   │   ├── Cluster Layer: API server, etcd, scheduler, controllers
+│   │   │   │   └── Infrastructure: Networking, storage, compute
+│   │   │   │
+│   │   │   └── Troubleshooting flows bottom-up:
+│   │   │       "Is infrastructure healthy?"
+│   │   │       "Are cluster components working?"
+│   │   │       "Are nodes functioning properly?"
+│   │   │       "Are pods scheduled and healthy?"
+│   │   │       "Are containers running correctly?"
+│   │   │       "Is application logic working?"</code></pre>
+<strong>The Five Whys Debugging Framework:</strong>
+<pre><code>Symptom: "Users can't access the web application"
+Why 1: Why can't users access the app?
+       → Service endpoints are empty
+<p>Why 2: Why are service endpoints empty?
+       → Pods are not in Ready state</p>
+<p>Why 3: Why are pods not ready?
+       → Readiness probe is failing</p>
+<p>Why 4: Why is readiness probe failing?
+       → Database connection timeout</p>
+<p>Why 5: Why is database timing out?
+       → Database pod was killed due to OOMKilled</p>
+<p>Root Cause: Insufficient memory limits for database workload
+Solution: Increase memory limits and add resource monitoring</code></pre></p>
+<h3>Cluster and Node Logging</h3>
+<h4>Control Plane Component Logging</h4>
+<strong>API Server Diagnostics:</strong>
+<pre><code><h2>Check API server logs (methods vary by installation)</h2>
+<h2>kubeadm clusters</h2>
+sudo journalctl -u kubelet -f
+kubectl logs -n kube-system kube-apiserver-<master-node>
+<h2>Check API server health endpoints</h2>
+kubectl get componentstatuses
+curl -k https://<api-server>:6443/healthz
+curl -k https://<api-server>:6443/version
+<h2>API server audit logs (if enabled)</h2>
+sudo tail -f /var/log/audit.log
+<h2>Common API server issues:</h2>
+<h2>1. Certificate expiration</h2>
+sudo openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep "Not After"
+<h2>2. etcd connectivity</h2>
+kubectl logs -n kube-system kube-apiserver-<node> | grep -i etcd
+<h2>3. Resource exhaustion</h2>
+kubectl top nodes
+kubectl describe node <master-node> | grep -A 10 "Allocated resources"</code></pre>
+<strong>etcd Diagnostics:</strong>
+<pre><code><h2>Check etcd health</h2>
+kubectl logs -n kube-system etcd-<master-node>
+<h2>etcd health check (if etcdctl available)</h2>
+sudo ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  endpoint health
+<h2>Check etcd member list</h2>
+sudo ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  member list
+<h2>etcd database size and performance</h2>
+sudo ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  endpoint status --write-out=table</code></pre>
+<strong>Scheduler and Controller Manager Diagnostics:</strong>
+<pre><code><h2>Check scheduler logs</h2>
+kubectl logs -n kube-system kube-scheduler-<master-node>
+<h2>Check controller manager logs</h2>
+kubectl logs -n kube-system kube-controller-manager-<master-node>
+<h2>Look for common issues:</h2>
+<h2>1. Resource constraints</h2>
+kubectl logs -n kube-system kube-scheduler-<node> | grep -i "insufficient"
+<h2>2. Failed pod scheduling</h2>
+kubectl get events --field-selector reason=FailedScheduling
+<h2>3. Controller failures</h2>
+kubectl get events | grep -i "error\|failed\|warning"
+<h2>Check leader election status</h2>
+kubectl logs -n kube-system kube-controller-manager-<node> | grep -i "leader"
+kubectl logs -n kube-system kube-scheduler-<node> | grep -i "leader"</code></pre>
+<h4>Node-Level Diagnostics</h4>
+<strong>Kubelet Troubleshooting:</strong>
+<pre><code><h2>Check kubelet status and logs</h2>
+sudo systemctl status kubelet
+sudo journalctl -u kubelet -f --since "1 hour ago"
+<h2>Kubelet configuration</h2>
+sudo cat /etc/kubernetes/kubelet.conf
+sudo cat /var/lib/kubelet/config.yaml
+<h2>Common kubelet issues:</h2>
+<h2>1. Certificate problems</h2>
+sudo journalctl -u kubelet | grep -i certificate
+<h2>2. Resource pressure</h2>
+kubectl describe node <node-name> | grep -i "pressure\|condition"
+<h2>3. Container runtime issues</h2>
+sudo journalctl -u kubelet | grep -i "runtime\|docker\|containerd"
+<h2>4. Network plugin issues</h2>
+sudo journalctl -u kubelet | grep -i "network\|cni"</code></pre>
+<strong>Container Runtime Diagnostics:</strong>
+<pre><code><h2>Docker runtime (if used)</h2>
+sudo docker ps -a
+sudo docker logs <container-id>
+sudo systemctl status docker
+sudo journalctl -u docker
+<h2>containerd runtime</h2>
+sudo crictl ps -a
+sudo crictl logs <container-id>
+sudo systemctl status containerd
+sudo journalctl -u containerd
+<h2>Container runtime configuration</h2>
+sudo cat /etc/docker/daemon.json        # Docker
+sudo cat /etc/containerd/config.toml    # containerd
+<h2>Check container runtime connectivity</h2>
+sudo crictl version
+sudo crictl info</code></pre>
+<strong>Node Resource Monitoring:</strong>
+<pre><code><h2>System resource utilization</h2>
+top
+htop
+iostat -x 1
+free -h
+df -h
+<h2>Kubernetes resource monitoring</h2>
+kubectl top nodes
+kubectl describe node <node-name>
+<h2>Process-level monitoring</h2>
+sudo ps aux | grep kube
+sudo ss -tulpn | grep kube
+<h2>File descriptor and connection limits</h2>
+sudo lsof | wc -l
+sudo cat /proc/sys/fs/file-max
+sudo ulimit -n
+<h2>Disk space issues (common cause of failures)</h2>
+sudo du -sh /var/lib/kubelet/*
+sudo du -sh /var/lib/docker/*         # If using Docker
+sudo du -sh /var/lib/containerd/*     # If using containerd</code></pre>
+<h4>Log Aggregation and Analysis</h4>
+<strong>Centralized Logging Architecture:</strong>
+<pre><code><h2>Fluentd DaemonSet for log collection</h2>
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: fluentd
+  template:
+    metadata:
+      labels:
+        name: fluentd
+    spec:
+      serviceAccount: fluentd
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: fluentd
+        image: fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch
+        env:
+        - name: FLUENT_ELASTICSEARCH_HOST
+          value: "elasticsearch.logging.svc.cluster.local"
+        - name: FLUENT_ELASTICSEARCH_PORT
+          value: "9200"
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: fluentd-config
+          mountPath: /fluentd/etc
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: fluentd-config
+        configMap:
+          name: fluentd-config
+<p>---
+<h2>Fluentd configuration</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config
+  namespace: kube-system
+data:
+  fluent.conf: |
+    <source>
+      @type tail
+      @id in_tail_container_logs
+      path /var/log/containers/*.log
+      pos_file /var/log/fluentd-containers.log.pos
+      tag kubernetes.*
+      read_from_head true
+      <parse>
+        @type json
+        time_format %Y-%m-%dT%H:%M:%S.%NZ
+      </parse>
+    </source>
+    
+    <filter kubernetes.**>
+      @type kubernetes_metadata
+    </filter>
+    
+    <match kubernetes.**>
+      @type elasticsearch
+      host elasticsearch.logging.svc.cluster.local
+      port 9200
+      logstash_format true
+      logstash_prefix kubernetes
+      <buffer>
+        timekey 1h
+        timekey_use_utc true
+        timekey_wait 10m
+      </buffer>
+    </match></code></pre></p>
+<h3>Application Monitoring</h3>
+<h4>Application Performance Monitoring</h4>
+<strong>Kubernetes Native Monitoring Stack:</strong>
+<pre><code><h2>Prometheus configuration for application monitoring</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+    
+    scrape_configs:
+    # Kubernetes API server
+    - job_name: 'kubernetes-apiservers'
+      kubernetes_sd_configs:
+      - role: endpoints
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+    
+    # Kubernetes nodes
+    - job_name: 'kubernetes-nodes'
+      kubernetes_sd_configs:
+      - role: node
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+    
+    # Kubernetes pods
+    - job_name: 'kubernetes-pods'
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+<p>---
+<h2>Application with Prometheus metrics</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-monitored
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: webapp
+        image: webapp:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: ENABLE_METRICS
+          value: "true"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi</code></pre></p>
+<strong>Application Health Check Patterns:</strong>
+<pre><code><h2>Comprehensive health check implementation</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: robust-webapp
+spec:
+  containers:
+  - name: webapp
+    image: webapp:latest
+    ports:
+    - containerPort: 8080
+      name: http
+    
+    # Startup probe for slow-starting applications
+    startupProbe:
+      httpGet:
+        path: /startup
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 30      # 30 * 5s = 150s max startup time
+    
+    # Readiness probe for traffic management
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8080
+        httpHeaders:
+        - name: X-Health-Check
+          value: readiness
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      successThreshold: 1
+      failureThreshold: 3
+    
+    # Liveness probe for restart decisions
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8080
+        httpHeaders:
+        - name: X-Health-Check
+          value: liveness
+      initialDelaySeconds: 30
+      periodSeconds: 20
+      timeoutSeconds: 10
+      successThreshold: 1
+      failureThreshold: 3
+    
+    # Resource constraints for predictable behavior
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+    
+    # Environment for health check configuration
+    env:
+    - name: HEALTH_CHECK_TIMEOUT
+      value: "5s"
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: database-url</code></pre>
+<h4>Custom Metrics and Alerting</h4>
+<strong>Prometheus Alert Rules:</strong>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: monitoring
+data:
+  app-alerts.yml: |
+    groups:
+    - name: application-alerts
+      rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{status=~"5.."}[5m]) /
+            rate(http_requests_total[5m])
+          ) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }}% for {{ $labels.job }}"
+      
+      # High response time
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95, 
+            rate(http_request_duration_seconds_bucket[5m])
+          ) * 1000 > 500
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency detected"
+          description: "95th percentile latency is {{ $value }}ms"
+      
+      # Pod not ready
+      - alert: PodNotReady
+        expr: |
+          kube_pod_status_ready{condition="false"} == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod not ready"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} not ready"
+      
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_usage_bytes{container!="POD",container!=""} /
+            container_spec_memory_limit_bytes > 0.9
+          ) * 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Container {{ $labels.container }} using {{ $value }}% of memory limit"
+      
+      # Persistent volume filling up
+      - alert: PVFillingUp
+        expr: |
+          (
+            kubelet_volume_stats_used_bytes /
+            kubelet_volume_stats_capacity_bytes
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Persistent volume filling up"
+          description: "PV {{ $labels.persistentvolumeclaim }} is {{ $value }}% full"</code></pre>
+<h3>Container Logs Management</h3>
+<h4>Container Log Collection Strategies</h4>
+<strong>stdout/stderr Log Management:</strong>
+<pre><code><h2>Basic container log viewing</h2>
+kubectl logs <pod-name>
+kubectl logs <pod-name> -c <container-name>    # Multi-container pod
+kubectl logs <pod-name> --previous             # Previous container instance
+kubectl logs <pod-name> -f                     # Follow logs
+kubectl logs <pod-name> --since=1h             # Last hour
+kubectl logs <pod-name> --tail=100             # Last 100 lines
+<h2>Logs from multiple pods</h2>
+kubectl logs -l app=webapp                     # All pods with label
+kubectl logs -l app=webapp --prefix=true       # Show pod name prefix
+<h2>Logs from deployments/replicasets</h2>
+kubectl logs deployment/webapp
+kubectl logs replicaset/webapp-abc123
+<h2>Save logs to file</h2>
+kubectl logs <pod-name> > app.log
+<h2>Stream logs with timestamps</h2>
+kubectl logs <pod-name> -f --timestamps=true</code></pre>
+<strong>Log Rotation and Retention:</strong>
+<pre><code><h2>Kubelet log rotation configuration</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubelet-config
+  namespace: kube-system
+data:
+  config.yaml: |
+    apiVersion: kubelet.config.k8s.io/v1beta1
+    kind: KubeletConfiguration
+    # Log rotation settings
+    containerLogMaxSize: "10Mi"         # Max size per log file
+    containerLogMaxFiles: 5             # Max number of rotated files
+    
+    # Log driver settings
+    logging:
+      format: json                      # json or text
+      verbosity: 2                      # 0-10, higher = more verbose
+      
+    # Node-level log collection
+    clusterDNS:
+    - 10.96.0.10
+    clusterDomain: cluster.local</code></pre>
+<strong>Structured Logging Best Practices:</strong>
+<pre><code><h2>Application with structured logging</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: structured-logger
+spec:
+  containers:
+  - name: app
+    image: app:latest
+    env:
+    - name: LOG_LEVEL
+      value: "info"
+    - name: LOG_FORMAT
+      value: "json"                     # Enable JSON logging
+    - name: LOG_CORRELATION_ID
+      value: "true"                     # Add correlation IDs
+    command:
+    - /app/server
+    - --log-level=$(LOG_LEVEL)
+    - --log-format=$(LOG_FORMAT)
+    
+    # Example structured log output:
+    # {
+    #   "timestamp": "2023-10-15T14:30:45.123Z",
+    #   "level": "info",
+    #   "message": "User login successful",
+    #   "user_id": "12345",
+    #   "correlation_id": "abc-def-ghi",
+    #   "request_id": "req-789",
+    #   "duration_ms": 245,
+    #   "source": "auth-service"
+    # }</code></pre>
+<h4>Log Analysis and Debugging</h4>
+<strong>Log Analysis Techniques:</strong>
+<pre><code><h2>Search for specific patterns</h2>
+kubectl logs <pod-name> | grep -i error
+kubectl logs <pod-name> | grep -E "(error|warn|fatal)"
+<h2>Count error occurrences</h2>
+kubectl logs <pod-name> | grep -c "ERROR"
+<h2>Extract timestamps and analyze timing</h2>
+kubectl logs <pod-name> --timestamps | grep "slow query"
+<h2>Analyze log patterns with awk</h2>
+kubectl logs <pod-name> | awk '/ERROR/ {print $0}'
+<h2>Monitor logs in real-time with filtering</h2>
+kubectl logs <pod-name> -f | grep --line-buffered "user_id.*12345"
+<h2>Export logs for external analysis</h2>
+kubectl logs <pod-name> --since=24h > app-logs-$(date +%Y%m%d).log</code></pre>
+<strong>Log Aggregation Queries:</strong>
+<pre><code><h2>Using tools like jq for JSON log analysis</h2>
+kubectl logs <pod-name> | jq -r 'select(.level == "error") | .message'
+<h2>Extract specific fields from structured logs</h2>
+kubectl logs <pod-name> | jq -r '.timestamp + " " + .level + " " + .message'
+<h2>Count log levels</h2>
+kubectl logs <pod-name> | jq -r '.level' | sort | uniq -c
+<h2>Filter by time range (if timestamps in logs)</h2>
+kubectl logs <pod-name> | jq -r 'select(.timestamp > "2023-10-15T14:00:00Z")'
+<h2>Correlation ID tracking</h2>
+kubectl logs <pod-name> | jq -r 'select(.correlation_id == "abc-123")'</code></pre>
+<h3>Application Failure Troubleshooting</h3>
+<h4>Pod Lifecycle Troubleshooting</h4>
+<strong>Pod State Analysis:</strong>
+<pre><code><h2>Comprehensive pod status check</h2>
+kubectl get pods -o wide
+kubectl describe pod <pod-name>
+<h2>Check pod events (most important for troubleshooting)</h2>
+kubectl get events --field-selector involvedObject.name=<pod-name>
+kubectl get events --sort-by=.metadata.creationTimestamp
+<h2>Pod status phases and what they mean:</h2>
+<h2>Pending:     Pod accepted but not scheduled/started</h2>
+<h2>Running:     Pod bound to node, containers started</h2>
+<h2>Succeeded:   All containers terminated successfully</h2>
+<h2>Failed:      All containers terminated, at least one failed</h2>
+<h2>Unknown:     Pod state unknown (usually communication issues)</h2></code></pre>
+<strong>Common Pod Failure Patterns:</strong>
+<strong>ImagePullBackOff / ErrImagePull:</strong>
+<pre><code><h2>Diagnosis</h2>
+kubectl describe pod <pod-name>
+<h2>Events:</h2>
+<h2>  Warning  Failed     pod/webapp  Failed to pull image "webapp:nonexistent": rpc error: code = NotFound</h2>
+<h2>Common causes and solutions:</h2>
+<h2>1. Image doesn't exist</h2>
+kubectl get pods <pod-name> -o jsonpath='{.spec.containers[*].image}'
+<h2>2. Registry authentication issues</h2>
+kubectl get secrets
+kubectl describe secret <registry-secret>
+<h2>3. Network issues reaching registry</h2>
+kubectl exec -it <debug-pod> -- nslookup registry.example.com
+kubectl exec -it <debug-pod> -- curl -I https://registry.example.com/v2/
+<h2>4. Registry is down</h2>
+kubectl describe pod <pod-name> | grep -A 5 Events:</code></pre>
+<strong>CrashLoopBackOff:</strong>
+<pre><code><h2>Diagnosis</h2>
+kubectl logs <pod-name> --previous    # Previous container logs
+kubectl describe pod <pod-name>
+<h2>Common causes:</h2>
+<h2>1. Application startup failure</h2>
+kubectl logs <pod-name> --previous | tail -50
+<h2>2. Insufficient resources</h2>
+kubectl describe pod <pod-name> | grep -A 10 "Limits\|Requests"
+kubectl top pod <pod-name>
+<h2>3. Configuration issues</h2>
+kubectl get pod <pod-name> -o yaml | grep -A 20 env:
+kubectl describe configmap <config-name>
+kubectl describe secret <secret-name>
+<h2>4. Health check failures</h2>
+kubectl describe pod <pod-name> | grep -A 5 "Liveness\|Readiness"</code></pre>
+<strong>Pending State Troubleshooting:</strong>
+<pre><code><h2>Check scheduling issues</h2>
+kubectl describe pod <pod-name> | grep -A 10 Events:
+<h2>Common pending causes:</h2>
+<h2>1. Insufficient resources</h2>
+kubectl describe nodes | grep -A 5 "Allocated resources"
+kubectl top nodes
+<h2>2. Node selector/affinity issues</h2>
+kubectl get pod <pod-name> -o yaml | grep -A 10 nodeSelector
+kubectl get nodes --show-labels
+<h2>3. Taints and tolerations</h2>
+kubectl describe nodes | grep -A 5 Taints:
+kubectl get pod <pod-name> -o yaml | grep -A 10 tolerations:
+<h2>4. PVC binding issues</h2>
+kubectl get pvc
+kubectl describe pvc <pvc-name>
+<h2>5. Pod disruption budgets</h2>
+kubectl get pdb
+kubectl describe pdb <pdb-name></code></pre>
+<h4>Application Configuration Debugging</h4>
+<strong>Environment Variable Issues:</strong>
+<pre><code><h2>Check environment variables in running pod</h2>
+kubectl exec -it <pod-name> -- env | sort
+<h2>Check environment variable sources</h2>
+kubectl get pod <pod-name> -o yaml | grep -A 20 env:
+<h2>Debug ConfigMap issues</h2>
+kubectl get configmap <config-name> -o yaml
+kubectl describe configmap <config-name>
+<h2>Debug Secret issues</h2>
+kubectl get secret <secret-name> -o yaml
+kubectl get secret <secret-name> -o jsonpath='{.data}' | base64 -d
+<h2>Test configuration inside pod</h2>
+kubectl exec -it <pod-name> -- cat /etc/config/app.conf
+kubectl exec -it <pod-name> -- ls -la /etc/secrets/</code></pre>
+<strong>Volume Mount Issues:</strong>
+<pre><code><h2>Check volume mounts</h2>
+kubectl describe pod <pod-name> | grep -A 10 "Mounts:"
+<h2>Verify volumes are mounted correctly</h2>
+kubectl exec -it <pod-name> -- mount | grep -v "proc\|sys\|dev"
+kubectl exec -it <pod-name> -- df -h
+<h2>Check file permissions</h2>
+kubectl exec -it <pod-name> -- ls -la /mounted/path/
+<h2>Test volume accessibility</h2>
+kubectl exec -it <pod-name> -- touch /mounted/path/test-file
+kubectl exec -it <pod-name> -- rm /mounted/path/test-file
+<h2>Check PVC status</h2>
+kubectl get pvc
+kubectl describe pvc <pvc-name></code></pre>
+<h4>Performance Troubleshooting</h4>
+<strong>Resource Constraint Analysis:</strong>
+<pre><code><h2>CPU and memory usage</h2>
+kubectl top pod <pod-name> --containers
+kubectl top pod <pod-name> --sort-by=cpu
+kubectl top pod <pod-name> --sort-by=memory
+<h2>Resource limits vs usage</h2>
+kubectl describe pod <pod-name> | grep -A 10 "Limits\|Requests"
+<h2>Node resource pressure</h2>
+kubectl describe node <node-name> | grep -A 5 "Conditions:"
+kubectl describe node <node-name> | grep -A 10 "Allocated resources:"
+<h2>Check for OOMKilled containers</h2>
+kubectl get events | grep OOMKilled
+kubectl describe pod <pod-name> | grep -i oom</code></pre>
+<strong>Application Performance Debugging:</strong>
+<pre><code><h2>Check application metrics (if available)</h2>
+kubectl port-forward <pod-name> 9090:9090
+curl http://localhost:9090/metrics
+<h2>Database connection issues</h2>
+kubectl exec -it <pod-name> -- netstat -an | grep :5432
+kubectl exec -it <pod-name> -- nslookup database-service
+<h2>Network latency testing</h2>
+kubectl exec -it <pod-name> -- ping <target-service>
+kubectl exec -it <pod-name> -- curl -w "@curl-format.txt" -o /dev/null -s http://api-service/health
+<h2>File I/O performance</h2>
+kubectl exec -it <pod-name> -- dd if=/dev/zero of=/tmp/test bs=1M count=100
+kubectl exec -it <pod-name> -- sync
+kubectl exec -it <pod-name> -- dd if=/tmp/test of=/dev/null bs=1M</code></pre>
+<h3>Cluster Component Failure Troubleshooting</h3>
+<h4>Control Plane Component Failures</h4>
+<strong>API Server Troubleshooting:</strong>
+<pre><code><h2>API Server health checks</h2>
+kubectl cluster-info
+kubectl get componentstatuses
+<h2>Direct API server health check</h2>
+curl -k https://<api-server-ip>:6443/healthz
+curl -k https://<api-server-ip>:6443/version
+<h2>API server logs analysis</h2>
+sudo journalctl -u kubelet | grep apiserver
+kubectl logs -n kube-system kube-apiserver-<master-node>
+<h2>Common API server issues:</h2>
+<h2>1. Certificate expiration</h2>
+sudo openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep "Not After"
+sudo openssl x509 -in /etc/kubernetes/pki/apiserver-kubelet-client.crt -text -noout | grep "Not After"
+<h2>2. etcd connectivity issues</h2>
+kubectl logs -n kube-system kube-apiserver-<master> | grep -i etcd
+<h2>3. Port conflicts or binding issues</h2>
+sudo netstat -tulpn | grep :6443
+sudo ss -tulpn | grep :6443
+<h2>4. Resource exhaustion</h2>
+kubectl describe node <master-node> | grep -A 10 "Allocated resources"
+free -h
+df -h /var/lib/etcd</code></pre>
+<strong>etcd Troubleshooting:</strong>
+<pre><code><h2>etcd cluster health</h2>
+sudo ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  endpoint health
+<h2>etcd cluster status</h2>
+sudo ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  endpoint status --write-out=table
+<h2>etcd member list</h2>
+sudo ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  member list
+<h2>etcd database size (large DB can cause performance issues)</h2>
+sudo ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  endpoint status --write-out=json | jq '.[] | .Status.dbSize'
+<h2>etcd defragmentation (if database is fragmented)</h2>
+sudo ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  defrag</code></pre>
+<strong>Scheduler Troubleshooting:</strong>
+<pre><code><h2>Scheduler health and logs</h2>
+kubectl logs -n kube-system kube-scheduler-<master-node>
+<h2>Check for scheduling failures</h2>
+kubectl get events | grep FailedScheduling
+kubectl get pods --all-namespaces | grep Pending
+<h2>Scheduler configuration</h2>
+kubectl get configmap kube-scheduler-config -n kube-system -o yaml
+<h2>Common scheduler issues:</h2>
+<h2>1. Resource constraints</h2>
+kubectl describe node <node-name> | grep -A 10 "Allocated resources"
+<h2>2. Affinity/anti-affinity conflicts</h2>
+kubectl get pod <pending-pod> -o yaml | grep -A 20 affinity:
+<h2>3. Taints preventing scheduling</h2>
+kubectl describe nodes | grep -A 3 Taints:
+<h2>4. PVC binding delays</h2>
+kubectl get pvc | grep Pending
+kubectl describe pvc <pvc-name></code></pre>
+<h4>Worker Node Failures</h4>
+<strong>Node Status Analysis:</strong>
+<pre><code><h2>Check node status</h2>
+kubectl get nodes
+kubectl describe node <node-name>
+<h2>Node conditions analysis</h2>
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}'
+<h2>Common node conditions:</h2>
+<h2>Ready: Node is healthy and ready to accept pods</h2>
+<h2>MemoryPressure: Node is running low on memory</h2>
+<h2>DiskPressure: Node is running low on disk space</h2>
+<h2>PIDPressure: Node is running low on process IDs</h2>
+<h2>NetworkUnavailable: Node network is not configured</h2></code></pre>
+<strong>Kubelet Troubleshooting:</strong>
+<pre><code><h2>Kubelet service status</h2>
+sudo systemctl status kubelet
+sudo journalctl -u kubelet -f
+<h2>Kubelet configuration</h2>
+sudo cat /var/lib/kubelet/config.yaml
+sudo cat /etc/kubernetes/kubelet.conf
+<h2>Common kubelet issues:</h2>
+<h2>1. Certificate expiration</h2>
+sudo journalctl -u kubelet | grep -i certificate
+sudo openssl x509 -in /var/lib/kubelet/pki/kubelet-client-current.pem -text -noout | grep "Not After"
+<h2>2. Disk pressure</h2>
+df -h
+sudo du -sh /var/lib/kubelet/*
+sudo du -sh /var/lib/docker/*     # If using Docker
+sudo du -sh /var/lib/containerd/* # If using containerd
+<h2>3. Memory pressure</h2>
+free -h
+cat /proc/meminfo
+<h2>4. Container runtime issues</h2>
+sudo systemctl status docker      # If using Docker
+sudo systemctl status containerd  # If using containerd
+sudo crictl version
+sudo crictl info</code></pre>
+<strong>Container Runtime Troubleshooting:</strong>
+<pre><code><h2>Container runtime connectivity</h2>
+sudo crictl version
+sudo crictl info
+<h2>Running containers</h2>
+sudo crictl ps
+sudo crictl ps -a                 # Include stopped containers
+<h2>Container logs</h2>
+sudo crictl logs <container-id>
+<h2>Container inspect</h2>
+sudo crictl inspect <container-id>
+<h2>Image management</h2>
+sudo crictl images
+sudo crictl rmi <image-id>
+<h2>Pod sandbox management</h2>
+sudo crictl pods
+sudo crictl inspectp <pod-id>
+<h2>Runtime configuration issues</h2>
+sudo cat /etc/containerd/config.toml
+sudo systemctl status containerd
+sudo journalctl -u containerd</code></pre>
+<h3>Network Troubleshooting</h3>
+<h4>Pod-to-Pod Communication Issues</h4>
+<strong>Network Connectivity Debugging:</strong>
+<pre><code><h2>Basic connectivity test</h2>
+kubectl run test-pod --image=busybox --rm -it -- /bin/sh
+<h2>Inside pod:</h2>
+ping <target-pod-ip>
+nslookup <service-name>
+wget -qO- http://<service-name>:<port>/health
+<h2>DNS resolution testing</h2>
+kubectl run dns-test --image=busybox --rm -it -- nslookup kubernetes.default
+kubectl run dns-test --image=busybox --rm -it -- nslookup <service-name>.<namespace>.svc.cluster.local
+<h2>Network troubleshooting toolkit</h2>
+kubectl run netshoot --image=nicolaka/netshoot --rm -it -- bash
+<h2>Tools available: ping, nslookup, dig, curl, netstat, ss, tcpdump, etc.</h2></code></pre>
+<strong>CNI Plugin Troubleshooting:</strong>
+<pre><code><h2>Check CNI plugin status</h2>
+kubectl get pods -n kube-system | grep -E "(flannel|calico|weave|cilium)"
+kubectl logs -n kube-system <cni-pod-name>
+<h2>CNI configuration</h2>
+ls -la /etc/cni/net.d/
+cat /etc/cni/net.d/*.conf
+<h2>Network interface inspection</h2>
+ip addr show
+ip route show
+brctl show                         # If using bridge networking
+<h2>Container network namespace debugging</h2>
+sudo crictl exec -it <container-id> ip addr show
+sudo crictl exec -it <container-id> ip route show</code></pre>
+<strong>Service Discovery Issues:</strong>
+<pre><code><h2>Check service configuration</h2>
+kubectl get svc
+kubectl describe svc <service-name>
+<h2>Check endpoints</h2>
+kubectl get endpoints <service-name>
+kubectl describe endpoints <service-name>
+<h2>Service without endpoints troubleshooting:</h2>
+<h2>1. Check pod labels match service selector</h2>
+kubectl get pods --show-labels
+kubectl get svc <service-name> -o yaml | grep selector: -A 3
+<h2>2. Check pod readiness</h2>
+kubectl get pods
+kubectl describe pod <pod-name> | grep -A 5 "Readiness:"
+<h2>3. Check port configuration</h2>
+kubectl get svc <service-name> -o yaml | grep -A 5 ports:
+kubectl get pods <pod-name> -o yaml | grep -A 5 ports:</code></pre>
+<h4>kube-proxy and Load Balancing Issues</h4>
+<strong>kube-proxy Troubleshooting:</strong>
+<pre><code><h2>Check kube-proxy status</h2>
+kubectl get pods -n kube-system | grep kube-proxy
+kubectl logs -n kube-system <kube-proxy-pod>
+<h2>kube-proxy configuration</h2>
+kubectl get configmap kube-proxy -n kube-system -o yaml
+<h2>Check iptables rules (iptables mode)</h2>
+sudo iptables -t nat -L KUBE-SERVICES
+sudo iptables -t nat -L KUBE-NODEPORTS
+sudo iptables -t nat -L | grep <service-name>
+<h2>Check IPVS rules (IPVS mode)</h2>
+sudo ipvsadm -L -n
+sudo ipvsadm -L -n -t <service-cluster-ip>:<port>
+<h2>Network policies blocking traffic</h2>
+kubectl get networkpolicies
+kubectl describe networkpolicy <policy-name></code></pre>
+<strong>Ingress Troubleshooting:</strong>
+<pre><code><h2>Check ingress controller</h2>
+kubectl get pods -n ingress-nginx
+kubectl logs -n ingress-nginx <ingress-controller-pod>
+<h2>Check ingress resources</h2>
+kubectl get ingress
+kubectl describe ingress <ingress-name>
+<h2>Test ingress connectivity</h2>
+curl -H "Host: <hostname>" http://<ingress-ip>/path
+<h2>Check TLS certificates</h2>
+openssl s_client -connect <hostname>:443 -servername <hostname>
+kubectl get secret <tls-secret-name> -o yaml
+<h2>Ingress class issues</h2>
+kubectl get ingressclass
+kubectl describe ingressclass <class-name></code></pre>
+<h4>DNS Troubleshooting</h4>
+<strong>CoreDNS Issues:</strong>
+<pre><code><h2>Check CoreDNS pods</h2>
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+kubectl logs -n kube-system -l k8s-app=kube-dns
+<h2>CoreDNS configuration</h2>
+kubectl get configmap coredns -n kube-system -o yaml
+<h2>DNS resolution testing</h2>
+kubectl run dns-debug --image=busybox --rm -it -- nslookup kubernetes.default
+<h2>Check DNS service</h2>
+kubectl get svc -n kube-system kube-dns
+kubectl describe svc -n kube-system kube-dns
+<h2>Pod DNS configuration</h2>
+kubectl exec -it <pod-name> -- cat /etc/resolv.conf
+<h2>DNS performance testing</h2>
+kubectl run dns-perf --image=busybox --rm -it -- \
+  sh -c 'for i in $(seq 1 10); do time nslookup kubernetes.default; done'</code></pre>
+<strong>Network Policy Debugging:</strong>
+<pre><code><h2>Check network policies</h2>
+kubectl get networkpolicies
+kubectl describe networkpolicy <policy-name>
+<h2>Test connectivity with and without policies</h2>
+kubectl apply -f deny-all-policy.yaml
+kubectl run test-pod --image=busybox --rm -it -- ping <target-pod-ip>
+<h2>Network policy troubleshooting</h2>
+kubectl get pods --show-labels
+kubectl get networkpolicy <policy-name> -o yaml
+<h2>CNI-specific network policy logs</h2>
+kubectl logs -n kube-system <calico-node-pod> | grep -i policy
+kubectl logs -n kube-system <cilium-pod> | grep -i policy</code></pre>
+<h3>Advanced Troubleshooting Techniques</h3>
+<h4>Resource Exhaustion Scenarios</h4>
+<strong>Memory Pressure Debugging:</strong>
+<pre><code><h2>System memory analysis</h2>
+free -h
+cat /proc/meminfo | grep -E "(MemTotal|MemAvailable|MemFree)"
+<h2>Process memory usage</h2>
+ps aux --sort=-%mem | head -20
+top -o %MEM
+<h2>Container memory usage</h2>
+kubectl top pods --sort-by=memory
+kubectl top nodes
+<h2>Memory cgroup analysis</h2>
+cat /sys/fs/cgroup/memory/memory.usage_in_bytes
+cat /sys/fs/cgroup/memory/memory.limit_in_bytes
+<h2>OOMKilled investigation</h2>
+sudo journalctl -k | grep -i "killed process"
+kubectl get events | grep OOMKilled
+dmesg | grep -i "out of memory"</code></pre>
+<strong>CPU Throttling Analysis:</strong>
+<pre><code><h2>CPU usage patterns</h2>
+top -1                             # Show per-CPU usage
+htop                              # Interactive process viewer
+iostat -c 1                       # CPU utilization over time
+<h2>CPU throttling detection</h2>
+cat /sys/fs/cgroup/cpu/cpu.stat | grep throttled
+<h2>Container CPU metrics</h2>
+kubectl top pods --sort-by=cpu
+kubectl top nodes
+<h2>Process CPU analysis</h2>
+ps aux --sort=-%cpu | head -20
+pidstat -u 1                      # Per-process CPU usage</code></pre>
+<strong>Disk Space Issues:</strong>
+<pre><code><h2>Disk usage analysis</h2>
+df -h
+du -sh /* | sort -hr | head -20
+<h2>Kubernetes-specific disk usage</h2>
+sudo du -sh /var/lib/kubelet/*
+sudo du -sh /var/lib/docker/*     # Docker
+sudo du -sh /var/lib/containerd/* # containerd
+sudo du -sh /var/log/*
+<h2>Clean up strategies</h2>
+<h2>1. Remove unused container images</h2>
+sudo crictl rmi --prune
+<h2>2. Clean up logs</h2>
+sudo journalctl --vacuum-time=7d
+sudo find /var/log -name "*.log" -mtime +7 -delete
+<h2>3. Clean up temporary files</h2>
+sudo find /tmp -type f -mtime +7 -delete</code></pre>
+<h4>Debugging Tools and Techniques</h4>
+<strong>Network Debugging Toolkit:</strong>
+<pre><code><h2>Advanced network debugging pod</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: network-debug
+spec:
+  hostNetwork: true               # Access host networking
+  containers:
+  - name: network-tools
+    image: nicolaka/netshoot
+    command: ["sleep", "3600"]
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN               # Network administration
+        - SYS_ADMIN              # System administration
+    volumeMounts:
+    - name: proc
+      mountPath: /host/proc
+      readOnly: true
+    - name: sys
+      mountPath: /host/sys
+      readOnly: true
+  volumes:
+  - name: proc
+    hostPath:
+      path: /proc
+  - name: sys
+    hostPath:
+      path: /sys
+  tolerations:
+  - operator: Exists              # Schedule on any node
+<h2>Usage examples:</h2>
+<h2>kubectl exec -it network-debug -- tcpdump -i any host <pod-ip></h2>
+<h2>kubectl exec -it network-debug -- ss -tuln</h2>
+<h2>kubectl exec -it network-debug -- iptables-save | grep <service-name></h2></code></pre>
+<strong>System Debugging Pod:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: system-debug
+spec:
+  hostPID: true                   # Access host processes
+  hostNetwork: true               # Access host networking
+  containers:
+  - name: debug
+    image: busybox
+    command: ["sleep", "3600"]
+    securityContext:
+      privileged: true            # Full system access
+    volumeMounts:
+    - name: host-root
+      mountPath: /host
+      readOnly: true
+    - name: host-var-log
+      mountPath: /host/var/log
+      readOnly: true
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+  - name: host-var-log
+    hostPath:
+      path: /var/log
+  tolerations:
+  - operator: Exists
+<h2>Usage examples:</h2>
+<h2>kubectl exec -it system-debug -- chroot /host /bin/bash</h2>
+<h2>kubectl exec -it system-debug -- cat /host/var/log/messages</h2>
+<h2>kubectl exec -it system-debug -- ps aux</h2></code></pre>
+<h3>Exam Tips & Quick Reference</h3>
+<h4>⚡ Essential Troubleshooting Commands</h4>
+<pre><code><h2>Quick cluster health check</h2>
+kubectl cluster-info
+kubectl get nodes
+kubectl get pods --all-namespaces
+kubectl get events --sort-by=.metadata.creationTimestamp
+<h2>Pod troubleshooting</h2>
+kubectl describe pod <pod-name>
+kubectl logs <pod-name> --previous
+kubectl get events --field-selector involvedObject.name=<pod-name>
+<h2>Network debugging</h2>
+kubectl run test --image=busybox --rm -it -- nslookup kubernetes.default
+kubectl exec -it <pod> -- ping <target-ip>
+<h2>Resource checking</h2>
+kubectl top nodes
+kubectl top pods
+kubectl describe node <node-name></code></pre>
+<h4>🎯 Common Exam Scenarios</h4>
+<strong>Scenario 1: Pod Won't Start</strong>
+<pre><code><h2>Systematic debugging approach</h2>
+kubectl get pods                              # Check status
+kubectl describe pod <pod-name>               # Check events
+kubectl logs <pod-name>                       # Check logs
+kubectl get events | grep <pod-name>          # Check events
+<h2>Check common issues</h2>
+kubectl get pvc                               # Storage issues
+kubectl get nodes                            # Node issues
+kubectl describe node <node-name>            # Resource issues</code></pre>
+<strong>Scenario 2: Service Not Accessible</strong>
+<pre><code><h2>Service troubleshooting chain</h2>
+kubectl get svc <service-name>                # Service exists?
+kubectl get endpoints <service-name>          # Endpoints populated?
+kubectl get pods -l <selector>                # Pods match selector?
+kubectl describe pod <pod-name>               # Pods ready?</code></pre>
+<h4>🚨 Critical Gotchas</h4>
+<p>1. <strong>Always check events first</strong>: <code>kubectl get events</code> reveals most issues
+2. <strong>Previous container logs</strong>: Use <code>--previous</code> flag for crashed containers
+3. <strong>Resource constraints</strong>: Check both requests/limits and actual usage
+4. <strong>DNS resolution</strong>: Many issues are DNS-related, test with nslookup
+5. <strong>Network policies</strong>: Can silently block traffic, check if applied
+6. <strong>Node conditions</strong>: MemoryPressure/DiskPressure affect scheduling
+7. <strong>Time synchronization</strong>: Clock skew causes certificate issues</p>
+<h3>WHY This Matters - The Deeper Philosophy</h3>
+<h4>The Art and Science of Troubleshooting</h4>
+<strong>Systems Thinking in Practice:</strong>
+<pre><code>Emergent Behavior Understanding:
+├── Complex systems fail in unexpected ways
+├── Root causes often distant from symptoms
+├── Multiple failures can cascade and amplify
+├── Human factors influence technical failures
+└── Documentation and communication are part of the solution
+<p>Mental Model Development:
+├── Build accurate internal representations of system behavior
+├── Continuously update models based on new evidence
+├── Question assumptions when predictions fail
+├── Develop intuition through pattern recognition
+└── Share mental models with team members</code></pre></p>
+<strong>The Economics of Downtime:</strong>
+<pre><code>Cost Structure of System Failures:
+├── Direct costs: Lost revenue, SLA penalties
+├── Indirect costs: Customer trust, team morale
+├── Opportunity costs: Features not delivered, innovation stalled
+├── Recovery costs: Incident response, post-mortem, improvements
+└── Insurance costs: Redundancy, monitoring, prevention
+<p>MTTR vs MTBF Investment Strategy:
+├── Traditional: Invest heavily in preventing failures (high MTBF)
+├── Modern: Accept failures, optimize for fast recovery (low MTTR)
+├── Kubernetes philosophy: Design for failure, automate recovery
+└── Career impact: MTTR skills more valuable than MTBF knowledge</code></pre></p>
+<h4>Information Theory and Signal Processing</h4>
+<strong>Signal vs Noise in System Observability:</strong>
+<pre><code>High-Signal Information:
+├── Correlated metrics showing system stress
+├── Error patterns indicating specific failure modes
+├── Resource trends predicting future problems
+├── User experience impact measurements
+└── Actionable alerts that require human intervention
+<p>Low-Signal Information (Noise):
+├── Normal operational variance in metrics
+├── Transient errors that self-resolve
+├── Verbose logs without filtering
+├── Alerts that fire frequently without action
+└── Vanity metrics that don't drive decisions</p>
+<p>Signal Enhancement Techniques:
+├── Correlation analysis across metrics
+├── Anomaly detection using baselines
+├── Context-aware alerting rules
+├── Structured logging with searchable fields
+└── Distributed tracing for request flows</code></pre></p>
+<strong>The Observer Effect in System Monitoring:</strong>
+<pre><code>Heisenberg Principle Applied:
+"The act of observing a system changes the system"
+<p>Monitoring Overhead:
+├── CPU cycles for metrics collection
+├── Network bandwidth for telemetry
+├── Storage for logs and metrics
+├── Latency from instrumentation
+└── Cognitive load from information overload</p>
+<p>Optimization Strategies:
+├── Sampling for high-volume metrics
+├── Intelligent aggregation at source
+├── Adaptive monitoring based on system state
+├── Graceful degradation when monitoring fails
+└── Cost-aware observability strategies</code></pre></p>
+<h4>Cognitive Science and Decision Making</h4>
+<strong>The Troubleshooting Cognitive Load Model:</strong>
+<pre><code>System 1 Thinking (Fast, Intuitive):
+├── Pattern recognition from experience
+├── Quick hypothesis formation
+├── Emotional responses to familiar failures
+├── Muscle memory for common commands
+└── Bias toward recently encountered solutions
+<p>System 2 Thinking (Slow, Analytical):
+├── Systematic hypothesis testing
+├── Evidence-based reasoning
+├── Root cause analysis frameworks
+├── Documentation and knowledge sharing
+└── Learning from failure patterns</p>
+<p>Optimal Troubleshooting:
+├── Use System 1 for initial assessment
+├── Switch to System 2 for complex issues
+├── Document System 2 insights for future System 1 use
+├── Train teams to recognize when to switch modes
+└── Build tools that augment both thinking systems</code></pre></p>
+<strong>The Expertise Paradox:</strong>
+<pre><code>Expert Blind Spots:
+├── Overconfidence in pattern recognition
+├── Anchoring on familiar solutions
+├── Confirmation bias in hypothesis testing
+├── Knowledge curse (can't see beginner perspective)
+└── Solution bias (prefer known tools)
+<p>Beginner Advantages:
+├── Fresh perspective on problems
+├── Willingness to question assumptions
+├── Systematic approach due to uncertainty
+├── Less emotional attachment to solutions
+└── Open to learning from documentation</p>
+<p>Balanced Approach:
+├── Pair experts with beginners for troubleshooting
+├── Encourage diverse perspectives in incident response
+├── Regularly challenge expert assumptions
+├── Maintain curiosity despite growing expertise
+└── Document reasoning, not just solutions</code></pre></p>
+<h4>Production Engineering Philosophy</h4>
+<strong>The Blame-Free Post-Mortem Culture:</strong>
+<pre><code>Traditional Incident Response:
+├── Find the person responsible
+├── Assign blame and punishment
+├── Focus on immediate fix
+├── Shame-driven learning avoidance
+└── Cover-up of failure details
+<p>Site Reliability Engineering Approach:
+├── Assume good intentions of all participants
+├── Focus on systemic factors that enabled failure
+├── Document everything for learning
+├── Celebrate learning opportunities
+├── Improve systems to prevent similar failures
+└── Share knowledge across teams and organizations</code></pre></p>
+<strong>The Blameless Timeline Reconstruction:</strong>
+<pre><code>Incident Analysis Framework:
+1. What happened? (Timeline of events)
+2. Why did it happen? (Contributing factors)
+3. How do we prevent it? (System improvements)
+4. How do we detect it faster? (Monitoring improvements)
+5. How do we recover faster? (Process improvements)
+<p>Key Principles:
+├── No single point of failure caused the incident
+├── Multiple small failures combined to create impact
+├── Human error is a symptom, not a cause
+├── System design enabled the human error
+└── Focus on process and tooling improvements</code></pre></p>
+<h4>Career Development Implications</h4>
+<strong>For the Exam:</strong>
+<ul><li><strong>Systematic Approach</strong>: Demonstrate methodical troubleshooting process</li>
+<li><strong>Tool Proficiency</strong>: Show comfort with kubectl, logs, events, describe</li>
+<li><strong>Problem Solving</strong>: Break complex issues into manageable components</li>
+<li><strong>Communication</strong>: Clearly document findings and reasoning</li>
+<strong>For Production Systems:</strong>
+<li><strong>Incident Response</strong>: Lead effective troubleshooting during outages</li>
+<li><strong>Reliability</strong>: Design systems that are easier to debug and repair</li>
+<li><strong>Monitoring</strong>: Implement observability that enables fast problem identification</li>
+<li><strong>Documentation</strong>: Create runbooks and knowledge bases for common issues</li>
+<strong>For Your Career:</strong>
+<li><strong>Leadership</strong>: Guide teams through complex technical problem-solving</li>
+<li><strong>Systems Thinking</strong>: Understand how complex systems fail and recover</li>
+<li><strong>Communication</strong>: Translate technical issues for business stakeholders</li>
+<li><strong>Continuous Learning</strong>: Develop expertise while maintaining beginner's mind</li></ul>
+<p>Understanding troubleshooting deeply teaches you how to <strong>diagnose, debug, and resolve</strong> complex system failures under pressure. This knowledge is fundamental to the CKA exam and essential for building reliable production systems.</p>
+<p>Troubleshooting is where theory meets reality - it's where you prove your understanding of how systems actually work when they're not working. Master these skills, and you master the most valuable capability in production engineering: making broken things work again.</p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

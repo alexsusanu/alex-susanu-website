@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security - Comprehensive Study Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Security - Comprehensive Study Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Security - Comprehensive Study Guide</h2>
+<h3>WHY Security Matters (Conceptual Foundation)</h3>
+<h4>Kubernetes as a Multi-Tenant Platform</h4>
+Security in Kubernetes is about <strong>controlling access and enforcing boundaries</strong> in a shared platform:
+<ul><li><strong>Identity and Access Management</strong> - Who can do what to which resources</li>
+<li><strong>Resource Isolation</strong> - Preventing workloads from interfering with each other</li>
+<li><strong>Network Segmentation</strong> - Controlling communication between services</li>
+<li><strong>Process and Container Security</strong> - Limiting privileges and attack surface</li>
+<li><strong>Data Protection</strong> - Securing secrets, configurations, and persistent data</li>
+<h4>Exam Context: Why Security Mastery is Critical</h4>
+<li><strong>25% of exam content</strong> focuses on security configuration and troubleshooting</li>
+<li><strong>Cluster hardening</strong> - Common exam scenarios for RBAC, NetworkPolicies</li>
+<li><strong>Pod security</strong> - SecurityContext configuration and debugging</li>
+<li><strong>Authentication/authorization</strong> - ServiceAccount and permission troubleshooting</li>
+<li><strong>Network isolation</strong> - Creating and debugging NetworkPolicy restrictions</li>
+<strong>Key Insight</strong>: Kubernetes security is <strong>layered defense</strong> - no single mechanism provides complete protection. Understanding how RBAC, SecurityContext, and NetworkPolicies work together is essential.
+<p>---</p>
+<h3>Security Architecture Overview</h3>
+<h4>The Kubernetes Security Model</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    SECURITY LAYERS                         │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │               Network Security                          ││
+│  │  NetworkPolicies, Ingress/Egress Control              ││
+│  └─────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │               Runtime Security                          ││
+│  │  SecurityContext, PodSecurityPolicy, Admission        ││
+│  └─────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │            Identity & Access (RBAC)                    ││
+│  │  Users, ServiceAccounts, Roles, RoleBindings          ││
+│  └─────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │              API Server Security                       ││
+│  │  Authentication, Authorization, Admission Control     ││
+│  └─────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4>Security Request Flow</h4>
+<pre><code>┌──────────────┐    ┌─────────────────┐    ┌────────────────┐
+│   kubectl    │───▶│ Authentication  │───▶│ Authorization  │
+│   (client)   │    │ (who are you?)  │    │ (what can you  │
+│              │    │                 │    │    do?)       │
+└──────────────┘    └─────────────────┘    └────────────────┘
+                                                   │
+                    ┌─────────────────┐           ▼
+                    │   Pod Created   │    ┌────────────────┐
+                    │  with Security  │◀───│ Admission      │
+                    │   Context       │    │ Controllers    │
+                    └─────────────────┘    │ (policy        │
+                                          │  enforcement)  │
+                                          └────────────────┘</code></pre>
+<strong>Conceptual Model</strong>: Every request flows through Authentication → Authorization → Admission Control, then runtime security is enforced via SecurityContext and NetworkPolicies.
+<p>---</p>
+<h3>RBAC (Role-Based Access Control)</h3>
+<h4>What RBAC Does (Conceptual)</h4>
+RBAC is the <strong>authorization engine</strong> that answers "what can this identity do?":
+<li><strong>Subject</strong> - Who is making the request (User, ServiceAccount)</li>
+<li><strong>Verb</strong> - What action is being attempted (get, create, delete)</li>
+<li><strong>Resource</strong> - What object is being accessed (pods, services, secrets)</li>
+<li><strong>Namespace</strong> - Where the action is taking place (optional scope)</li>
+<h4>RBAC Components Architecture</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      RBAC Model                            │
+│                                                             │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐  │
+│  │   Subject   │    │  Binding    │    │      Role       │  │
+│  │             │    │             │    │                 │  │
+│  │ • User      │◀───│ • RoleB     │───▶│ • Rules         │  │
+│  │ • SA        │    │ • ClusterRB │    │ • Verbs         │  │
+│  │ • Group     │    │             │    │ • Resources     │  │
+│  └─────────────┘    └─────────────┘    └─────────────────┘  │
+│                                                             │
+│  Example: ServiceAccount "api-service" has RoleBinding     │
+│          that grants Role "pod-reader" permissions         │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4>Basic RBAC Objects</h4>
+<p>#### Role and RoleBinding (Namespace-scoped)
+<pre><code><h2>Role defines permissions within a namespace</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: development
+  name: pod-manager
+rules:
+<li>apiGroups: [""]         # Core API group</li>
+  resources: ["pods"]
+  verbs: ["get", "list", "create", "delete"]
+<li>apiGroups: [""]</li>
+  resources: ["pods/log"]  # Subresources
+  verbs: ["get"]
+<li>apiGroups: ["apps"]     # apps API group</li>
+  resources: ["deployments"]
+  verbs: ["get", "list", "create", "update", "patch"]
+---
+<h2>RoleBinding grants Role to subjects</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-manager-binding
+  namespace: development
+subjects:
+<li>kind: User</li>
+  name: jane.doe
+  apiGroup: rbac.authorization.k8s.io
+<li>kind: ServiceAccount</li>
+  name: api-service
+  namespace: development
+roleRef:
+  kind: Role
+  name: pod-manager
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<p>#### ClusterRole and ClusterRoleBinding (Cluster-scoped)
+<pre><code><h2>ClusterRole for cluster-wide permissions</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-reader
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["nodes"]
+  verbs: ["get", "list"]
+<li>apiGroups: ["metrics.k8s.io"]</li>
+  resources: ["nodes", "pods"]
+  verbs: ["get", "list"]
+---
+<h2>ClusterRoleBinding grants ClusterRole to subjects</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: monitoring-team
+subjects:
+<li>kind: Group</li>
+  name: monitoring-team
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: node-reader
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<h4>Advanced RBAC Patterns</h4>
+<p>#### Resource Names and Wildcards
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: production
+  name: specific-pod-access
+rules:
+<h2>Access specific pods by name</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  resourceNames: ["web-pod-1", "web-pod-2"]  # Specific resources
+  verbs: ["get", "delete"]
+<h2>Access all configmaps but only specific operations</h2>
+<li>apiGroups: [""]</li>
+  resources: ["configmaps"]
+  verbs: ["get", "list"]  # No create/update/delete
+<h2>Wildcard access to all resources in apps group</h2>
+<li>apiGroups: ["apps"]</li>
+  resources: ["*"]  # All resources
+  verbs: ["get", "list"]
+<h2>Access subresources</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods/exec", "pods/portforward"]
+  verbs: ["create"]</code></pre></p>
+<p>#### Service Account with Multiple Roles
+<pre><code><h2>ServiceAccount</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: microservice-sa
+  namespace: application
+---
+<h2>Role 1: Pod management</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: application
+  name: pod-operator
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  verbs: ["get", "list", "create", "delete"]
+---
+<h2>Role 2: ConfigMap management</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: application
+  name: config-reader
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list"]
+---
+<h2>Binding 1</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: microservice-pod-binding
+  namespace: application
+subjects:
+<li>kind: ServiceAccount</li>
+  name: microservice-sa
+  namespace: application
+roleRef:
+  kind: Role
+  name: pod-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+<h2>Binding 2</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: microservice-config-binding
+  namespace: application
+subjects:
+<li>kind: ServiceAccount</li>
+  name: microservice-sa
+  namespace: application
+roleRef:
+  kind: Role
+  name: config-reader
+  apiGroup: rbac.authorization.k8s.io</code></pre></p>
+<h4>RBAC Troubleshooting</h4>
+<p>#### Testing Permissions
+<pre><code><h2>Check if current user can perform action</h2>
+kubectl auth can-i create pods
+kubectl auth can-i delete pods --namespace=production
+kubectl auth can-i "<em>" "</em>"  # All permissions</p>
+<h2>Check permissions for other users/service accounts</h2>
+kubectl auth can-i create pods --as=system:serviceaccount:default:my-sa
+kubectl auth can-i get nodes --as=jane.doe
+<h2>List all permissions for a service account</h2>
+kubectl auth can-i --list --as=system:serviceaccount:default:my-sa
+<h2>Debug permission denials</h2>
+kubectl get events --sort-by='.lastTimestamp' | grep -i forbidden
+kubectl logs -n kube-system kube-apiserver-master | grep -i "forbidden\|unauthorized"</code></pre>
+<p>#### Common RBAC Issues
+<pre><code><h2>Issue 1: ServiceAccount doesn't exist</h2>
+<h2>Error: "User system:serviceaccount:default:non-existent cannot create pods"</h2>
+kubectl get serviceaccount non-existent  # Check if SA exists
+kubectl create serviceaccount missing-sa  # Create if missing</p>
+<h2>Issue 2: No RoleBinding exists</h2>
+<h2>Error: "User system:serviceaccount:default:my-sa cannot create pods"</h2>
+kubectl get rolebindings,clusterrolebindings --all-namespaces | grep my-sa
+<h2>Issue 3: Wrong namespace in RoleBinding</h2>
+<h2>Check that RoleBinding and ServiceAccount are in same namespace</h2>
+kubectl get rolebinding -n correct-namespace
+kubectl get serviceaccount my-sa -n correct-namespace
+<h2>Issue 4: Insufficient permissions in Role</h2>
+kubectl describe role my-role -n my-namespace
+<h2>Verify that required verbs and resources are included</h2></code></pre>
+<p>---</p>
+<h3>ServiceAccounts: Identity for Pods</h3>
+<h4>What ServiceAccounts Do (Conceptual)</h4>
+ServiceAccounts provide <strong>identity for pods</strong> to authenticate with the API server:
+<li><strong>Pod Identity</strong> - Every pod runs with a ServiceAccount identity</li>
+<li><strong>API Authentication</strong> - ServiceAccounts use JWT tokens for API calls</li>
+<li><strong>RBAC Integration</strong> - ServiceAccounts are subjects in RBAC bindings</li>
+<li><strong>Namespace Scoped</strong> - ServiceAccounts belong to specific namespaces</li>
+<li><strong>Automatic Token Mounting</strong> - Tokens automatically mounted in pods</li>
+<h4>ServiceAccount Architecture</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                  ServiceAccount Flow                       │
+│                                                             │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐  │
+│  │    Pod      │───▶│ SA Token    │───▶│   API Server    │  │
+│  │             │    │ (JWT)       │    │  Authentication │  │
+│  │/var/run/    │    │             │    │                 │  │
+│  │secrets/k8s..│    │             │    │                 │  │
+│  └─────────────┘    └─────────────┘    └─────────────────┘  │
+│         │                                       │           │
+│         ▼                                       ▼           │
+│  ┌─────────────┐                     ┌─────────────────┐    │
+│  │ Mounted     │                     │ RBAC Check      │    │
+│  │ Token       │                     │ (what can this  │    │
+│  │ Files       │                     │  SA do?)        │    │
+│  └─────────────┘                     └─────────────────┘    │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4>ServiceAccount Creation and Management</h4>
+<p>#### Basic ServiceAccount
+<pre><code><h2>ServiceAccount definition</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: application-sa
+  namespace: production
+automountServiceAccountToken: true  # Default: true
+---
+<h2>Using ServiceAccount in Pod</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+  namespace: production
+spec:
+  serviceAccountName: application-sa  # Use specific SA
+  containers:
+  - name: app
+    image: myapp:latest
+    # Token automatically mounted at:
+    # /var/run/secrets/kubernetes.io/serviceaccount/token
+    # /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    # /var/run/secrets/kubernetes.io/serviceaccount/namespace</code></pre></p>
+<p>#### ServiceAccount with RBAC
+<pre><code><h2>Complete ServiceAccount setup</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-reader-sa
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: monitoring
+  name: pod-reader-role
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-reader-binding
+  namespace: monitoring
+subjects:
+<li>kind: ServiceAccount</li>
+  name: pod-reader-sa
+  namespace: monitoring
+roleRef:
+  kind: Role
+  name: pod-reader-role
+  apiGroup: rbac.authorization.k8s.io
+---
+<h2>Pod using the ServiceAccount</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-app
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monitoring
+  template:
+    metadata:
+      labels:
+        app: monitoring
+    spec:
+      serviceAccountName: pod-reader-sa
+      containers:
+      - name: monitor
+        image: monitor:latest
+        # Application can now call Kubernetes API
+        # using mounted token with pod read permissions</code></pre></p>
+<h4>ServiceAccount Token Management</h4>
+<p>#### Token Mounting and Access
+<pre><code><h2>Inside a pod, ServiceAccount token is mounted at:</h2>
+ls -la /var/run/secrets/kubernetes.io/serviceaccount/
+<h2>token      - JWT token for API authentication</h2>
+<h2>ca.crt     - Cluster CA certificate</h2>
+<h2>namespace  - Current namespace</h2></p>
+<h2>Using the token to call API</h2>
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+curl -H "Authorization: Bearer $TOKEN" \
+     --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+     https://kubernetes.default.svc.cluster.local/api/v1/namespaces/$NAMESPACE/pods</code></pre>
+<p>#### Disabling Token Mounting
+<pre><code><h2>ServiceAccount with token mounting disabled</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: no-token-sa
+  namespace: production
+automountServiceAccountToken: false
+---
+<h2>Pod can override ServiceAccount setting</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  serviceAccountName: no-token-sa
+  automountServiceAccountToken: false  # Explicitly disable
+  containers:
+  - name: app
+    image: myapp
+    # No token mounted in this pod</code></pre></p>
+<h4>ServiceAccount Security Best Practices</h4>
+<p>#### Least Privilege ServiceAccounts
+<pre><code><h2>Specific SA for each application component</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web-frontend-sa
+  namespace: ecommerce
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: ecommerce
+  name: frontend-role
+rules:
+<h2>Only permissions needed by frontend</h2>
+<li>apiGroups: [""]</li>
+  resources: ["configmaps"]
+  resourceNames: ["frontend-config"]  # Specific configmap only
+  verbs: ["get"]
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  resourceNames: ["frontend-secrets"]  # Specific secret only
+  verbs: ["get"]
+---
+<h2>Separate SA for backend with different permissions</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-backend-sa
+  namespace: ecommerce
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: ecommerce
+  name: backend-role
+rules:
+<h2>Backend needs more permissions</h2>
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  verbs: ["get", "list"]  # Monitor other pods
+<li>apiGroups: [""]</li>
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list"]  # Access configuration</code></pre></p>
+<p>---</p>
+<h3>SecurityContext: Process and Container Security</h3>
+<h4>What SecurityContext Does (Conceptual)</h4>
+SecurityContext controls the <strong>runtime security settings</strong> for pods and containers:
+<li><strong>User and Group IDs</strong> - What user/group processes run as</li>
+<li><strong>Capabilities</strong> - Linux capabilities granted or dropped</li>
+<li><strong>Privilege Escalation</strong> - Whether processes can gain additional privileges</li>
+<li><strong>Read-only Root Filesystem</strong> - Prevents filesystem modifications</li>
+<li><strong>SELinux/AppArmor</strong> - Mandatory access control integration</li>
+<h4>SecurityContext Levels</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                SecurityContext Hierarchy                   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │               PodSecurityContext                       ││
+│  │         (applies to all containers)                    ││
+│  └─────────────────────────────────────────────────────────┘│
+│                            │                               │
+│                            ▼                               │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │             Container SecurityContext                  ││
+│  │          (overrides pod settings)                      ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│  Container settings take precedence over Pod settings      │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4>Pod SecurityContext</h4>
+<p>#### Basic Pod Security Settings
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  securityContext:
+    # Run as non-root user
+    runAsNonRoot: true
+    runAsUser: 1000      # Specific user ID
+    runAsGroup: 3000     # Specific group ID
+    fsGroup: 2000        # Volume ownership group
+    
+    # Security profiles
+    seccompProfile:
+      type: RuntimeDefault  # Use runtime default seccomp profile
+    
+    # SELinux context (if SELinux enabled)
+    seLinuxOptions:
+      level: "s0:c123,c456"
+    
+    # Sysctls (kernel parameters)
+    sysctls:
+    - name: net.core.somaxconn
+      value: "1024"
+  
+  containers:
+  - name: app
+    image: nginx:1.20
+    securityContext:
+      # Container-specific overrides
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE  # Allow binding to privileged ports
+    
+    # Writable volumes for read-only root filesystem
+    volumeMounts:
+    - name: tmp-volume
+      mountPath: /tmp
+    - name: var-cache
+      mountPath: /var/cache/nginx
+    - name: var-run
+      mountPath: /var/run
+  
+  volumes:
+  - name: tmp-volume
+    emptyDir: {}
+  - name: var-cache
+    emptyDir: {}
+  - name: var-run
+    emptyDir: {}</code></pre></p>
+<h4>Container SecurityContext</h4>
+<p>#### Advanced Security Configuration
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: hardened-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  
+  containers:
+  - name: web
+    image: nginx:alpine
+    securityContext:
+      # Prevent privilege escalation
+      allowPrivilegeEscalation: false
+      
+      # Read-only root filesystem
+      readOnlyRootFilesystem: true
+      
+      # Drop all capabilities, add only what's needed
+      capabilities:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE  # nginx needs to bind to port 80
+        - CHOWN            # nginx needs to change file ownership
+        - SETUID           # nginx needs to switch users
+        - SETGID           # nginx needs to switch groups
+      
+      # Seccomp profile for syscall filtering
+      seccompProfile:
+        type: Localhost
+        localhostProfile: nginx-seccomp.json
+    
+    # Required volumes for read-only root filesystem
+    volumeMounts:
+    - name: nginx-cache
+      mountPath: /var/cache/nginx
+    - name: nginx-run
+      mountPath: /var/run
+    - name: tmp
+      mountPath: /tmp
+  
+  # Init container to set up volumes with correct permissions
+  initContainers:
+  - name: setup
+    image: busybox
+    securityContext:
+      runAsUser: 0  # Root needed for setup
+    command:
+    - /bin/sh
+    - -c
+    - |
+      mkdir -p /var/cache/nginx /var/run
+      chown 1000:2000 /var/cache/nginx /var/run /tmp
+      chmod 755 /var/cache/nginx /var/run /tmp
+    volumeMounts:
+    - name: nginx-cache
+      mountPath: /var/cache/nginx
+    - name: nginx-run
+      mountPath: /var/run
+    - name: tmp
+      mountPath: /tmp
+  
+  volumes:
+  - name: nginx-cache
+    emptyDir: {}
+  - name: nginx-run
+    emptyDir: {}
+  - name: tmp
+    emptyDir: {}</code></pre></p>
+<h4>Privileged and Host Access</h4>
+<p>#### Privileged Containers (Avoid in Production)
+<pre><code><h2>WARNING: Privileged containers have full host access</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged-pod
+spec:
+  containers:
+  - name: privileged-container
+    image: busybox
+    securityContext:
+      privileged: true  # Full host access - dangerous!
+    # Can access all host devices, kernel modules, etc.
+    # Use only for system-level utilities like CNI, CSI drivers</code></pre></p>
+<p>#### Host Namespace Access
+<pre><code><h2>System monitoring pod (like node-exporter)</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: system-monitor
+spec:
+  # Host namespace access
+  hostNetwork: true    # Use host networking
+  hostPID: true        # See host processes
+  hostIPC: true        # Access host IPC
+  
+  containers:
+  - name: monitor
+    image: prom/node-exporter
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65534  # nobody user
+    ports:
+    - containerPort: 9100
+      hostPort: 9100   # Expose on host
+    volumeMounts:
+    - name: proc
+      mountPath: /host/proc
+      readOnly: true
+    - name: sys
+      mountPath: /host/sys
+      readOnly: true
+  
+  volumes:
+  - name: proc
+    hostPath:
+      path: /proc
+  - name: sys
+    hostPath:
+      path: /sys
+  
+  # Allow on all nodes including masters
+  tolerations:
+  - operator: Exists</code></pre></p>
+<h4>SecurityContext Troubleshooting</h4>
+<p>#### Common Security Issues
+<pre><code><h2>Issue 1: Permission denied errors</h2>
+kubectl logs pod-name
+<h2>Look for: "Permission denied", "Operation not permitted"</h2>
+<h2>Solution: Check runAsUser, fsGroup, volume permissions</h2></p>
+<h2>Issue 2: Cannot bind to privileged ports</h2>
+kubectl describe pod pod-name
+<h2>Error: "bind: permission denied" for ports < 1024</h2>
+<h2>Solution: Add NET_BIND_SERVICE capability</h2>
+<h2>Issue 3: Read-only filesystem errors</h2>
+kubectl logs pod-name
+<h2>Error: "Read-only file system"</h2>
+<h2>Solution: Mount writable volumes for temp directories</h2>
+<h2>Issue 4: SELinux/AppArmor denials</h2>
+<h2>Check node logs for SELinux/AppArmor messages</h2>
+sudo ausearch -m AVC  # SELinux denials
+sudo dmesg | grep apparmor  # AppArmor denials</code></pre>
+<p>#### Security Validation
+<pre><code><h2>Check effective user/group in running container</h2>
+kubectl exec pod-name -- id
+kubectl exec pod-name -- ps aux</p>
+<h2>Verify capabilities</h2>
+kubectl exec pod-name -- grep Cap /proc/self/status
+<h2>Check filesystem permissions</h2>
+kubectl exec pod-name -- ls -la /
+kubectl exec pod-name -- touch /test-write  # Should fail with read-only root
+<h2>Verify seccomp profile</h2>
+kubectl exec pod-name -- grep Seccomp /proc/self/status</code></pre>
+<p>---</p>
+<h3>NetworkPolicies: Traffic Segmentation</h3>
+<h4>What NetworkPolicies Do (Conceptual)</h4>
+NetworkPolicies provide <strong>microsegmentation</strong> at the pod level:
+<li><strong>Default Deny</strong> - Block all traffic unless explicitly allowed</li>
+<li><strong>Pod Selection</strong> - Target specific pods using label selectors</li>
+<li><strong>Traffic Direction</strong> - Control ingress (incoming) and egress (outgoing)</li>
+<li><strong>Namespace Isolation</strong> - Segment traffic between namespaces</li>
+<li><strong>Protocol and Port Control</strong> - Layer 4 traffic filtering</li>
+<h4>NetworkPolicy Architecture</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                NetworkPolicy Model                         │
+│                                                             │
+│  ┌─────────────┐                           ┌─────────────┐  │
+│  │  Frontend   │                           │  Database   │  │
+│  │    Pods     │──── ✓ ALLOWED ────────────│    Pods     │  │
+│  │             │                           │             │  │
+│  └─────────────┘                           └─────────────┘  │
+│         │                                         ▲         │
+│         ▼                                         │         │
+│  ┌─────────────┐                           ┌─────────────┐  │
+│  │  External   │──── ✗ DENIED ─────────────│  Database   │  │
+│  │   Traffic   │                           │    Pods     │  │
+│  │             │                           │             │  │
+│  └─────────────┘                           └─────────────┘  │
+│                                                             │
+│  NetworkPolicy selects Database pods and allows only       │
+│  ingress from Frontend pods on specific ports              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<strong>Important</strong>: NetworkPolicies are <strong>additive</strong> - multiple policies selecting the same pods combine their rules.
+<h4>Basic NetworkPolicy Patterns</h4>
+<p>#### Default Deny All Traffic
+<pre><code><h2>Deny all ingress traffic to all pods in namespace</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: production
+spec:
+  podSelector: {}  # Selects all pods in namespace
+  policyTypes:
+  - Ingress
+  # No ingress rules = deny all ingress
+---
+<h2>Deny all egress traffic from all pods in namespace</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-egress
+  namespace: production
+spec:
+  podSelector: {}  # Selects all pods in namespace
+  policyTypes:
+  - Egress
+  # No egress rules = deny all egress
+---
+<h2>Deny all ingress AND egress (complete isolation)</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress</code></pre></p>
+<p>#### Allow Specific Pod-to-Pod Communication
+<pre><code><h2>Allow frontend to access backend on specific port</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: application
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend  # Policy applies to backend pods
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: frontend  # Allow from frontend pods
+    ports:
+    - protocol: TCP
+      port: 8080</code></pre></p>
+<h4>Advanced NetworkPolicy Patterns</h4>
+<p>#### Multi-tier Application Security
+<pre><code><h2>Web tier: Allow ingress from internet, egress to API tier</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-tier-policy
+  namespace: ecommerce
+spec:
+  podSelector:
+    matchLabels:
+      tier: web
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - {}  # Allow all ingress (internet traffic)
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          tier: api
+    ports:
+    - protocol: TCP
+      port: 8080
+  - to: {}  # Allow DNS resolution
+    ports:
+    - protocol: UDP
+      port: 53
+---
+<h2>API tier: Allow ingress from web tier, egress to database tier</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-tier-policy
+  namespace: ecommerce
+spec:
+  podSelector:
+    matchLabels:
+      tier: api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: web
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          tier: database
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to: {}  # Allow DNS
+    ports:
+    - protocol: UDP
+      port: 53
+---
+<h2>Database tier: Allow ingress only from API tier</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-tier-policy
+  namespace: ecommerce
+spec:
+  podSelector:
+    matchLabels:
+      tier: database
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: api
+    ports:
+    - protocol: TCP
+      port: 5432
+  egress:
+  - to: {}  # Allow DNS only
+    ports:
+    - protocol: UDP
+      port: 53</code></pre></p>
+<p>#### Namespace-based Isolation
+<pre><code><h2>Allow cross-namespace communication for monitoring</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-access
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      monitoring: "true"  # Pods that expose metrics
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring  # From monitoring namespace
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 9090  # Metrics port
+---
+<h2>Allow ingress from specific external IPs</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-external-ips
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: web
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 10.0.0.0/8     # Internal networks
+    - ipBlock:
+        cidr: 192.168.1.0/24  # Office network
+        except:
+        - 192.168.1.100/32    # Exclude specific IP
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443</code></pre></p>
+<h4>NetworkPolicy Troubleshooting</h4>
+<p>#### Testing Network Connectivity
+<pre><code><h2>Test pod-to-pod connectivity</h2>
+kubectl run test-pod --image=busybox -it --rm -- /bin/sh
+<h2>Inside test pod:</h2>
+wget -qO- http://target-service:8080
+nslookup target-service
+ping target-pod-ip</p>
+<h2>Test specific port connectivity</h2>
+kubectl run test-pod --image=busybox -it --rm -- \
+  nc -zv target-service 8080
+<h2>Test connectivity with netshoot (advanced debugging)</h2>
+kubectl run netshoot --image=nicolaka/netshoot -it --rm -- /bin/bash
+<h2>Inside netshoot:</h2>
+nmap -p 8080 target-service
+tcptraceroute target-service 8080</code></pre>
+<p>#### NetworkPolicy Debugging
+<pre><code><h2>List all NetworkPolicies</h2>
+kubectl get networkpolicies --all-namespaces</p>
+<h2>Describe specific policy</h2>
+kubectl describe networkpolicy allow-frontend-to-backend -n application
+<h2>Check if CNI supports NetworkPolicies</h2>
+kubectl get nodes -o jsonpath='{.items[*].status.nodeInfo.containerRuntimeVersion}'
+<h2>Calico, Cilium, Weave support NetworkPolicies</h2>
+<h2>Flannel does NOT support NetworkPolicies</h2>
+<h2>View policy in effect for specific pod</h2>
+kubectl get pod frontend-pod -o yaml | grep -A 10 labels
+kubectl get networkpolicy -o yaml | grep -A 20 "podSelector"</code></pre>
+<p>#### Common NetworkPolicy Issues
+<pre><code><h2>Issue 1: CNI doesn't support NetworkPolicies</h2>
+<h2>Solution: Use Calico, Cilium, or Weave instead of Flannel</h2></p>
+<h2>Issue 2: DNS resolution blocked</h2>
+<h2>Error: "nslookup: can't resolve"</h2>
+<h2>Solution: Allow egress to kube-dns</h2>
+egress:
+<li>to:</li>
+  - namespaceSelector:
+      matchLabels:
+        name: kube-system
+    podSelector:
+      matchLabels:
+        k8s-app: kube-dns
+  ports:
+  - protocol: UDP
+    port: 53
+<h2>Issue 3: Multiple policies causing confusion</h2>
+<h2>NetworkPolicies are additive - check all policies selecting the pod</h2>
+kubectl get networkpolicy -o yaml | grep -B 5 -A 10 "tier: web"</code></pre>
+<p>---</p>
+<h3>Integrated Security Example</h3>
+<h4>Complete Secure Application Deployment</h4>
+<pre><code><h2>Namespace with NetworkPolicy isolation</h2>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secure-app
+  labels:
+    name: secure-app
+---
+<h2>ServiceAccount with minimal permissions</h2>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web-app-sa
+  namespace: secure-app
+automountServiceAccountToken: true
+---
+<h2>Role with least privilege</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: secure-app
+  name: web-app-role
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["configmaps"]
+  resourceNames: ["web-config"]
+  verbs: ["get"]
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  resourceNames: ["web-secrets"]
+  verbs: ["get"]
+---
+<h2>RoleBinding</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: web-app-binding
+  namespace: secure-app
+subjects:
+<li>kind: ServiceAccount</li>
+  name: web-app-sa
+  namespace: secure-app
+roleRef:
+  kind: Role
+  name: web-app-role
+  apiGroup: rbac.authorization.k8s.io
+---
+<h2>Secure deployment</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-web-app
+  namespace: secure-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: web
+        tier: frontend
+    spec:
+      serviceAccountName: web-app-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: web
+        image: nginx:1.20-alpine
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: var-cache
+          mountPath: /var/cache/nginx
+        - name: var-run
+          mountPath: /var/run
+        - name: config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: var-cache
+        emptyDir: {}
+      - name: var-run
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: web-config
+---
+<h2>NetworkPolicy - default deny + specific allows</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: secure-app
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-traffic
+  namespace: secure-app
+spec:
+  podSelector:
+    matchLabels:
+      tier: frontend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from: []  # Allow from anywhere (internet)
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: {}  # Allow DNS
+    ports:
+    - protocol: UDP
+      port: 53</code></pre>
+<p>---</p>
+<h3>Exam-Specific Security Tasks</h3>
+<h4>Common Exam Scenarios</h4>
+<p>#### 1. Create RBAC for ServiceAccount
+<pre><code><h2>Task: Create ServiceAccount that can create/delete pods in namespace "development"</h2></p>
+<h2>Solution:</h2>
+kubectl create namespace development
+kubectl create serviceaccount pod-manager -n development
+<h2>Create Role</h2>
+cat <<EOF | kubectl apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: development
+  name: pod-manager-role
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["pods"]
+  verbs: ["create", "delete", "get", "list"]
+EOF
+<h2>Create RoleBinding</h2>
+kubectl create rolebinding pod-manager-binding \
+  --role=pod-manager-role \
+  --serviceaccount=development:pod-manager \
+  -n development
+<h2>Test permissions</h2>
+kubectl auth can-i create pods --as=system:serviceaccount:development:pod-manager -n development</code></pre>
+<p>#### 2. Secure Pod with SecurityContext
+<pre><code><h2>Task: Create pod that runs as non-root with read-only filesystem</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-exam-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: app
+    image: nginx:alpine
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE
+    volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: var-cache
+      mountPath: /var/cache/nginx
+    - name: var-run
+      mountPath: /var/run
+  volumes:
+  - name: tmp
+    emptyDir: {}
+  - name: var-cache
+    emptyDir: {}
+  - name: var-run
+    emptyDir: {}</code></pre></p>
+<p>#### 3. NetworkPolicy Implementation
+<pre><code><h2>Task: Block all traffic to database pods except from API pods</h2>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-isolation
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      tier: database
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: api
+    ports:
+    - protocol: TCP
+      port: 5432</code></pre></p>
+<p>---</p>
+<h3>Security Troubleshooting Workflows</h3>
+<h4>Systematic Security Debugging</h4>
+<p>#### RBAC Permission Issues
+<pre><code><h2>1. Identify the subject (user/SA)</h2>
+kubectl auth whoami
+<h2>or check pod's service account</h2>
+kubectl get pod my-pod -o jsonpath='{.spec.serviceAccountName}'</p>
+<h2>2. Check what permissions they have</h2>
+kubectl auth can-i --list --as=system:serviceaccount:default:my-sa
+<h2>3. Find relevant RoleBindings/ClusterRoleBindings</h2>
+kubectl get rolebindings,clusterrolebindings --all-namespaces | grep my-sa
+<h2>4. Examine the Role/ClusterRole</h2>
+kubectl describe role my-role -n my-namespace
+kubectl describe clusterrole my-clusterrole
+<h2>5. Fix by adding missing permissions or creating bindings</h2></code></pre>
+<p>#### SecurityContext Problems
+<pre><code><h2>1. Check pod events for security-related errors</h2>
+kubectl describe pod my-pod | grep -A 10 Events</p>
+<h2>2. Check container logs for permission errors</h2>
+kubectl logs my-pod
+<h2>3. Verify effective user/capabilities in container</h2>
+kubectl exec my-pod -- id
+kubectl exec my-pod -- grep Cap /proc/self/status
+<h2>4. Test filesystem permissions</h2>
+kubectl exec my-pod -- ls -la /
+kubectl exec my-pod -- touch /test-readonly
+<h2>5. Adjust SecurityContext settings as needed</h2></code></pre>
+<p>#### NetworkPolicy Connectivity Issues
+<pre><code><h2>1. Test basic connectivity</h2>
+kubectl run test --image=busybox -it --rm -- nc -zv target-service 8080</p>
+<h2>2. Check if NetworkPolicies exist</h2>
+kubectl get networkpolicy --all-namespaces
+<h2>3. Identify which policies affect your pods</h2>
+kubectl describe networkpolicy -n my-namespace
+<h2>4. Verify CNI supports NetworkPolicies</h2>
+kubectl get nodes -o jsonpath='{.items[*].status.nodeInfo.containerRuntimeVersion}'
+<h2>5. Add necessary allow rules or fix policy logic</h2></code></pre>
+<p>---</p>
+<h3>Conceptual Mastery Framework</h3>
+<h4>Security as Layered Defense</h4>
+Understanding that <strong>no single security mechanism</strong> is sufficient:
+1. <strong>API Server Security</strong> - Authentication and authorization
+2. <strong>RBAC</strong> - Fine-grained access control to resources
+3. <strong>ServiceAccounts</strong> - Identity and token management for pods
+4. <strong>SecurityContext</strong> - Process and container runtime security
+5. <strong>NetworkPolicies</strong> - Network-level microsegmentation
+<h4>Security Integration Patterns</h4>
+Security mechanisms <strong>work together</strong>:
+<li><strong>ServiceAccounts</strong> provide identity for <strong>RBAC</strong> authorization</li>
+<li><strong>SecurityContext</strong> enforces runtime security for <strong>pods</strong></li>
+<li><strong>NetworkPolicies</strong> provide network security for <strong>pod communication</strong></li>
+<li><strong>All layers</strong> must be configured for defense in depth</li>
+<h4>Least Privilege Principle</h4>
+Every security configuration should follow <strong>minimum necessary access</strong>:
+<li><strong>RBAC roles</strong> with only required permissions</li>
+<li><strong>ServiceAccounts</strong> with specific, limited roles</li>
+<li><strong>SecurityContext</strong> dropping all capabilities, adding only needed ones</li>
+<li><strong>NetworkPolicies</strong> denying all traffic, allowing only necessary flows</li></ul>
+<p>---</p>
+<h3>Conceptual Mastery Checklist</h3>
+<p>✅ <strong>Understand RBAC as the authorization mechanism for API access</strong>
+✅ <strong>Master ServiceAccount token mounting and API authentication</strong>
+✅ <strong>Comprehend SecurityContext controls for runtime security</strong>
+✅ <strong>Know NetworkPolicy microsegmentation patterns</strong>
+✅ <strong>Practice integrated security configurations</strong>
+✅ <strong>Internalize troubleshooting workflows for security issues</strong>
+✅ <strong>Apply least privilege principles across all security layers</strong></p>
+<p>---</p>
+<em>Mastering Kubernetes security means understanding how authentication, authorization, runtime security, and network controls work together to create defense in depth. Each layer addresses different attack vectors and must be properly configured for comprehensive protection.</em>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

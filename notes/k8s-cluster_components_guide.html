@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Components - Comprehensive Study Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Cluster Components - Comprehensive Study Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Cluster Components - Comprehensive Study Guide</h2>
+<h3>WHY Cluster Components Matter (Conceptual Foundation)</h3>
+<h4>The Kubernetes Control Plane as a Distributed System</h4>
+Understanding cluster components is understanding <strong>how Kubernetes actually works</strong> - not just what it does:
+<ul><li><strong>Control Plane</strong> = The brain of Kubernetes (decision makers)</li>
+<li><strong>Data Plane</strong> = The workers executing decisions (kubelet, kube-proxy)</li>
+<li><strong>Distributed Consensus</strong> = How multiple masters coordinate (etcd + raft)</li>
+<li><strong>Event-Driven Architecture</strong> = Components react to state changes</li>
+<li><strong>Reconciliation Loops</strong> = Continuous convergence toward desired state</li>
+<h4>Exam Context: Why Component Mastery is Critical</h4>
+<li><strong>Troubleshooting cluster issues</strong> - 40% of advanced problems stem from component failures</li>
+<li><strong>Backup/restore scenarios</strong> - etcd operations are common exam tasks</li>
+<li><strong>Performance optimization</strong> - understanding bottlenecks and resource allocation</li>
+<li><strong>Security hardening</strong> - component configuration affects cluster security</li>
+<li><strong>Multi-master setups</strong> - HA cluster design and troubleshooting</li>
+<strong>Key Insight</strong>: Every kubectl command, every pod creation, every service discovery - it all flows through these components in predictable patterns.
+<p>---</p>
+<h3>Kubernetes Architecture Overview</h3>
+<h4>Control Plane vs Data Plane</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    CONTROL PLANE                           │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐│
+│  │kube-apiserver│ │    etcd     │ │  kube-controller-mgr   ││
+│  │             │ │             │ │                         ││
+│  │   Gateway   │ │ State Store │ │   Reconciliation        ││
+│  └─────────────┘ └─────────────┘ └─────────────────────────┘│
+│                   ┌─────────────┐                          │
+│                   │kube-scheduler│                          │
+│                   │             │                          │
+│                   │  Placement  │                          │
+│                   └─────────────┘                          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     DATA PLANE                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐│
+│  │   kubelet   │ │ kube-proxy  │ │   Container Runtime     ││
+│  │             │ │             │ │                         ││
+│  │ Node Agent  │ │  Networking │ │  Docker/containerd/CRI  ││
+│  └─────────────┘ └─────────────┘ └─────────────────────────┘│
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4>Component Interaction Flow</h4>
+<pre><code>1. User/kubectl → kube-apiserver (REST API)
+2. kube-apiserver → etcd (store state)
+3. kube-scheduler watches → apiserver (new pods)
+4. kube-scheduler → apiserver (pod binding)
+5. kubelet watches → apiserver (assigned pods)
+6. kubelet → container runtime (create containers)
+7. controllers watch → apiserver (desired state)
+8. controllers → apiserver (reconciliation actions)</code></pre>
+<strong>Conceptual Insight</strong>: All components communicate through the API server - it's the <strong>single source of truth</strong> and <strong>communication hub</strong>.
+<p>---</p>
+<h3>kube-apiserver: The Gateway and State Manager</h3>
+<h4>What kube-apiserver Does (Conceptual)</h4>
+The API server is the <strong>front door</strong> to Kubernetes and the <strong>state management engine</strong>:
+<li><strong>REST API Gateway</strong> - Exposes Kubernetes API over HTTPS</li>
+<li><strong>Authentication & Authorization</strong> - Who can do what to which resources</li>
+<li><strong>Admission Control</strong> - Policy enforcement and resource validation</li>
+<li><strong>State Persistence</strong> - Coordinates with etcd for data storage</li>
+<li><strong>Watch/Event Mechanism</strong> - Notifies clients of state changes</li>
+<li><strong>API Versioning</strong> - Manages multiple API versions simultaneously</li>
+<h4>API Server Architecture</h4>
+<pre><code><h2>API Server Request Flow</h2>
+┌──────────────┐    ┌─────────────────┐    ┌────────────────┐
+│   kubectl    │───▶│  Authentication │───▶│  Authorization │
+│              │    │  (who are you?) │    │ (what can you  │
+│              │    │                 │    │    do?)       │
+└──────────────┘    └─────────────────┘    └────────────────┘
+                                                   │
+                    ┌─────────────────┐           ▼
+                    │      etcd       │    ┌────────────────┐
+                    │   (persistence) │◀───│ Admission      │
+                    │                 │    │ Controllers    │
+                    └─────────────────┘    │ (policy &      │
+                                          │  validation)   │
+                                          └────────────────┘</code></pre>
+<h4>API Server Configuration Examples</h4>
+<p>#### Static Pod Manifest (kubeadm clusters)
+<pre><code><h2>/etc/kubernetes/manifests/kube-apiserver.yaml</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-apiserver
+    image: k8s.gcr.io/kube-apiserver:v1.28.0
+    command:
+    - kube-apiserver
+    - --advertise-address=192.168.1.100
+    - --etcd-servers=https://127.0.0.1:2379
+    - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
+    - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
+    - --etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key
+    - --client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    - --secure-port=6443
+    - --allow-privileged=true
+    - --authorization-mode=Node,RBAC
+    - --enable-admission-plugins=NodeRestriction
+    - --service-cluster-ip-range=10.96.0.0/12
+    - --service-account-key-file=/etc/kubernetes/pki/sa.pub
+    - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
+    - --service-account-issuer=https://kubernetes.default.svc.cluster.local
+    ports:
+    - containerPort: 6443
+      hostPort: 6443
+      name: https
+    volumeMounts:
+    - mountPath: /etc/kubernetes/pki
+      name: k8s-certs
+      readOnly: true
+    - mountPath: /etc/ca-certificates
+      name: ca-certs
+      readOnly: true
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/pki
+      type: DirectoryOrCreate
+    name: k8s-certs
+  - hostPath:
+      path: /etc/ca-certificates
+      type: DirectoryOrCreate
+    name: ca-certs</code></pre></p>
+<h4>Critical API Server Parameters</h4>
+<p>#### Security Configuration
+<pre><code><h2>Authentication methods</h2>
+--client-ca-file=/path/to/ca.crt                    # Client certificate CA
+--oidc-issuer-url=https://accounts.google.com       # OIDC provider
+--basic-auth-file=/path/to/basic-auth.csv           # Basic auth (deprecated)</p>
+<h2>Authorization modes (processed in order)</h2>
+--authorization-mode=Node,RBAC,ABAC,Webhook         # Multiple modes
+--authorization-policy-file=/path/to/policy.json    # ABAC policy
+<h2>Admission controllers (order matters!)</h2>
+--enable-admission-plugins=NodeRestriction,PodSecurityPolicy,LimitRanger
+--disable-admission-plugins=DefaultStorageClass</code></pre>
+<p>#### Networking and Service Configuration
+<pre><code><h2>Service network configuration</h2>
+--service-cluster-ip-range=10.96.0.0/12             # ClusterIP range
+--service-node-port-range=30000-32767               # NodePort range</p>
+<h2>API server networking</h2>
+--advertise-address=192.168.1.100                   # External API server IP
+--bind-address=0.0.0.0                              # Listen on all interfaces
+--secure-port=6443                                  # HTTPS port
+--insecure-port=0                                   # Disable HTTP (secure default)</code></pre>
+<h4>Troubleshooting API Server Issues</h4>
+<p>#### Common Problems and Diagnostics
+<pre><code><h2>Check API server status</h2>
+kubectl get componentstatus
+kubectl get --raw='/healthz'
+kubectl get --raw='/metrics' | grep apiserver</p>
+<h2>API server logs (static pod)</h2>
+kubectl logs -n kube-system kube-apiserver-master-node
+<h2>Direct systemd service (non-kubeadm)</h2>
+sudo journalctl -u kube-apiserver -f
+<h2>Check API server connectivity</h2>
+curl -k https://localhost:6443/healthz
+openssl s_client -connect localhost:6443 -showcerts</code></pre>
+<p>#### Performance Monitoring
+<pre><code><h2>API server request metrics</h2>
+kubectl get --raw='/metrics' | grep 'apiserver_request_total'
+kubectl get --raw='/metrics' | grep 'apiserver_request_duration'</p>
+<h2>etcd interaction metrics</h2>
+kubectl get --raw='/metrics' | grep 'etcd_request_duration'
+<h2>Check API server resource usage</h2>
+kubectl top pods -n kube-system | grep apiserver</code></pre>
+<strong>Gotcha</strong>: API server restarts cause brief cluster unavailability. Always check logs for certificate expiration, etcd connectivity issues, or resource exhaustion.
+<p>---</p>
+<h3>etcd: The Cluster State Database</h3>
+<h4>What etcd Does (Conceptual)</h4>
+etcd is the <strong>single source of truth</strong> for all cluster state:
+<li><strong>Distributed Key-Value Store</strong> - Stores all Kubernetes objects</li>
+<li><strong>Raft Consensus Algorithm</strong> - Ensures data consistency across replicas</li>
+<li><strong>Watch Mechanism</strong> - Notifies clients of data changes</li>
+<li><strong>ACID Transactions</strong> - Ensures data integrity</li>
+<li><strong>Strong Consistency</strong> - Read-after-write consistency guaranteed</li>
+<h4>etcd Architecture and Data Model</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    etcd Cluster                            │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐│
+│  │    etcd-1   │ │    etcd-2   │ │        etcd-3           ││
+│  │   (leader)  │ │ (follower)  │ │     (follower)          ││
+│  │             │ │             │ │                         ││
+│  └─────────────┘ └─────────────┘ └─────────────────────────┘│
+│         │               │                      │           │
+│         └───────────────┼──────────────────────┘           │
+│                         │                                  │
+│              ┌─────────────────┐                           │
+│              │  Raft Consensus │                           │
+│              │   Protocol      │                           │
+│              └─────────────────┘                           │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+              ┌─────────────────┐
+              │  kube-apiserver │
+              │                 │
+              └─────────────────┘</code></pre>
+<h4>etcd Data Organization</h4>
+<pre><code><h2>Kubernetes data structure in etcd</h2>
+/registry/
+├── pods/default/
+│   ├── web-pod-12345
+│   └── api-pod-67890
+├── services/default/
+│   ├── kubernetes
+│   └── web-service
+├── deployments/default/
+│   └── web-deployment
+├── secrets/default/
+│   └── app-secret
+└── configmaps/kube-system/
+    └── cluster-info</code></pre>
+<h4>etcd Configuration and Management</h4>
+<p>#### etcd Static Pod Configuration
+<pre><code><h2>/etc/kubernetes/manifests/etcd.yaml</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd
+  namespace: kube-system
+spec:
+  containers:
+  - name: etcd
+    image: k8s.gcr.io/etcd:3.5.7-0
+    command:
+    - etcd
+    - --name=master-node
+    - --data-dir=/var/lib/etcd
+    - --listen-client-urls=https://127.0.0.1:2379,https://192.168.1.100:2379
+    - --advertise-client-urls=https://192.168.1.100:2379
+    - --listen-peer-urls=https://192.168.1.100:2380
+    - --initial-advertise-peer-urls=https://192.168.1.100:2380
+    - --cert-file=/etc/kubernetes/pki/etcd/server.crt
+    - --key-file=/etc/kubernetes/pki/etcd/server.key
+    - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+    - --client-cert-auth=true
+    - --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+    - --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+    - --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+    - --peer-client-cert-auth=true
+    - --snapshot-count=10000
+    - --quota-backend-bytes=8589934592  # 8GB
+    volumeMounts:
+    - mountPath: /var/lib/etcd
+      name: etcd-data
+    - mountPath: /etc/kubernetes/pki/etcd
+      name: etcd-certs
+  volumes:
+  - hostPath:
+      path: /var/lib/etcd
+      type: DirectoryOrCreate
+    name: etcd-data
+  - hostPath:
+      path: /etc/kubernetes/pki/etcd
+      type: DirectoryOrCreate
+    name: etcd-certs</code></pre></p>
+<h4>etcd Operations and Management</h4>
+<p>#### Basic etcd Interactions
+<pre><code><h2>etcdctl setup (v3 API)</h2>
+export ETCDCTL_API=3
+export ETCDCTL_ENDPOINTS=https://127.0.0.1:2379
+export ETCDCTL_CACERT=/etc/kubernetes/pki/etcd/ca.crt
+export ETCDCTL_CERT=/etc/kubernetes/pki/etcd/server.crt
+export ETCDCTL_KEY=/etc/kubernetes/pki/etcd/server.key</p>
+<h2>Check etcd cluster health</h2>
+etcdctl endpoint health
+etcdctl endpoint status --write-out=table
+<h2>List all keys (Kubernetes objects)</h2>
+etcdctl get --prefix --keys-only /registry/
+<h2>Get specific object data</h2>
+etcdctl get /registry/pods/default/web-pod --print-value-only
+<h2>Watch for changes (useful for debugging)</h2>
+etcdctl watch --prefix /registry/pods/</code></pre>
+<p>#### etcd Backup and Restore (Critical Exam Skill)
+<pre><code><h2>Create snapshot backup</h2>
+ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot-$(date +%Y%m%d-%H%M%S).db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key</p>
+<h2>Verify snapshot</h2>
+etcdctl snapshot status /backup/etcd-snapshot.db --write-out=table
+<h2>Restore from snapshot (DESTRUCTIVE - stops cluster)</h2>
+<h2>1. Stop kube-apiserver</h2>
+sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/
+<h2>2. Stop etcd</h2>
+sudo mv /etc/kubernetes/manifests/etcd.yaml /tmp/
+<h2>3. Restore data</h2>
+sudo rm -rf /var/lib/etcd
+ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot.db \
+  --data-dir=/var/lib/etcd \
+  --name=master-node \
+  --initial-cluster=master-node=https://192.168.1.100:2380 \
+  --initial-advertise-peer-urls=https://192.168.1.100:2380
+<h2>4. Fix ownership</h2>
+sudo chown -R etcd:etcd /var/lib/etcd
+<h2>5. Restart etcd and apiserver</h2>
+sudo mv /tmp/etcd.yaml /etc/kubernetes/manifests/
+sudo mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/</code></pre>
+<h4>etcd Performance and Monitoring</h4>
+<pre><code><h2>Check etcd performance metrics</h2>
+etcdctl endpoint status --write-out=table
+etcdctl endpoint hashkv --write-out=table
+<h2>Monitor etcd logs</h2>
+kubectl logs -n kube-system etcd-master-node
+<h2>Check disk usage and performance</h2>
+df -h /var/lib/etcd
+iostat -x 1 5  # Monitor disk I/O
+<h2>etcd compaction (manage history)</h2>
+etcdctl compact $(etcdctl endpoint status --write-out="json" | jq -r '.[] | .Status.header.revision')
+etcdctl defrag --endpoints=$ETCDCTL_ENDPOINTS</code></pre>
+<strong>Critical Gotcha</strong>: etcd needs low-latency storage (SSD recommended). Network partitions can cause split-brain - always use odd numbers of nodes (3, 5, 7) for HA.
+<p>---</p>
+<h3>kube-scheduler: The Pod Placement Engine</h3>
+<h4>What kube-scheduler Does (Conceptual)</h4>
+The scheduler is the <strong>placement intelligence</strong> of Kubernetes:
+<li><strong>Resource Awareness</strong> - Considers CPU, memory, storage requirements</li>
+<li><strong>Constraint Satisfaction</strong> - Node selectors, affinity, anti-affinity</li>
+<li><strong>Load Balancing</strong> - Distributes workloads across nodes</li>
+<li><strong>Policy Enforcement</strong> - Custom scheduling policies and priorities</li>
+<li><strong>Future Resource Planning</strong> - Considers pending resource requests</li>
+<h4>Scheduling Process Flow</h4>
+<pre><code>┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Pod Created     │───▶│ Scheduler       │───▶│ Node Selected   │
+│ (Unscheduled)   │    │ Filtering &     │    │ (Pod Binding)   │
+│ spec.nodeName   │    │ Scoring         │    │ spec.nodeName   │
+│ is empty        │    │                 │    │ = "worker-2"    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Watch apiserver │    │ Filter Nodes    │    │ kubelet Pulls   │
+│ for new pods    │    │ • Resources     │    │ Pod & Starts    │
+│ with no node    │    │ • Constraints   │    │ Containers      │
+│                 │    │ • Policies      │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘</code></pre>
+<h4>Scheduler Configuration</h4>
+<p>#### kube-scheduler Static Pod
+<pre><code><h2>/etc/kubernetes/manifests/kube-scheduler.yaml</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-scheduler
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-scheduler
+    image: k8s.gcr.io/kube-scheduler:v1.28.0
+    command:
+    - kube-scheduler
+    - --authentication-kubeconfig=/etc/kubernetes/scheduler.conf
+    - --authorization-kubeconfig=/etc/kubernetes/scheduler.conf
+    - --bind-address=127.0.0.1
+    - --kubeconfig=/etc/kubernetes/scheduler.conf
+    - --leader-elect=true
+    - --port=0  # Disable insecure port
+    - --secure-port=10259
+    - --config=/etc/kubernetes/scheduler-config.yaml  # Custom config
+    volumeMounts:
+    - mountPath: /etc/kubernetes/scheduler.conf
+      name: kubeconfig
+      readOnly: true
+    - mountPath: /etc/kubernetes/scheduler-config.yaml
+      name: config
+      readOnly: true
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/scheduler.conf
+      type: FileOrCreate
+    name: kubeconfig
+  - hostPath:
+      path: /etc/kubernetes/scheduler-config.yaml
+      type: FileOrCreate
+    name: config</code></pre></p>
+<p>#### Custom Scheduler Configuration
+<pre><code><h2>scheduler-config.yaml</h2>
+apiVersion: kubescheduler.config.k8s.io/v1beta3
+kind: KubeSchedulerConfiguration
+profiles:
+<li>schedulerName: default-scheduler</li>
+  plugins:
+    score:
+      enabled:
+      - name: NodeResourcesFit
+      - name: NodeAffinity
+      - name: PodTopologySpread
+    filter:
+      enabled:
+      - name: NodeResourcesFilter
+      - name: NodeAffinity
+      - name: PodTopologySpread
+  pluginConfig:
+  - name: NodeResourcesFit
+    args:
+      scoringStrategy:
+        type: LeastAllocated  # Prefer nodes with more available resources</code></pre></p>
+<h4>Scheduling Constraints and Policies</h4>
+<p>#### Node Selection and Affinity
+<pre><code><h2>Node selector (simple)</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-pod
+spec:
+  nodeSelector:
+    accelerator: nvidia-tesla-k80
+  containers:
+  - name: gpu-app
+    image: tensorflow/tensorflow:latest-gpu
+---
+<h2>Node affinity (advanced)</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: affinity-pod
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+            - amd64
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: instance-type
+            operator: In
+            values:
+            - m5.large
+  containers:
+  - name: app
+    image: nginx</code></pre></p>
+<p>#### Pod Affinity and Anti-Affinity
+<pre><code><h2>Pod anti-affinity (avoid co-location)</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - web
+            topologyKey: kubernetes.io/hostname  # Different nodes
+      containers:
+      - name: web
+        image: nginx</code></pre></p>
+<p>#### Taints and Tolerations
+<pre><code><h2>Add taint to node (repel pods)</h2>
+kubectl taint nodes worker-1 special=true:NoSchedule</p>
+<h2>Remove taint</h2>
+kubectl taint nodes worker-1 special=true:NoSchedule-
+<h2>Pod with toleration</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tolerant-pod
+spec:
+  tolerations:
+  - key: "special"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+  containers:
+  - name: app
+    image: nginx</code></pre>
+<h4>Scheduler Troubleshooting</h4>
+<p>#### Debugging Scheduling Issues
+<pre><code><h2>Check scheduler status</h2>
+kubectl get componentstatus
+kubectl get events --sort-by='.lastTimestamp' | grep -i schedul</p>
+<h2>Pod scheduling status</h2>
+kubectl describe pod pending-pod
+<h2>Look for: "Events:" section with scheduling failures</h2>
+<h2>Scheduler logs</h2>
+kubectl logs -n kube-system kube-scheduler-master-node
+<h2>Node capacity and allocations</h2>
+kubectl describe nodes
+kubectl top nodes</code></pre>
+<p>#### Common Scheduling Problems
+<pre><code><h2>Insufficient resources</h2>
+kubectl describe node worker-1 | grep -A 5 "Allocated resources"</p>
+<h2>Taints preventing scheduling</h2>
+kubectl describe node worker-1 | grep -A 5 "Taints"
+<h2>Pod affinity conflicts</h2>
+kubectl get pods -o wide --all-namespaces | grep -v Running</code></pre>
+<strong>Exam Tip</strong>: Always check <code>kubectl describe pod</code> for scheduling failures. The Events section shows exactly why a pod couldn't be scheduled.
+<p>---</p>
+<h3>kube-controller-manager: The Reconciliation Engine</h3>
+<h4>What kube-controller-manager Does (Conceptual)</h4>
+The controller manager runs the <strong>reconciliation loops</strong> that make Kubernetes work:
+<li><strong>Desired State Monitoring</strong> - Watches API server for object changes</li>
+<li><strong>Current State Assessment</strong> - Compares actual vs desired state</li>
+<li><strong>Corrective Actions</strong> - Takes steps to achieve desired state</li>
+<li><strong>Multiple Controllers</strong> - Manages different resource types independently</li>
+<li><strong>Event Generation</strong> - Creates events for troubleshooting</li></ul>
+<h4>Controller Architecture</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│              kube-controller-manager                        │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐│
+│  │ Deployment  │ │  ReplicaSet │ │     Node Controller     ││
+│  │ Controller  │ │ Controller  │ │                         ││
+│  └─────────────┘ └─────────────┘ └─────────────────────────┘│
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐│
+│  │ Service     │ │ Endpoint    │ │  Namespace Controller   ││
+│  │ Controller  │ │ Controller  │ │                         ││
+│  └─────────────┘ └─────────────┘ └─────────────────────────┘│
+│                              └──────▲──────┘                │
+└──────────────────────────────────────┼──────────────────────┘
+                                       │
+                    ┌─────────────────────────────────┐
+                    │         API Server              │
+                    │    (Watch & Update Objects)     │
+                    └─────────────────────────────────┘</code></pre>
+<h4>Controller Manager Configuration</h4>
+<pre><code><h2>/etc/kubernetes/manifests/kube-controller-manager.yaml</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-controller-manager
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-controller-manager
+    image: k8s.gcr.io/kube-controller-manager:v1.28.0
+    command:
+    - kube-controller-manager
+    - --authentication-kubeconfig=/etc/kubernetes/controller-manager.conf
+    - --authorization-kubeconfig=/etc/kubernetes/controller-manager.conf
+    - --bind-address=127.0.0.1
+    - --kubeconfig=/etc/kubernetes/controller-manager.conf
+    - --leader-elect=true
+    - --port=0
+    - --secure-port=10257
+    - --cluster-cidr=10.244.0.0/16        # Pod network CIDR
+    - --service-cluster-ip-range=10.96.0.0/12  # Service network
+    - --cluster-name=kubernetes
+    - --root-ca-file=/etc/kubernetes/pki/ca.crt
+    - --service-account-private-key-file=/etc/kubernetes/pki/sa.key
+    - --use-service-account-credentials=true
+    - --controllers=*,bootstrapsigner,tokencleaner  # Enable all controllers
+    volumeMounts:
+    - mountPath: /etc/kubernetes/controller-manager.conf
+      name: kubeconfig
+      readOnly: true
+    - mountPath: /etc/kubernetes/pki
+      name: k8s-certs
+      readOnly: true</code></pre>
+<h4>Key Controllers and Their Functions</h4>
+<p>#### Deployment Controller
+<pre><code><h2>Controls the lifecycle of ReplicaSets</h2>
+<h2>Handles rolling updates, rollbacks, scaling</h2></p>
+<h2>Example reconciliation loop:</h2>
+<h2>1. Watch for Deployment changes</h2>
+<h2>2. Create/update ReplicaSet with new pod template</h2>
+<h2>3. Gradually scale down old ReplicaSet</h2>
+<h2>4. Gradually scale up new ReplicaSet</h2>
+<h2>5. Update Deployment status</h2></code></pre>
+<p>#### ReplicaSet Controller
+<pre><code><h2>Ensures desired number of pod replicas</h2>
+<h2>Creates/deletes pods to match spec.replicas</h2></p>
+<h2>Reconciliation logic:</h2>
+<h2>Current pods = kubectl get pods -l app=web | wc -l</h2>
+<h2>Desired pods = deployment.spec.replicas</h2>
+<h2>If current < desired: create new pods</h2>
+<h2>If current > desired: delete excess pods</h2></code></pre>
+<p>#### Node Controller
+<pre><code><h2>Monitors node health and manages node lifecycle</h2>
+<h2>Handles node cordoning, draining, and pod eviction</h2></p>
+<h2>Node conditions monitored:</h2>
+<h2>- Ready: kubelet is healthy and ready to accept pods</h2>
+<h2>- MemoryPressure: node has memory pressure</h2>
+<h2>- DiskPressure: node has disk pressure</h2>
+<h2>- PIDPressure: node has PID pressure</h2>
+<h2>- NetworkUnavailable: node network is unavailable</h2></code></pre>
+<h4>Controller Troubleshooting</h4>
+<p>#### Debugging Controller Issues
+<pre><code><h2>Check controller manager status</h2>
+kubectl get componentstatus
+kubectl logs -n kube-system kube-controller-manager-master-node</p>
+<h2>Check specific controller behavior</h2>
+kubectl get events --sort-by='.lastTimestamp' | grep -i replicaset
+kubectl get events --sort-by='.lastTimestamp' | grep -i deployment
+<h2>Monitor controller metrics</h2>
+kubectl get --raw='/metrics' | grep 'controller_manager'</code></pre>
+<p>#### Common Controller Problems
+<pre><code><h2>ReplicaSet not creating pods (check resources)</h2>
+kubectl describe rs my-replicaset
+kubectl describe nodes | grep -A 5 "Allocated resources"</p>
+<h2>Deployment stuck in rollout</h2>
+kubectl rollout status deployment/my-deployment
+kubectl rollout history deployment/my-deployment
+<h2>Service endpoints not updating</h2>
+kubectl get endpoints my-service
+kubectl describe service my-service</code></pre>
+<strong>Controller Insight</strong>: Each controller runs an independent reconciliation loop. Understanding which controller manages which resource type is crucial for troubleshooting.
+<p>---</p>
+<h3>Component Interactions and Dependencies</h3>
+<h4>Startup Dependencies</h4>
+<pre><code>1. etcd must start first (data store)
+2. kube-apiserver starts (needs etcd)
+3. kube-controller-manager starts (needs apiserver)
+4. kube-scheduler starts (needs apiserver)
+5. kubelet starts on nodes (needs apiserver)
+6. kube-proxy starts on nodes (needs apiserver)</code></pre>
+<h4>Communication Patterns</h4>
+<pre><code><h2>All components authenticate to API server via:</h2>
+<h2>- Client certificates</h2>
+<h2>- Service account tokens</h2>
+<h2>- Kubeconfig files</h2>
+<h2>API server connects to etcd via:</h2>
+<h2>- Mutual TLS (mTLS)</h2>
+<h2>- Client certificates</h2>
+<h2>Controllers and scheduler use:</h2>
+<h2>- Watch API for efficient event notifications</h2>
+<h2>- Leader election for HA deployments</h2></code></pre>
+<h4>High Availability Considerations</h4>
+<pre><code><h2>Multi-master setup requires:</h2>
+<h2>1. External etcd cluster (3+ nodes)</h2>
+<h2>2. Load balancer for API servers</h2>
+<h2>3. Shared storage for certificates</h2>
+<h2>4. Leader election for controllers/scheduler</h2>
+<h2>Example HA configuration:</h2>
+<h2>- etcd-1, etcd-2, etcd-3 (separate nodes)</h2>
+<h2>- master-1, master-2, master-3 (API servers)</h2>
+<h2>- Load balancer: 192.168.1.10:6443 → masters</h2></code></pre>
+<p>---</p>
+<h3>Cluster Component Health Monitoring</h3>
+<h4>Health Check Commands</h4>
+<pre><code><h2>Overall cluster health</h2>
+kubectl get componentstatus
+kubectl cluster-info
+kubectl get nodes
+<h2>Individual component health</h2>
+kubectl get --raw='/healthz'
+kubectl get --raw='/readyz'
+kubectl get --raw='/livez'
+<h2>Component-specific health</h2>
+kubectl get --raw='/healthz/etcd'
+kubectl get --raw='/healthz/poststarthook/generic-apiserver-start-informers'</code></pre>
+<h4>Monitoring and Alerting</h4>
+<pre><code><h2>Critical metrics to monitor:</h2>
+<h2>- API server response time and error rate</h2>
+<h2>- etcd latency and space usage</h2>
+<h2>- Scheduler queue depth</h2>
+<h2>- Controller loop duration</h2>
+<h2>Log locations (systemd)</h2>
+sudo journalctl -u kubelet -f
+sudo journalctl -u kube-proxy -f
+<h2>Log locations (static pods)</h2>
+kubectl logs -n kube-system kube-apiserver-master
+kubectl logs -n kube-system etcd-master
+kubectl logs -n kube-system kube-scheduler-master
+kubectl logs -n kube-system kube-controller-manager-master</code></pre>
+<p>---</p>
+<h3>Exam-Specific Component Tasks</h3>
+<h4>Common Exam Scenarios</h4>
+1. <strong>etcd backup/restore</strong> - Critical skill, often tested
+2. <strong>Component troubleshooting</strong> - Diagnose why cluster is unhealthy
+3. <strong>Certificate management</strong> - Renew or fix certificate issues
+4. <strong>Scheduler configuration</strong> - Custom scheduling policies
+5. <strong>Controller parameter tuning</strong> - Adjust reconciliation behavior
+<h4>Quick Diagnostic Workflow</h4>
+<pre><code><h2>1. Check overall cluster health</h2>
+kubectl get componentstatus
+kubectl get nodes
+<h2>2. Check component logs</h2>
+kubectl logs -n kube-system <component-pod>
+<h2>3. Check component configuration</h2>
+ls -la /etc/kubernetes/manifests/
+cat /etc/kubernetes/manifests/kube-apiserver.yaml
+<h2>4. Check certificates</h2>
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep -A 2 Validity
+<h2>5. Check networking</h2>
+netstat -tlnp | grep 6443  # API server
+netstat -tlnp | grep 2379  # etcd client
+netstat -tlnp | grep 2380  # etcd peer</code></pre>
+<p>---</p>
+<h3>Conceptual Mastery Checklist</h3>
+<p>✅ <strong>Understand component roles and interactions in the distributed system</strong>
+✅ <strong>Know the API server as the single communication hub</strong>
+✅ <strong>Master etcd as the source of truth and backup/restore procedures</strong>
+✅ <strong>Comprehend scheduler filtering and scoring algorithms</strong>
+✅ <strong>Internalize controller reconciliation loop patterns</strong>
+✅ <strong>Practice component troubleshooting workflows</strong>
+✅ <strong>Understand HA deployment patterns and failure scenarios</strong></p>
+<p>---</p>
+<em>Understanding cluster components means understanding Kubernetes as a distributed system where each component has a specific role in maintaining desired state. The API server is the hub, etcd is the memory, scheduler is the brain for placement, and controllers are the hands that do the work.</em>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backup/Restore - Comprehensive Study Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Backup/Restore - Comprehensive Study Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Backup/Restore - Comprehensive Study Guide</h2>
+<h3>WHY Backup/Restore Matters (Conceptual Foundation)</h3>
+<h4>etcd as the Single Point of Truth</h4>
+Understanding backup/restore is understanding <strong>cluster data protection and disaster recovery</strong>:
+<ul><li><strong>etcd Contains Everything</strong> - All cluster state, configurations, secrets live in etcd</li>
+<li><strong>Data Loss Scenarios</strong> - Hardware failures, human errors, corruption, ransomware</li>
+<li><strong>Business Continuity</strong> - Minimizing downtime and data loss during disasters</li>
+<li><strong>Compliance Requirements</strong> - Many industries mandate backup and recovery procedures</li>
+<li><strong>Testing and Development</strong> - Restore to previous states for testing and rollbacks</li>
+<h4>Exam Context: Why Backup/Restore Mastery is Critical</h4>
+<li><strong>15-20% of exam tasks</strong> involve backup/restore scenarios</li>
+<li><strong>High-value questions</strong> - Backup/restore tasks often worth significant points</li>
+<li><strong>Time pressure</strong> - Must execute backup/restore quickly under exam conditions</li>
+<li><strong>Real-world relevance</strong> - Essential skill for production Kubernetes operations</li>
+<li><strong>Disaster scenarios</strong> - Common exam setup: "etcd is corrupted, restore from backup"</li>
+<strong>Key Insight</strong>: etcd backup/restore is <strong>the most critical operational skill</strong> for Kubernetes administrators. A failed restore can mean complete cluster loss.
+<p>---</p>
+<h3>etcd Architecture and Data Storage</h3>
+<h4>What Lives in etcd</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    etcd Data Structure                     │
+│                                                             │
+│  /registry/                                                 │
+│  ├── pods/                    ← All pod definitions         │
+│  │   ├── default/                                          │
+│  │   ├── kube-system/                                      │
+│  │   └── production/                                       │
+│  ├── services/                ← Service definitions        │
+│  ├── deployments/             ← Deployment specs           │
+│  ├── configmaps/              ← Configuration data         │
+│  ├── secrets/                 ← Encrypted secret data      │
+│  ├── persistentvolumes/       ← Storage definitions        │
+│  ├── nodes/                   ← Node registrations        │
+│  ├── namespaces/              ← Namespace definitions      │
+│  └── rbac/                    ← RBAC policies             │
+│      ├── roles/                                            │
+│      ├── rolebindings/                                     │
+│      ├── clusterroles/                                     │
+│      └── clusterrolebindings/                              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<strong>Critical Understanding</strong>: When you backup etcd, you're backing up <strong>the entire cluster state</strong> - every Kubernetes object, every configuration, every secret.
+<h4>etcd Cluster Topology</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                  etcd Cluster Architecture                 │
+│                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐│
+│  │   etcd-1    │ │   etcd-2    │ │        etcd-3           ││
+│  │  (leader)   │ │ (follower)  │ │     (follower)          ││
+│  │             │ │             │ │                         ││
+│  │/var/lib/etcd│ │/var/lib/etcd│ │    /var/lib/etcd        ││
+│  └─────────────┘ └─────────────┘ └─────────────────────────┘│
+│         │               │                      │           │
+│         └───────────────┼──────────────────────┘           │
+│                         │                                  │
+│              ┌─────────────────┐                           │
+│              │  Raft Consensus │                           │
+│              │ (Data Sync)     │                           │
+│              └─────────────────┘                           │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+    ┌─────────────────────────────────┐
+    │         Backup Strategy         │
+    │                                 │
+    │ • Backup any etcd member        │
+    │ • All members have same data    │
+    │ • Restore affects entire cluster│
+    └─────────────────────────────────┘</code></pre>
+<p>---</p>
+<h3>etcd Backup Procedures</h3>
+<h4>Understanding etcdctl</h4>
+<pre><code><h2>etcdctl is the command-line client for etcd</h2>
+<h2>Critical: Always use API version 3</h2>
+export ETCDCTL_API=3
+<h2>etcdctl requires authentication for secure etcd clusters</h2>
+export ETCDCTL_ENDPOINTS=https://127.0.0.1:2379
+export ETCDCTL_CACERT=/etc/kubernetes/pki/etcd/ca.crt
+export ETCDCTL_CERT=/etc/kubernetes/pki/etcd/server.crt
+export ETCDCTL_KEY=/etc/kubernetes/pki/etcd/server.key</code></pre>
+<h4>Basic Backup Command</h4>
+<pre><code><h2>Simple backup command (exam-ready format)</h2>
+ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot-$(date +%Y%m%d-%H%M%S).db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+<h2>Verify backup was created successfully</h2>
+ls -la /backup/
+ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-snapshot-20240115-143000.db --write-out=table</code></pre>
+<h4>Complete Backup Script</h4>
+<pre><code>#!/bin/bash
+<h2>Production-ready etcd backup script</h2>
+<h2>Configuration</h2>
+BACKUP_DIR="/backup/etcd"
+ETCD_ENDPOINTS="https://127.0.0.1:2379"
+ETCD_CACERT="/etc/kubernetes/pki/etcd/ca.crt"
+ETCD_CERT="/etc/kubernetes/pki/etcd/server.crt"
+ETCD_KEY="/etc/kubernetes/pki/etcd/server.key"
+RETENTION_DAYS=7
+<h2>Set etcdctl API version</h2>
+export ETCDCTL_API=3
+<h2>Create backup directory</h2>
+mkdir -p $BACKUP_DIR
+<h2>Generate backup filename with timestamp</h2>
+BACKUP_FILE="$BACKUP_DIR/etcd-snapshot-$(date +%Y%m%d-%H%M%S).db"
+<p>echo "Starting etcd backup to $BACKUP_FILE..."</p>
+<h2>Perform backup</h2>
+etcdctl snapshot save $BACKUP_FILE \
+  --endpoints=$ETCD_ENDPOINTS \
+  --cacert=$ETCD_CACERT \
+  --cert=$ETCD_CERT \
+  --key=$ETCD_KEY
+<h2>Check backup status</h2>
+if [ $? -eq 0 ]; then
+    echo "Backup completed successfully!"
+    
+    # Verify backup integrity
+    etcdctl snapshot status $BACKUP_FILE --write-out=table
+    
+    # Show backup file details
+    echo "Backup file details:"
+    ls -lh $BACKUP_FILE
+    
+    # Cleanup old backups (keep only last 7 days)
+    find $BACKUP_DIR -name "etcd-snapshot-*.db" -mtime +$RETENTION_DAYS -delete
+    echo "Cleaned up backups older than $RETENTION_DAYS days"
+    
+else
+    echo "Backup failed!"
+    exit 1
+fi</code></pre>
+<h4>Automated Backup with CronJob</h4>
+<pre><code><h2>Kubernetes CronJob for automated etcd backups</h2>
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+  namespace: kube-system
+spec:
+  schedule: "0 2 <em> </em> *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          hostNetwork: true  # Access etcd on host network
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""  # Run on master node
+          tolerations:
+          - operator: "Exists"
+            effect: "NoSchedule"
+          containers:
+          - name: etcd-backup
+            image: k8s.gcr.io/etcd:3.5.7-0
+            command:
+            - /bin/sh
+            - -c
+            - |
+              export ETCDCTL_API=3
+              etcdctl snapshot save /backup/etcd-snapshot-$(date +%Y%m%d-%H%M%S).db \
+                --endpoints=https://127.0.0.1:2379 \
+                --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+                --cert=/etc/kubernetes/pki/etcd/server.crt \
+                --key=/etc/kubernetes/pki/etcd/server.key
+              
+              # Verify backup
+              etcdctl snapshot status /backup/etcd-snapshot-$(date +%Y%m%d)*.db --write-out=table
+              
+              # Cleanup old backups (keep 7 days)
+              find /backup -name "etcd-snapshot-*.db" -mtime +7 -delete
+            volumeMounts:
+            - name: etcd-certs
+              mountPath: /etc/kubernetes/pki/etcd
+              readOnly: true
+            - name: backup-storage
+              mountPath: /backup
+          volumes:
+          - name: etcd-certs
+            hostPath:
+              path: /etc/kubernetes/pki/etcd
+              type: Directory
+          - name: backup-storage
+            hostPath:
+              path: /backup/etcd
+              type: DirectoryOrCreate
+          restartPolicy: OnFailure</code></pre>
+<h4>Backup Verification</h4>
+<pre><code><h2>Always verify backup after creation</h2>
+BACKUP_FILE="/backup/etcd-snapshot-20240115-143000.db"
+<h2>Check backup file integrity and metadata</h2>
+ETCDCTL_API=3 etcdctl snapshot status $BACKUP_FILE --write-out=table
+<h2>Expected output:</h2>
+<h2>+----------+----------+------------+------------+</h2>
+<h2>|   HASH   | REVISION | TOTAL KEYS | TOTAL SIZE |</h2>
+<h2>+----------+----------+------------+------------+</h2>
+<h2>| c42e2d8a |     1847 |       1234 |     2.1 MB |</h2>
+<h2>+----------+----------+------------+------------+</h2>
+<h2>Verify backup file is not corrupted</h2>
+file $BACKUP_FILE
+<h2>Expected: should show it's a valid file, not corrupted</h2>
+<h2>Check backup file size (should be > 0)</h2>
+ls -lh $BACKUP_FILE
+du -h $BACKUP_FILE</code></pre>
+<p>---</p>
+<h3>etcd Restore Procedures</h3>
+<h4>Pre-Restore Preparation</h4>
+<pre><code><h2>CRITICAL: Restore is a DESTRUCTIVE operation</h2>
+<h2>Always backup current state before restore!</h2>
+<h2>1. Stop kube-apiserver (prevents new writes to etcd)</h2>
+sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/
+<h2>2. Verify apiserver is stopped</h2>
+kubectl get nodes  # Should fail with connection error
+<h2>3. Stop etcd</h2>
+sudo mv /etc/kubernetes/manifests/etcd.yaml /tmp/
+<h2>4. Verify etcd is stopped</h2>
+sudo ss -tlnp | grep 2379  # Should show no process listening
+<h2>5. Backup existing etcd data (safety measure)</h2>
+sudo mv /var/lib/etcd /var/lib/etcd-backup-$(date +%Y%m%d-%H%M%S)</code></pre>
+<h4>Basic Restore Command</h4>
+<pre><code><h2>Restore etcd from snapshot</h2>
+ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot-20240115-143000.db \
+  --data-dir=/var/lib/etcd \
+  --name=master-node \
+  --initial-cluster=master-node=https://192.168.1.100:2380 \
+  --initial-advertise-peer-urls=https://192.168.1.100:2380
+<h2>Fix ownership (etcd user must own the data directory)</h2>
+sudo chown -R etcd:etcd /var/lib/etcd
+<h2>Restart etcd</h2>
+sudo mv /tmp/etcd.yaml /etc/kubernetes/manifests/
+<h2>Wait for etcd to start and verify</h2>
+sleep 10
+sudo ss -tlnp | grep 2379  # Should show etcd listening
+<h2>Restart kube-apiserver</h2>
+sudo mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/
+<h2>Verify cluster is functional</h2>
+kubectl get nodes
+kubectl get pods --all-namespaces</code></pre>
+<h4>Complete Restore Procedure</h4>
+<pre><code>#!/bin/bash
+<h2>Production-ready etcd restore script</h2>
+<p>BACKUP_FILE="$1"
+ETCD_DATA_DIR="/var/lib/etcd"
+ETCD_BACKUP_DIR="/var/lib/etcd-backup-$(date +%Y%m%d-%H%M%S)"
+NODE_NAME="master-node"
+NODE_IP="192.168.1.100"</p>
+<h2>Validate input</h2>
+if [ -z "$BACKUP_FILE" ]; then
+    echo "Usage: $0 <backup-file>"
+    echo "Example: $0 /backup/etcd-snapshot-20240115-143000.db"
+    exit 1
+fi
+<p>if [ ! -f "$BACKUP_FILE" ]; then
+    echo "Backup file $BACKUP_FILE does not exist!"
+    exit 1
+fi</p>
+<p>echo "Starting etcd restore from $BACKUP_FILE..."</p>
+<h2>Verify backup integrity before restore</h2>
+echo "Verifying backup integrity..."
+ETCDCTL_API=3 etcdctl snapshot status $BACKUP_FILE --write-out=table
+if [ $? -ne 0 ]; then
+    echo "Backup file is corrupted!"
+    exit 1
+fi
+<h2>Stop kube-apiserver</h2>
+echo "Stopping kube-apiserver..."
+sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/
+sleep 5
+<h2>Stop etcd</h2>
+echo "Stopping etcd..."
+sudo mv /etc/kubernetes/manifests/etcd.yaml /tmp/
+sleep 10
+<h2>Backup existing etcd data</h2>
+echo "Backing up existing etcd data to $ETCD_BACKUP_DIR..."
+sudo mv $ETCD_DATA_DIR $ETCD_BACKUP_DIR
+<h2>Restore from snapshot</h2>
+echo "Restoring etcd data..."
+ETCDCTL_API=3 etcdctl snapshot restore $BACKUP_FILE \
+  --data-dir=$ETCD_DATA_DIR \
+  --name=$NODE_NAME \
+  --initial-cluster=$NODE_NAME=https://$NODE_IP:2380 \
+  --initial-advertise-peer-urls=https://$NODE_IP:2380
+<p>if [ $? -ne 0 ]; then
+    echo "Restore failed! Rolling back..."
+    sudo mv $ETCD_BACKUP_DIR $ETCD_DATA_DIR
+    exit 1
+fi</p>
+<h2>Fix ownership</h2>
+echo "Fixing etcd data ownership..."
+sudo chown -R etcd:etcd $ETCD_DATA_DIR
+<h2>Restart etcd</h2>
+echo "Starting etcd..."
+sudo mv /tmp/etcd.yaml /etc/kubernetes/manifests/
+<h2>Wait for etcd to be ready</h2>
+echo "Waiting for etcd to start..."
+for i in {1..30}; do
+    if sudo ss -tlnp | grep -q 2379; then
+        echo "etcd is running!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "etcd failed to start!"
+        exit 1
+    fi
+    sleep 2
+done
+<h2>Restart kube-apiserver</h2>
+echo "Starting kube-apiserver..."
+sudo mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/
+<h2>Wait for apiserver to be ready</h2>
+echo "Waiting for kube-apiserver to start..."
+for i in {1..30}; do
+    if kubectl get nodes &>/dev/null; then
+        echo "kube-apiserver is running!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "kube-apiserver failed to start!"
+        exit 1
+    fi
+    sleep 2
+done
+<h2>Verify restore success</h2>
+echo "Verifying cluster health..."
+kubectl get nodes
+kubectl get pods --all-namespaces | head -10
+<p>echo "Restore completed successfully!"
+echo "Original etcd data backed up to: $ETCD_BACKUP_DIR"</code></pre></p>
+<h4>Multi-Master Cluster Restore</h4>
+<pre><code><h2>For clusters with multiple etcd members</h2>
+<h2>This is more complex and requires coordination</h2>
+<h2>1. Stop all kube-apiservers on all master nodes</h2>
+for node in master-1 master-2 master-3; do
+    ssh $node "sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/"
+done
+<h2>2. Stop all etcd instances</h2>
+for node in master-1 master-2 master-3; do
+    ssh $node "sudo mv /etc/kubernetes/manifests/etcd.yaml /tmp/"
+done
+<h2>3. Backup existing etcd data on all nodes</h2>
+for node in master-1 master-2 master-3; do
+    ssh $node "sudo mv /var/lib/etcd /var/lib/etcd-backup-$(date +%Y%m%d-%H%M%S)"
+done
+<h2>4. Restore on each node with proper cluster configuration</h2>
+ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot.db \
+  --data-dir=/var/lib/etcd \
+  --name=master-1 \
+  --initial-cluster=master-1=https://192.168.1.100:2380,master-2=https://192.168.1.101:2380,master-3=https://192.168.1.102:2380 \
+  --initial-advertise-peer-urls=https://192.168.1.100:2380
+<h2>Repeat for each node with appropriate --name and --initial-advertise-peer-urls</h2>
+<h2>5. Fix ownership on all nodes</h2>
+for node in master-1 master-2 master-3; do
+    ssh $node "sudo chown -R etcd:etcd /var/lib/etcd"
+done
+<h2>6. Start etcd on all nodes</h2>
+for node in master-1 master-2 master-3; do
+    ssh $node "sudo mv /tmp/etcd.yaml /etc/kubernetes/manifests/"
+done
+<h2>7. Start kube-apiserver on all nodes</h2>
+for node in master-1 master-2 master-3; do
+    ssh $node "sudo mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/"
+done</code></pre>
+<p>---</p>
+<h3>Disaster Recovery Scenarios</h3>
+<h4>Scenario 1: Single Node etcd Corruption</h4>
+<pre><code><h2>Symptoms: </h2>
+<h2>- kubectl commands fail</h2>
+<h2>- etcd logs show corruption errors</h2>
+<h2>- API server cannot connect to etcd</h2>
+<h2>Recovery steps:</h2>
+echo "Scenario 1: etcd corruption on single-node cluster"
+<h2>1. Identify the issue</h2>
+kubectl get nodes  # Fails
+sudo journalctl -u kubelet | grep -i etcd
+kubectl logs -n kube-system etcd-master-node
+<h2>2. Stop cluster components</h2>
+sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/
+sudo mv /etc/kubernetes/manifests/etcd.yaml /tmp/
+<h2>3. Attempt etcd repair (if possible)</h2>
+sudo etcd --data-dir=/var/lib/etcd --force-new-cluster
+<h2>4. If repair fails, restore from backup</h2>
+ETCDCTL_API=3 etcdctl snapshot restore /backup/latest-etcd-snapshot.db \
+  --data-dir=/var/lib/etcd-new
+<p>sudo rm -rf /var/lib/etcd
+sudo mv /var/lib/etcd-new /var/lib/etcd
+sudo chown -R etcd:etcd /var/lib/etcd</p>
+<h2>5. Restart components</h2>
+sudo mv /tmp/etcd.yaml /etc/kubernetes/manifests/
+sudo mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/</code></pre>
+<h4>Scenario 2: Complete Cluster Loss</h4>
+<pre><code><h2>Symptoms:</h2>
+<h2>- All master nodes down</h2>
+<h2>- etcd data lost on all nodes</h2>
+<h2>- Need to rebuild cluster from backup</h2>
+<p>echo "Scenario 2: Complete cluster reconstruction"</p>
+<h2>1. Reinstall Kubernetes on master node(s)</h2>
+<h2>(This assumes you have cluster configuration backed up separately)</h2>
+<h2>2. Initialize new cluster</h2>
+sudo kubeadm init --config=/backup/kubeadm-config.yaml
+<h2>3. Stop default etcd</h2>
+sudo mv /etc/kubernetes/manifests/etcd.yaml /tmp/
+sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/
+<h2>4. Restore etcd data</h2>
+sudo rm -rf /var/lib/etcd
+ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot.db \
+  --data-dir=/var/lib/etcd
+<p>sudo chown -R etcd:etcd /var/lib/etcd</p>
+<h2>5. Restart components</h2>
+sudo mv /tmp/etcd.yaml /etc/kubernetes/manifests/
+sudo mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/
+<h2>6. Rejoin worker nodes</h2>
+kubeadm token create --print-join-command
+<h2>Run join command on worker nodes</h2></code></pre>
+<h4>Scenario 3: Accidental Resource Deletion</h4>
+<pre><code><h2>Symptoms:</h2>
+<h2>- Critical resources accidentally deleted</h2>
+<h2>- Need to restore to previous state</h2>
+<h2>- Cluster is running but missing objects</h2>
+<p>echo "Scenario 3: Restore specific resources"</p>
+<h2>This requires a full etcd restore to get deleted resources back</h2>
+<h2>You cannot selectively restore individual objects from etcd backup</h2>
+<h2>1. Create backup of current state (in case you need to roll forward)</h2>
+ETCDCTL_API=3 etcdctl snapshot save /backup/pre-restore-$(date +%Y%m%d-%H%M%S).db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+<h2>2. Restore from backup that contains the deleted resources</h2>
+<h2>(Follow standard restore procedure)</h2>
+<h2>3. After restore, manually recreate any resources that were created</h2>
+<h2>   between the backup time and now (if needed)</h2></code></pre>
+<p>---</p>
+<h3>Backup Strategy and Best Practices</h3>
+<h4>Backup Frequency and Retention</h4>
+<pre><code><h2>Production backup strategy recommendations:</h2>
+<h2>1. Automated backups every 6 hours</h2>
+0 <em>/6 </em> <em> </em> /scripts/etcd-backup.sh
+<h2>2. Retention policy:</h2>
+<h2>- Hourly backups: Keep for 48 hours</h2>
+<h2>- Daily backups: Keep for 30 days  </h2>
+<h2>- Weekly backups: Keep for 90 days</h2>
+<h2>- Monthly backups: Keep for 1 year</h2>
+<h2>3. Multiple storage locations:</h2>
+<h2>- Local storage for quick recovery</h2>
+<h2>- Remote storage for disaster recovery</h2>
+<h2>- Cloud storage for long-term retention</h2></code></pre>
+<h4>Backup Storage Locations</h4>
+<pre><code><h2>Example: Backup to multiple locations</h2>
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup-multi-location
+  namespace: kube-system
+spec:
+  schedule: "0 <em>/6 </em> <em> </em>"  # Every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: etcd-backup
+            image: etcd-backup:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Create backup
+              export ETCDCTL_API=3
+              BACKUP_FILE="/tmp/etcd-snapshot-$(date +%Y%m%d-%H%M%S).db"
+              
+              etcdctl snapshot save $BACKUP_FILE \
+                --endpoints=https://127.0.0.1:2379 \
+                --cacert=/certs/ca.crt \
+                --cert=/certs/server.crt \
+                --key=/certs/server.key
+              
+              # Store locally
+              cp $BACKUP_FILE /backup/local/
+              
+              # Store in NFS
+              cp $BACKUP_FILE /backup/nfs/
+              
+              # Upload to S3
+              aws s3 cp $BACKUP_FILE s3://my-etcd-backups/$(date +%Y/%m/%d)/
+              
+              # Upload to Azure Blob
+              az storage blob upload --file $BACKUP_FILE \
+                --container-name etcd-backups \
+                --name $(date +%Y/%m/%d)/$(basename $BACKUP_FILE)
+              
+              # Cleanup local temp file
+              rm $BACKUP_FILE
+            volumeMounts:
+            - name: etcd-certs
+              mountPath: /certs
+            - name: local-backup
+              mountPath: /backup/local
+            - name: nfs-backup
+              mountPath: /backup/nfs
+          restartPolicy: OnFailure</code></pre>
+<h4>Testing Backup and Restore</h4>
+<pre><code>#!/bin/bash
+<h2>Backup/restore testing script for non-production</h2>
+<p>echo "Testing backup and restore procedures..."</p>
+<h2>1. Create test resources</h2>
+kubectl create namespace backup-test
+kubectl create deployment test-app --image=nginx -n backup-test
+kubectl create configmap test-config --from-literal=key=value -n backup-test
+<h2>2. Create backup</h2>
+BACKUP_FILE="/tmp/test-backup-$(date +%Y%m%d-%H%M%S).db"
+ETCDCTL_API=3 etcdctl snapshot save $BACKUP_FILE \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+<h2>3. Delete test resources</h2>
+kubectl delete namespace backup-test
+<h2>4. Verify deletion</h2>
+kubectl get namespace backup-test  # Should show "not found"
+<h2>5. Restore from backup</h2>
+<h2>(Follow standard restore procedure)</h2>
+<h2>6. Verify restoration</h2>
+kubectl get namespace backup-test  # Should exist again
+kubectl get deployments -n backup-test  # Should show test-app
+kubectl get configmap -n backup-test  # Should show test-config
+<p>echo "Backup/restore test completed successfully!"</code></pre></p>
+<p>---</p>
+<h3>Troubleshooting Backup and Restore</h3>
+<h4>Common Backup Issues</h4>
+<p>#### Issue 1: Authentication Failures
+<pre><code><h2>Error: "certificate verify failed" or "permission denied"</h2></p>
+<h2>Check etcd certificate paths</h2>
+ls -la /etc/kubernetes/pki/etcd/
+<h2>Should show: ca.crt, server.crt, server.key</h2>
+<h2>Verify certificate validity</h2>
+openssl x509 -in /etc/kubernetes/pki/etcd/server.crt -text -noout | grep -A 2 Validity
+<h2>Test etcd connectivity</h2>
+ETCDCTL_API=3 etcdctl endpoint health \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key</code></pre>
+<p>#### Issue 2: Backup File Corruption
+<pre><code><h2>Error: "snapshot file corrupted" during restore</h2></p>
+<h2>Verify backup file integrity</h2>
+file /backup/etcd-snapshot.db
+<h2>Should show: "data" or similar, not "ASCII text" or "empty"</h2>
+<h2>Check backup file size</h2>
+ls -lh /backup/etcd-snapshot.db
+<h2>Should be > 0 bytes, typically several MB</h2>
+<h2>Try to read backup metadata</h2>
+ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-snapshot.db --write-out=table
+<h2>Should show hash, revision, keys, size</h2></code></pre>
+<p>#### Issue 3: Insufficient Disk Space
+<pre><code><h2>Error: "no space left on device"</h2></p>
+<h2>Check available space</h2>
+df -h /backup
+df -h /var/lib/etcd
+<h2>Clean up old backups</h2>
+find /backup -name "etcd-snapshot-*.db" -mtime +7 -ls
+find /backup -name "etcd-snapshot-*.db" -mtime +7 -delete
+<h2>Use compression for backups</h2>
+gzip /backup/etcd-snapshot-$(date +%Y%m%d).db</code></pre>
+<h4>Common Restore Issues</h4>
+<p>#### Issue 1: Restore Fails with "cluster ID mismatch"
+<pre><code><h2>Error: "database snapshot integrity check failed"</h2></p>
+<h2>This happens when trying to restore to existing etcd data</h2>
+<h2>Solution: Ensure etcd data directory is empty/removed</h2>
+<p>sudo systemctl stop etcd  # or move static pod manifest
+sudo rm -rf /var/lib/etcd/*  # Clear existing data
+<h2>Then retry restore</h2></code></pre></p>
+<p>#### Issue 2: Restored Cluster Shows Wrong Data
+<pre><code><h2>Issue: Restore completed but cluster state is not as expected</h2></p>
+<h2>Check backup timestamp and contents</h2>
+ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-snapshot.db --write-out=table
+<h2>Verify you restored the correct backup</h2>
+ls -la /backup/
+<h2>Ensure you used the intended backup file</h2>
+<h2>Check if restore process completed fully</h2>
+kubectl get all --all-namespaces
+kubectl get pv  # Check persistent volumes
+kubectl get crd  # Check custom resource definitions</code></pre>
+<p>#### Issue 3: Nodes Not Rejoining Cluster
+<pre><code><h2>Issue: After restore, worker nodes show "NotReady"</h2></p>
+<h2>Check kubelet logs on worker nodes</h2>
+sudo journalctl -u kubelet -f
+<h2>Common causes:</h2>
+<h2>1. Node certificates expired</h2>
+<h2>2. Network connectivity issues</h2>
+<h2>3. Container runtime issues</h2>
+<h2>Solution: Re-join nodes to cluster</h2>
+kubeadm token create --print-join-command
+<h2>Run join command on affected nodes</h2></code></pre>
+<p>---</p>
+<h3>Exam-Specific Backup/Restore Tasks</h3>
+<h4>Common Exam Scenarios</h4>
+<p>#### Task 1: Create etcd Backup
+<pre><code><h2>Exam Task: "Create a backup of etcd and save it to /opt/backup/etcd-snapshot.db"</h2></p>
+<h2>Solution:</h2>
+export ETCDCTL_API=3
+<h2>Find etcd endpoint and certificates (common exam step)</h2>
+kubectl describe pod etcd-master -n kube-system | grep -E "listen-client-urls|cert-file|key-file|trusted-ca-file"
+<h2>Or check etcd static pod manifest</h2>
+cat /etc/kubernetes/manifests/etcd.yaml | grep -E "endpoints|cert|key"
+<h2>Create backup</h2>
+etcdctl snapshot save /opt/backup/etcd-snapshot.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+<h2>Verify backup</h2>
+etcdctl snapshot status /opt/backup/etcd-snapshot.db --write-out=table</code></pre>
+<p>#### Task 2: Restore from Backup
+<pre><code><h2>Exam Task: "etcd is corrupted. Restore from backup located at /opt/backup/etcd-snapshot.db"</h2></p>
+<h2>Solution:</h2>
+export ETCDCTL_API=3
+<h2>1. Stop kube-apiserver</h2>
+mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/
+<h2>2. Stop etcd  </h2>
+mv /etc/kubernetes/manifests/etcd.yaml /tmp/
+<h2>3. Backup existing data</h2>
+mv /var/lib/etcd /var/lib/etcd-backup
+<h2>4. Restore from snapshot</h2>
+etcdctl snapshot restore /opt/backup/etcd-snapshot.db \
+  --data-dir=/var/lib/etcd \
+  --name=master \
+  --initial-cluster=master=https://192.168.1.100:2380 \
+  --initial-advertise-peer-urls=https://192.168.1.100:2380
+<h2>5. Fix ownership</h2>
+chown -R etcd:etcd /var/lib/etcd
+<h2>6. Start etcd</h2>
+mv /tmp/etcd.yaml /etc/kubernetes/manifests/
+<h2>7. Start kube-apiserver  </h2>
+mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/
+<h2>8. Verify cluster works</h2>
+kubectl get nodes</code></pre>
+<p>#### Task 3: Automated Backup Setup
+<pre><code><h2>Exam Task: "Set up automated daily backups of etcd"</h2></p>
+<h2>Solution: Create cron job</h2>
+crontab -e
+<h2>Add line:</h2>
+0 2 <em> </em> * /usr/local/bin/etcd-backup.sh
+<h2>Create backup script</h2>
+cat > /usr/local/bin/etcd-backup.sh << 'EOF'
+#!/bin/bash
+export ETCDCTL_API=3
+etcdctl snapshot save /backup/etcd-$(date +%Y%m%d).db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+find /backup -name "etcd-*.db" -mtime +7 -delete
+EOF
+<p>chmod +x /usr/local/bin/etcd-backup.sh</code></pre></p>
+<h4>Quick Reference Commands</h4>
+<pre><code><h2>Essential etcd backup/restore commands for exam:</h2>
+<h2>Backup:</h2>
+ETCDCTL_API=3 etcdctl snapshot save /backup/snap.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+<h2>Restore:</h2>
+mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp/
+mv /etc/kubernetes/manifests/etcd.yaml /tmp/
+mv /var/lib/etcd /var/lib/etcd-backup
+ETCDCTL_API=3 etcdctl snapshot restore /backup/snap.db --data-dir=/var/lib/etcd
+chown -R etcd:etcd /var/lib/etcd
+mv /tmp/etcd.yaml /etc/kubernetes/manifests/
+mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/
+<h2>Verify:</h2>
+etcdctl snapshot status /backup/snap.db --write-out=table
+kubectl get nodes</code></pre>
+<p>---</p>
+<h3>Integration with Other CKA Topics</h3>
+<h4>Backup in Security Context</h4>
+<pre><code><h2>Backup includes all security configurations:</h2>
+<h2>- RBAC roles and bindings</h2>
+<h2>- ServiceAccounts and their tokens</h2>
+<h2>- Secrets and their encrypted data</h2>
+<h2>- NetworkPolicies and SecurityContexts</h2>
+<h2>After restore, verify security is intact:</h2>
+kubectl auth can-i create pods --as=system:serviceaccount:default:test
+kubectl get networkpolicies --all-namespaces
+kubectl get secrets --all-namespaces</code></pre>
+<h4>Backup and Pod Lifecycle</h4>
+<pre><code><h2>Backup captures current pod states, but not running containers</h2>
+<h2>After restore:</h2>
+<h2>- Pod specifications are restored</h2>
+<h2>- Containers will be recreated by kubelet</h2>
+<h2>- Data in emptyDir volumes is lost</h2>
+<h2>- PersistentVolume data persists (separate from etcd)</h2>
+<h2>Verify pods restart correctly after restore:</h2>
+kubectl get pods --all-namespaces
+kubectl describe pod <stuck-pod> # Check for any issues</code></pre>
+<h4>Backup and Cluster Components</h4>
+<pre><code><h2>etcd backup includes:</h2>
+<h2>- Node registrations and status</h2>
+<h2>- Component configurations</h2>
+<h2>- Resource quotas and limits</h2>
+<h2>After restore, check cluster health:</h2>
+kubectl get componentstatus
+kubectl get nodes
+kubectl top nodes  # Verify metrics still work</code></pre>
+<p>---</p>
+<h3>Conceptual Mastery Framework</h3>
+<h4>Understanding etcd as Cluster Memory</h4>
+etcd is the <strong>persistent memory</strong> of your cluster:
+<li><strong>Every kubectl apply</strong> results in data written to etcd</li>
+<li><strong>Every resource definition</strong> lives in etcd's key-value store</li>
+<li><strong>Cluster state recovery</strong> is impossible without etcd data</li>
+<li><strong>Backup = snapshot of entire cluster state</strong> at a point in time</li>
+<h4>Backup/Restore as Time Travel</h4>
+Think of backup/restore as <strong>time travel for your cluster</strong>:
+<li><strong>Backup captures a moment</strong> in cluster history</li>
+<li><strong>Restore rewinds cluster</strong> to that exact moment</li>
+<li><strong>Everything after backup time</strong> is lost unless separately preserved</li>
+<li><strong>Consistency is key</strong> - partial restores don't exist</li>
+<h4>Production Considerations</h4>
+Real-world backup/restore involves:
+<li><strong>Regular automated backups</strong> with proper retention</li>
+<li><strong>Multiple storage locations</strong> for disaster recovery</li>
+<li><strong>Tested restore procedures</strong> - untested backups are useless</li>
+<li><strong>Documentation and runbooks</strong> for emergency situations</li>
+<li><strong>Monitoring backup success</strong> and storage capacity</li>
+<p>---</p>
+<h3>Conceptual Mastery Checklist</h3>
+<p>✅ <strong>Understand etcd as the single source of truth for cluster state</strong>
+✅ <strong>Master the complete backup procedure with authentication</strong>
+✅ <strong>Know the detailed restore process including component management</strong>
+✅ <strong>Practice disaster recovery scenarios and troubleshooting</strong>
+✅ <strong>Implement automated backup strategies with proper retention</strong>
+✅ <strong>Integrate backup/restore with other cluster security and operational practices</strong>
+✅ <strong>Prepare for exam scenarios with quick, reliable execution</strong></p>
+<p>---</p>
+<h3>Final Integration: Complete CKA Mastery</h3>
+<p>This backup/restore guide completes your comprehensive CKA preparation. You now have deep understanding of:</p>
+<p>1. <strong>kubectl</strong> - The client interface and command patterns
+2. <strong>YAML Manifests</strong> - Declarative infrastructure definitions  
+3. <strong>Cluster Components</strong> - How the distributed system actually works
+4. <strong>Pod Lifecycle</strong> - Complete workload management from creation to termination
+5. <strong>Security</strong> - Multi-layered defense with RBAC, SecurityContext, and NetworkPolicies
+6. <strong>Backup/Restore</strong> - Data protection and disaster recovery procedures</p>
+<strong>Key Integration Points</strong>:
+<li><strong>kubectl</strong> commands interact with <strong>cluster components</strong> to manage <strong>pod lifecycle</strong></li>
+<li><strong>YAML manifests</strong> define desired state that <strong>controllers</strong> continuously reconcile</li>
+<li><strong>Security</strong> policies protect resources throughout their <strong>lifecycle</strong></li>
+<li><strong>Backup/restore</strong> preserves all <strong>configurations</strong> and <strong>state</strong> across the entire system</li>
+<strong>Exam Success Strategy</strong>:
+<li><strong>Practice the workflows</strong> until they're muscle memory</li>
+<li><strong>Understand the conceptual models</strong> behind each technology</li>
+<li><strong>Know the troubleshooting patterns</strong> for systematic problem-solving</li>
+<li><strong>Master the integration points</strong> where topics connect</li></ul>
+<p>You're now equipped with production-level Kubernetes expertise. The CKA exam will test your ability to apply this knowledge under pressure - trust your preparation and execute the procedures you've mastered.</p>
+<em>Backup/restore mastery means understanding that etcd is the memory of your cluster, and protecting that memory is protecting everything you've built. Every other Kubernetes skill is meaningless if you cannot recover from disaster.</em>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

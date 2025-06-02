@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Guide: Ingress Controllers, CoreDNS, and Advanced Networking - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Guide: Ingress Controllers, CoreDNS, and Advanced Networking</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Guide: Ingress Controllers, CoreDNS, and Advanced Networking</h2>
+<h3>Fundamental Conceptual Understanding</h3>
+<h4>The Ingress Philosophy</h4>
+<strong>The Problem Ingress Solves:</strong>
+<pre><code>Without Ingress (Service-based External Access):
+├── Each service needs its own LoadBalancer
+├── Multiple external IPs to manage
+├── No centralized SSL termination
+├── No path-based routing
+├── High cloud provider costs
+└── Complex DNS management
+<p>Service 1 → LoadBalancer 1 → External IP 1
+Service 2 → LoadBalancer 2 → External IP 2  
+Service 3 → LoadBalancer 3 → External IP 3</p>
+<p>With Ingress (Centralized Layer 7 Routing):
+├── Single external IP for multiple services
+├── Path-based and host-based routing
+├── Centralized SSL/TLS termination
+├── Advanced traffic management
+├── Cost-effective external access
+└── Unified configuration</p>
+<p>External Traffic → Ingress Controller → Multiple Services
+                       │
+                  Single Entry Point</code></pre></p>
+<strong>The Layer 7 Advantage:</strong>
+<pre><code>Layer 4 Load Balancing (Service LoadBalancer):
+├── Routes based on IP and port only
+├── No application protocol awareness
+├── Limited routing capabilities
+├── Simple but less flexible
+└── Example: TCP/UDP load balancing
+<p>Layer 7 Load Balancing (Ingress):
+├── Routes based on HTTP headers, paths, hostnames
+├── SSL termination and certificate management
+├── Advanced features: redirects, rewrites, auth
+├── Application-aware routing decisions
+└── Example: HTTP reverse proxy with routing rules</code></pre></p>
+<h4>Ingress Architecture Components</h4>
+<strong>The Three-Layer Ingress Model:</strong>
+<pre><code>Layer 1: Ingress Resource (Configuration)
+├── Kubernetes API object defining routing rules
+├── Declarative specification of desired routing
+├── Host-based and path-based routing rules
+├── TLS configuration and certificate references
+└── Backend service definitions
+<p>Layer 2: Ingress Controller (Implementation)  
+├── Watches Ingress resources for changes
+├── Implements routing rules in load balancer
+├── Manages certificates and TLS termination
+├── Provides metrics and health checks
+└── Vendor-specific implementation (nginx, traefik, etc.)</p>
+<p>Layer 3: Load Balancer (Infrastructure)
+├── Receives external traffic
+├── Forwards to Ingress Controller pods
+├── Provides external IP address
+├── Cloud provider integration
+└── High availability and failover</code></pre></p>
+<strong>Ingress Traffic Flow:</strong>
+<pre><code>External Client → DNS Resolution → Load Balancer → Ingress Controller → Service → Pod
+       │              │               │               │              │        │
+   example.com    External IP     NodePort/LB      nginx/traefik   ClusterIP  App
+   192.168.1.100   203.0.113.10      :80/:443        Pod           10.96.1.100  Container</code></pre>
+<h3>Ingress Controllers Deep Dive</h3>
+<h4>Popular Ingress Controller Comparison</h4>
+<strong>NGINX Ingress Controller:</strong>
+<pre><code>Architecture: nginx reverse proxy + Kubernetes controller
+├── Pros: Mature, feature-rich, high performance
+├── Cons: Complex configuration, resource intensive
+├── Use cases: Production websites, API gateways
+├── Features: SSL termination, path rewriting, rate limiting
+└── Deployment: DaemonSet or Deployment + Service
+<p>Configuration via annotations:
+├── nginx.ingress.kubernetes.io/rewrite-target
+├── nginx.ingress.kubernetes.io/ssl-redirect
+├── nginx.ingress.kubernetes.io/rate-limit
+└── nginx.ingress.kubernetes.io/auth-basic</code></pre></p>
+<strong>Traefik Ingress Controller:</strong>
+<pre><code>Architecture: Go-based reverse proxy with automatic service discovery
+├── Pros: Automatic HTTPS, dynamic configuration, built-in dashboard
+├── Cons: Newer, smaller ecosystem than nginx
+├── Use cases: Microservices, development environments
+├── Features: Let's Encrypt integration, circuit breakers, metrics
+└── Deployment: Deployment + Service + CRDs
+<p>Configuration via labels and CRDs:
+├── traefik.ingress.kubernetes.io/router.middlewares
+├── traefik.ingress.kubernetes.io/service.loadbalancer.method
+├── Native support for Kubernetes CRDs
+└── Web UI for configuration visualization</code></pre></p>
+<strong>AWS Load Balancer Controller:</strong>
+<pre><code>Architecture: Native AWS Application Load Balancer integration
+├── Pros: Deep AWS integration, cost-effective, managed
+├── Cons: AWS-specific, limited to AWS features
+├── Use cases: AWS-native applications, cost optimization
+├── Features: ALB/NLB provisioning, WAF integration, autoscaling
+└── Deployment: Deployment with AWS IAM permissions
+<p>Configuration via annotations:
+├── kubernetes.io/ingress.class: alb
+├── alb.ingress.kubernetes.io/scheme: internet-facing
+├── alb.ingress.kubernetes.io/target-type: ip
+└── alb.ingress.kubernetes.io/certificate-arn</code></pre></p>
+<h4>NGINX Ingress Controller Implementation</h4>
+<strong>Installation and Configuration:</strong>
+<pre><code><h2>NGINX Ingress Controller deployment</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+  namespace: ingress-nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ingress-nginx
+    spec:
+      serviceAccountName: nginx-ingress-serviceaccount
+      containers:
+      - name: nginx-ingress-controller
+        image: k8s.gcr.io/ingress-nginx/controller:v1.1.1
+        args:
+        - /nginx-ingress-controller
+        - --configmap=$(POD_NAMESPACE)/nginx-configuration
+        - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
+        - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
+        - --publish-service=$(POD_NAMESPACE)/ingress-nginx
+        - --annotations-prefix=nginx.ingress.kubernetes.io
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        - name: metrics
+          containerPort: 10254
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          periodSeconds: 1
+        resources:
+          requests:
+            cpu: 100m
+            memory: 90Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+<p>---
+<h2>Service to expose the ingress controller</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 443
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: ingress-nginx</code></pre></p>
+<strong>NGINX Global Configuration:</strong>
+<pre><code><h2>ConfigMap for global nginx settings</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-configuration
+  namespace: ingress-nginx
+data:
+  # Global nginx configuration
+  proxy-connect-timeout: "15"
+  proxy-send-timeout: "600"
+  proxy-read-timeout: "600"
+  proxy-buffers-number: "4"
+  proxy-buffer-size: "4k"
+  
+  # SSL configuration
+  ssl-protocols: "TLSv1.2 TLSv1.3"
+  ssl-ciphers: "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384"
+  ssl-prefer-server-ciphers: "true"
+  
+  # Performance tuning
+  worker-processes: "auto"
+  max-worker-connections: "16384"
+  worker-rlimit-nofile: "65536"
+  
+  # Logging
+  access-log-path: "/var/log/nginx/access.log"
+  error-log-path: "/var/log/nginx/error.log"
+  log-format-upstream: '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id'</code></pre>
+<h3>Ingress Resources and Routing</h3>
+<h4>Basic Ingress Configuration</h4>
+<strong>Simple Host-based Routing:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simple-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: api.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 80
+  - host: web.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80</code></pre>
+<strong>Path-based Routing:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: path-based-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - host: example.com
+    http:
+      paths:
+      # API routes
+      - path: /api(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 8080
+      
+      # Static assets
+      - path: /static(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: static-service
+            port:
+              number: 80
+              
+      # Default route (must be last)
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80</code></pre>
+<h4>TLS/SSL Configuration</h4>
+<strong>Basic TLS Setup:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tls-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - secure.example.com
+    - api.example.com
+    secretName: example-tls-secret
+  rules:
+  - host: secure.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: secure-service
+            port:
+              number: 443
+<p>---
+<h2>TLS certificate secret</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: example-tls-secret
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTi... # base64 encoded certificate
+  tls.key: LS0tLS1CRUdJTi... # base64 encoded private key</code></pre></p>
+<strong>Certificate Management with cert-manager:</strong>
+<pre><code><h2>Automatic certificate provisioning</h2>
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auto-tls-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - auto.example.com
+    secretName: auto-tls-secret  # Will be created automatically
+  rules:
+  - host: auto.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80
+<p>---
+<h2>ClusterIssuer for Let's Encrypt</h2>
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@example.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx</code></pre></p>
+<h4>Advanced Ingress Features</h4>
+<strong>Rate Limiting and Security:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: secured-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    
+    # Rate limiting
+    nginx.ingress.kubernetes.io/rate-limit: "100"  # requests per minute
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/rate-limit-connections: "10"
+    
+    # Authentication
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth-secret
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required"
+    
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    
+    # IP whitelisting
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,192.168.0.0/16"
+    
+spec:
+  rules:
+  - host: secure-api.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 8080
+<p>---
+<h2>Basic auth secret</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-auth-secret
+type: Opaque
+data:
+  auth: YWRtaW46JGFwcjEkSDY... # htpasswd generated hash</code></pre></p>
+<strong>Advanced Routing and Rewriting:</strong>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: advanced-routing
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    
+    # URL rewriting
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    
+    # Custom headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+    
+    # Session affinity
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "INGRESSCOOKIE"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "86400"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+    nginx.ingress.kubernetes.io/session-cookie-path: "/"
+    
+    # Load balancing method
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"
+    
+spec:
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      # API v1 routes
+      - path: /api/v1(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: api-v1-service
+            port:
+              number: 8080
+      
+      # API v2 routes (newer version)
+      - path: /api/v2(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: api-v2-service
+            port:
+              number: 8080
+      
+      # Legacy API redirect
+      - path: /legacy-api(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: api-v2-service  # Redirect to v2
+            port:
+              number: 8080</code></pre>
+<h3>CoreDNS Configuration and Management</h3>
+<h4>CoreDNS Architecture Deep Dive</h4>
+<strong>CoreDNS Plugin Chain:</strong>
+<pre><code>CoreDNS Server → Plugin Chain → Response
+     │              │             │
+   DNS Query    ┌─────────────┐   DNS Answer
+   (port 53)    │   errors    │   (A, AAAA, etc.)
+                │   health    │
+                │   ready     │
+                │ kubernetes  │  ← Service discovery
+                │ prometheus  │  ← Metrics
+                │  forward    │  ← Upstream DNS
+                │   cache     │  ← Response caching
+                │   loop      │  ← Loop detection
+                │  reload     │  ← Config reload
+                │loadbalance  │  ← Response balancing
+                └─────────────┘</code></pre>
+<strong>CoreDNS Configuration Structure:</strong>
+<pre><code>Corefile Syntax:
+<zone> {
+    <plugin> [parameters]
+    <plugin> [parameters]
+    ...
+}
+<p>Example zones:
+├── . (root zone - all queries)
+├── cluster.local (Kubernetes internal)
+├── consul.local (Consul service discovery)
+└── example.com (custom domain)</code></pre></p>
+<h4>Advanced CoreDNS Configuration</h4>
+<strong>Production CoreDNS Corefile:</strong>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    # Internal Kubernetes DNS
+    cluster.local:53 {
+        errors
+        health {
+            lameduck 5s
+        }
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        }
+        prometheus :9153
+        cache 30
+        loop
+        reload
+        loadbalance
+    }
+    
+    # Custom internal domain
+    company.internal:53 {
+        errors
+        file /etc/coredns/company.internal.db
+        prometheus :9153
+        cache 300
+        reload
+    }
+    
+    # External DNS with custom upstream
+    .:53 {
+        errors
+        health {
+            lameduck 5s
+        }
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        }
+        prometheus :9153
+        
+        # Custom upstream servers
+        forward . 8.8.8.8 8.8.4.4 {
+            max_concurrent 1000
+            except company.internal
+        }
+        
+        # Cache external queries longer
+        cache 300 {
+            success 9984 30
+            denial 9984 5
+        }
+        
+        loop
+        reload
+        loadbalance
+    }
+  
+  # Custom zone file
+  company.internal.db: |
+    $ORIGIN company.internal.
+    @    3600 IN SOA sns.dns.icann.org. noc.dns.icann.org. (
+                    2017042745 ; serial
+                    7200       ; refresh (2 hours)
+                    3600       ; retry (1 hour)
+                    1209600    ; expire (2 weeks)
+                    3600       ; minimum (1 hour)
+                    )
+    
+    @         IN A     10.1.1.1
+    www       IN A     10.1.1.10
+    api       IN A     10.1.1.20
+    database  IN A     10.1.1.30
+    
+    ; Service records
+    _http._tcp.www  IN SRV 0 5 80 www.company.internal.
+    _https._tcp.www IN SRV 0 5 443 www.company.internal.</code></pre>
+<strong>CoreDNS with External DNS Integration:</strong>
+<pre><code><h2>External DNS for cloud provider integration</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: external-dns
+  template:
+    metadata:
+      labels:
+        app: external-dns
+    spec:
+      serviceAccountName: external-dns
+      containers:
+      - name: external-dns
+        image: k8s.gcr.io/external-dns/external-dns:v0.10.2
+        args:
+        - --source=service
+        - --source=ingress
+        - --domain-filter=example.com  # Only manage this domain
+        - --provider=aws              # Cloud provider
+        - --policy=upsert-only        # Only create/update, never delete
+        - --aws-zone-type=public      # Public hosted zone
+        - --registry=txt
+        - --txt-owner-id=k8s-cluster-1
+        env:
+        - name: AWS_DEFAULT_REGION
+          value: us-east-1
+        resources:
+          requests:
+            memory: 50Mi
+            cpu: 50m
+          limits:
+            memory: 100Mi
+            cpu: 100m
+<p>---
+<h2>Service with external DNS annotation</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: web.example.com
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: web</code></pre></p>
+<h4>DNS Performance Optimization</h4>
+<strong>CoreDNS Scaling and Performance:</strong>
+<pre><code><h2>CoreDNS deployment with performance tuning</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coredns
+  namespace: kube-system
+spec:
+  replicas: 3  # Scale based on cluster size
+  selector:
+    matchLabels:
+      k8s-app: kube-dns
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-dns
+    spec:
+      priorityClassName: system-cluster-critical
+      serviceAccountName: coredns
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+      - name: coredns
+        image: k8s.gcr.io/coredns/coredns:v1.8.6
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: 170Mi
+            cpu: 1000m
+          requests:
+            cpu: 100m
+            memory: 70Mi
+        args: [ "-conf", "/etc/coredns/Corefile" ]
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/coredns
+          readOnly: true
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 9153
+          name: metrics
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8181
+            scheme: HTTP
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            add:
+            - NET_BIND_SERVICE
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+      dnsPolicy: Default
+      volumes:
+      - name: config-volume
+        configMap:
+          name: coredns
+          items:
+          - key: Corefile
+            path: Corefile
+<p>---
+<h2>Horizontal Pod Autoscaler for CoreDNS</h2>
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: coredns-hpa
+  namespace: kube-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: coredns
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80</code></pre></p>
+<strong>DNS Caching Strategies:</strong>
+<pre><code><h2>NodeLocal DNS Cache for improved performance</h2>
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-local-dns
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: node-local-dns
+  template:
+    metadata:
+      labels:
+        k8s-app: node-local-dns
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: node-local-dns
+      hostNetwork: true
+      dnsPolicy: Default
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      containers:
+      - name: node-cache
+        image: k8s.gcr.io/dns/k8s-dns-node-cache:1.21.1
+        resources:
+          requests:
+            cpu: 25m
+            memory: 5Mi
+        args: [ "-localip", "169.254.20.10,10.96.0.10", "-conf", "/etc/Corefile", "-upstreamsvc", "kube-dns-upstream" ]
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 9253
+          name: metrics
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            host: 169.254.20.10
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+        volumeMounts:
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
+          readOnly: false
+        - name: config-volume
+          mountPath: /etc/coredns
+        - name: kube-dns-config
+          mountPath: /etc/kube-dns
+      volumes:
+      - name: xtables-lock
+        hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+      - name: kube-dns-config
+        configMap:
+          name: kube-dns
+          optional: true
+      - name: config-volume
+        configMap:
+          name: node-local-dns
+          items:
+          - key: Corefile
+            path: Corefile.base</code></pre>
+<h3>CNI Plugin Selection and Management</h3>
+<h4>CNI Decision Framework</h4>
+<strong>CNI Selection Criteria:</strong>
+<pre><code>Performance Requirements:
+├── High throughput: Cilium (eBPF), Calico (native routing)
+├── Low latency: Calico BGP, host networking
+├── Standard performance: Flannel, Weave
+└── Development/testing: Bridge, host-local
+<p>Security Requirements:
+├── Network policies: Calico, Cilium, Weave
+├── Encryption: Weave (mesh), Cilium (WireGuard), service mesh
+├── Micro-segmentation: Calico (GlobalNetworkPolicy), Cilium (L7 policies)
+└── Zero-trust: Service mesh (Istio, Linkerd) with CNI</p>
+<p>Operational Complexity:
+├── Simple setup: Flannel, kindnet
+├── Moderate complexity: Calico, Weave
+├── High complexity: Cilium, custom solutions
+└── Cloud-managed: Provider CNI (AWS VPC, GKE, AKS)</p>
+<p>Infrastructure Requirements:
+├── BGP support: Calico native routing
+├── VXLAN overlay: Flannel, Calico IPIP
+├── Cloud integration: Provider-specific CNI
+└── On-premises: Calico, Cilium, Weave</code></pre></p>
+<strong>Network Policy Support Matrix:</strong>
+<pre><code>CNI Plugin    | L3/L4 Policies | L7 Policies | Encryption | BGP
+------------- | -------------- | ----------- | ---------- | ---
+Flannel       | ❌             | ❌          | ❌         | ❌
+Calico        | ✅             | ✅*         | 🔶         | ✅
+Cilium        | ✅             | ✅          | ✅         | 🔶
+Weave         | ✅             | ❌          | ✅         | ❌
+AWS VPC CNI   | ✅             | ❌          | 🔶         | ❌
+<p>✅ = Full support
+🔶 = Partial/addon support  
+❌ = Not supported
+* = Requires Calico Enterprise</code></pre></p>
+<h4>Advanced CNI Configuration</h4>
+<strong>Calico with BGP Configuration:</strong>
+<pre><code><h2>Calico installation manifest</h2>
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    # IP pool configuration
+    ipPools:
+    - blockSize: 26           # /26 blocks per node (64 IPs)
+      cidr: 10.244.0.0/16    # Pod network CIDR
+      encapsulation: None     # No overlay, pure BGP routing
+      natOutgoing: Enabled    # SNAT for outbound traffic
+      nodeSelector: all()
+    
+    # BGP configuration
+    bgp: Enabled
+    
+    # Multi-interface configuration
+    nodeAddressAutodetectionV4:
+      interface: eth0          # Primary interface for BGP
+    
+    # IP-in-IP configuration for cross-subnet
+    ipipMode: CrossSubnet     # Only use IPIP across subnets
+    vxlanMode: Never          # Disable VXLAN overlay
+<p>---
+<h2>BGP Peer configuration</h2>
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: rack1-tor
+spec:
+  peerIP: 192.168.1.1        # Top-of-rack switch IP
+  asNumber: 65001            # Switch AS number
+  node: rack1-node1          # Specific node peering</p>
+<p>---
+<h2>Global BGP configuration</h2>
+apiVersion: projectcalico.org/v3
+kind: BGPConfiguration
+metadata:
+  name: default
+spec:
+  logSeverityScreen: Info
+  asNumber: 65000            # Cluster AS number
+  serviceClusterIPs:
+  - cidr: 10.96.0.0/12       # Advertise service CIDR
+  serviceExternalIPs:
+  - cidr: 203.0.113.0/24     # Advertise external IPs</code></pre></p>
+<strong>Cilium with eBPF Configuration:</strong>
+<pre><code><h2>Cilium DaemonSet configuration</h2>
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cilium
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cilium
+  template:
+    metadata:
+      labels:
+        k8s-app: cilium
+    spec:
+      serviceAccountName: cilium
+      hostNetwork: true
+      containers:
+      - name: cilium-agent
+        image: quay.io/cilium/cilium:v1.11.2
+        imagePullPolicy: IfNotPresent
+        command:
+        - cilium-agent
+        args:
+        - --config-dir=/tmp/cilium/config-map
+        - --debug=$(CILIUM_DEBUG)
+        env:
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CILIUM_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              key: debug
+              name: cilium-config
+              optional: true
+        - name: CILIUM_CNI_CHAINING_MODE
+          valueFrom:
+            configMapKeyRef:
+              key: cni-chaining-mode
+              name: cilium-config
+              optional: true
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /cni-uninstall.sh
+        livenessProbe:
+          httpGet:
+            host: 127.0.0.1
+            path: /healthz
+            port: 9876
+            scheme: HTTP
+            httpHeaders:
+            - name: brief
+              value: "true"
+          failureThreshold: 10
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            host: 127.0.0.1
+            path: /healthz
+            port: 9876
+            scheme: HTTP
+            httpHeaders:
+            - name: brief
+              value: "true"
+          failureThreshold: 3
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        volumeMounts:
+        - mountPath: /sys/fs/bpf
+          name: bpf-maps
+        - mountPath: /var/run/cilium
+          name: cilium-run
+        - mountPath: /host/opt/cni/bin
+          name: cni-path
+        - mountPath: /host/etc/cni/net.d
+          name: etc-cni-netd
+        - mountPath: /tmp/cilium/config-map
+          name: cilium-config-path
+          readOnly: true
+        - mountPath: /lib/modules
+          name: lib-modules
+          readOnly: true
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_MODULE
+          privileged: true
+      hostNetwork: true
+      restartPolicy: Always
+      priorityClassName: system-node-critical
+      serviceAccount: cilium
+      serviceAccountName: cilium
+      terminationGracePeriodSeconds: 1
+      tolerations:
+      - operator: Exists
+      volumes:
+      - hostPath:
+          path: /var/run/cilium
+          type: DirectoryOrCreate
+        name: cilium-run
+      - hostPath:
+          path: /sys/fs/bpf
+          type: DirectoryOrCreate
+        name: bpf-maps
+      - hostPath:
+          path: /opt/cni/bin
+          type: DirectoryOrCreate
+        name: cni-path
+      - hostPath:
+          path: /etc/cni/net.d
+          type: DirectoryOrCreate
+        name: etc-cni-netd
+      - configMap:
+          name: cilium-config
+        name: cilium-config-path
+      - hostPath:
+          path: /lib/modules
+        name: lib-modules
+      - hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+        name: xtables-lock
+<p>---
+<h2>Cilium configuration</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cilium-config
+  namespace: kube-system
+data:
+  # Core configuration
+  debug: "false"
+  enable-ipv4: "true"
+  enable-ipv6: "false"
+  
+  # eBPF configuration
+  enable-bpf-masquerade: "true"
+  enable-xt-socket-fallback: "true"
+  install-iptables-rules: "true"
+  
+  # Network configuration
+  cluster-name: k8s-cluster
+  cluster-id: "0"
+  cluster-pool-ipv4-cidr: "10.244.0.0/16"
+  cluster-pool-ipv4-mask-size: "24"
+  
+  # Service mesh features
+  enable-l7-proxy: "true"
+  enable-envoy-config: "true"
+  
+  # Hubble observability
+  enable-hubble: "true"
+  hubble-listen-address: ":4244"
+  hubble-metrics-server: ":9091"
+  hubble-metrics: "dns,drop,tcp,flow,icmp,http"
+  
+  # Security features
+  enable-policy: "default"
+  policy-enforcement-mode: "default"
+  
+  # Performance tuning
+  tunnel: "disabled"                    # Use native routing
+  enable-endpoint-routes: "true"        # Program per-endpoint routes
+  auto-direct-node-routes: "true"       # Automatic node route detection</code></pre></p>
+<h3>Troubleshooting Advanced Networking</h3>
+<h4>Ingress Troubleshooting</h4>
+<strong>Systematic Ingress Debugging:</strong>
+<pre><code><h2>Step 1: Check ingress resource</h2>
+kubectl get ingress
+kubectl describe ingress <ingress-name>
+<h2>Step 2: Verify ingress controller</h2>
+kubectl get pods -n ingress-nginx
+kubectl logs -n ingress-nginx <controller-pod>
+<h2>Step 3: Check service and endpoints</h2>
+kubectl get svc,endpoints <service-name>
+<h2>Step 4: Test internal connectivity</h2>
+kubectl run test --image=busybox --rm -it -- \
+  wget -qO- http://<service-name>.<namespace>
+<h2>Step 5: Check external DNS</h2>
+nslookup <hostname>
+dig <hostname>
+<h2>Step 6: Test external connectivity</h2>
+curl -v http://<hostname>/path
+curl -v https://<hostname>/path -k
+<h2>Step 7: Check TLS certificates</h2>
+openssl s_client -connect <hostname>:443 -servername <hostname></code></pre>
+<strong>Common Ingress Issues:</strong>
+<strong>Issue 1: 404 Not Found</strong>
+<pre><code><h2>Check ingress rules</h2>
+kubectl get ingress <name> -o yaml | grep -A 10 rules:
+<h2>Verify path matching</h2>
+kubectl describe ingress <name> | grep Path:
+<h2>Check annotation syntax</h2>
+kubectl get ingress <name> -o yaml | grep annotations: -A 10</code></pre>
+<strong>Issue 2: SSL/TLS Problems</strong>
+<pre><code><h2>Check TLS secret</h2>
+kubectl get secret <tls-secret-name> -o yaml
+<h2>Verify certificate validity</h2>
+kubectl get secret <tls-secret-name> -o jsonpath='{.data.tls\.crt}' | \
+  base64 -d | openssl x509 -text -noout
+<h2>Check certificate expiration</h2>
+kubectl get secret <tls-secret-name> -o jsonpath='{.data.tls\.crt}' | \
+  base64 -d | openssl x509 -enddate -noout</code></pre>
+<h4>DNS Troubleshooting</h4>
+<strong>CoreDNS Debugging:</strong>
+<pre><code><h2>Check CoreDNS pod status</h2>
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+<h2>View CoreDNS logs</h2>
+kubectl logs -n kube-system -l k8s-app=kube-dns
+<h2>Check CoreDNS configuration</h2>
+kubectl get configmap coredns -n kube-system -o yaml
+<h2>Test DNS resolution from pod</h2>
+kubectl run dns-debug --image=busybox --rm -it -- nslookup kubernetes.default
+<h2>Check DNS performance</h2>
+kubectl run dns-perf --image=busybox --rm -it -- \
+  sh -c 'time nslookup google.com && time nslookup kubernetes.default'
+<h2>Verify DNS policy</h2>
+kubectl run test-pod --image=busybox --dry-run=client -o yaml | \
+  grep dnsPolicy</code></pre>
+<h4>CNI Troubleshooting</h4>
+<strong>CNI Plugin Debugging:</strong>
+<pre><code><h2>Check CNI plugin pods</h2>
+kubectl get pods -n kube-system | grep -E '(flannel|calico|cilium|weave)'
+<h2>View CNI plugin logs</h2>
+kubectl logs -n kube-system <cni-pod-name>
+<h2>Check CNI configuration</h2>
+ls -la /etc/cni/net.d/
+cat /etc/cni/net.d/*.conf
+<h2>Test pod networking</h2>
+kubectl exec -it <pod-name> -- ip addr show
+kubectl exec -it <pod-name> -- ip route show
+<h2>Check cross-node connectivity</h2>
+kubectl run test-1 --image=busybox -- sleep 3600
+kubectl run test-2 --image=busybox -- sleep 3600
+kubectl exec test-1 -- ping <test-2-pod-ip></code></pre>
+<h3>Exam Tips & Quick Reference</h3>
+<h4>⚡ Essential Commands</h4>
+<pre><code><h2>Ingress management</h2>
+kubectl create ingress simple --rule="host/path=service:port"
+kubectl get ingress,svc,endpoints
+<h2>DNS testing</h2>
+kubectl run dns-test --image=busybox --rm -it -- nslookup service-name
+<h2>Network debugging</h2>
+kubectl run netshoot --image=nicolaka/netshoot --rm -it -- bash
+kubectl exec -it pod-name -- netstat -tlnp
+<h2>TLS certificate management</h2>
+kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key</code></pre>
+<h4>🎯 Common Exam Scenarios</h4>
+<strong>Scenario 1: Create Ingress with TLS</strong>
+<pre><code><h2>Create TLS secret</h2>
+kubectl create secret tls webapp-tls --cert=webapp.crt --key=webapp.key
+<h2>Create ingress</h2>
+kubectl create ingress webapp --rule="webapp.example.com/*=webapp-svc:80,tls=webapp-tls"</code></pre>
+<strong>Scenario 2: Debug Service Connectivity</strong>
+<pre><code><h2>Check service chain</h2>
+kubectl get svc,endpoints webapp-svc
+kubectl get pods -l app=webapp
+kubectl run debug --image=busybox --rm -it -- telnet webapp-svc 80</code></pre>
+<h4>🚨 Critical Gotchas</h4>
+<p>1. <strong>Ingress Class</strong>: Must specify correct ingress class annotation
+2. <strong>Path Types</strong>: Prefix vs Exact vs ImplementationSpecific behavior
+3. <strong>TLS Secret Format</strong>: Must be kubernetes.io/tls type with tls.crt and tls.key
+4. <strong>DNS Caching</strong>: DNS queries may be cached, restart pods to clear
+5. <strong>CNI Plugin Health</strong>: Network issues often trace to CNI plugin problems
+6. <strong>Service Endpoints</strong>: Check endpoints match pod labels exactly
+7. <strong>Network Policies</strong>: May block expected traffic if enabled</p>
+<h3>WHY This Matters - The Deeper Philosophy</h3>
+<h4>Application Delivery Evolution</h4>
+<strong>The Historical Progression:</strong>
+<pre><code>Monolithic Era:    Single server, single domain, simple routing
+SOA Era:          Multiple services, ESB routing, complex integration
+Microservices:    Distributed services, API gateways, service mesh
+Cloud-Native:     Dynamic routing, auto-scaling, observability
+<p>Ingress represents the evolution toward:
+├── Declarative traffic management
+├── Application-aware routing
+├── Automated certificate management
+├── Integrated security policies
+└── Observable request flows</code></pre></p>
+<strong>The Network as Code Philosophy:</strong>
+<pre><code>Traditional Network Management:
+├── Manual configuration changes
+├── Imperative network commands  
+├── Static routing rules
+├── Siloed network/application teams
+└── Change fear and rigidity
+<p>Kubernetes Network Management:
+├── Declarative network policies
+├── Version-controlled configurations
+├── Dynamic routing based on application state
+├── DevOps-driven network changes
+└── Infrastructure as Code principles</code></pre></p>
+<p>Understanding advanced Kubernetes networking teaches you how to build <strong>scalable, secure, and observable</strong> application delivery platforms. This knowledge is essential for the CKA exam and critical for operating modern production workloads that require sophisticated traffic management, security policies, and reliable service discovery.</p>
+<p>The networking layer is where applications meet infrastructure, making this knowledge fundamental for anyone designing or operating cloud-native systems at scale.</p>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

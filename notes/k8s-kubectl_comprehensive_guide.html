@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kubectl Commands - Comprehensive Study Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>kubectl Commands - Comprehensive Study Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>kubectl Commands - Comprehensive Study Guide</h2>
+<h3>WHY kubectl Matters (Conceptual Foundation)</h3>
+<h4>The Control Plane Interface</h4>
+kubectl is your <strong>primary interface</strong> to the Kubernetes API server. Understanding this conceptually is crucial:
+<ul><li><strong>kubectl is NOT Kubernetes</strong> - it's a client that sends HTTP requests to the API server</li>
+<li><strong>Everything is an API call</strong> - every kubectl command translates to REST API calls</li>
+<li><strong>Declarative vs Imperative</strong> - kubectl supports both paradigms, critical for exam efficiency</li>
+<li><strong>State reconciliation</strong> - kubectl commands trigger the control plane's reconciliation loops</li>
+<h4>Exam Context: Why kubectl Mastery is Critical</h4>
+<li><strong>60% of exam tasks</strong> require kubectl proficiency</li>
+<li><strong>Time pressure</strong> - knowing the right flags saves precious minutes</li>
+<li><strong>No autocomplete</strong> - you must memorize syntax</li>
+<li><strong>Debugging skills</strong> - kubectl is your primary troubleshooting tool</li>
+<p>---</p>
+<h3>Core Architectural Understanding</h3>
+<h4>How kubectl Works</h4>
+<pre><code>kubectl get pods
+<h2>Translates to: GET /api/v1/namespaces/default/pods</h2>
+<h2>Flow: kubectl → kube-apiserver → etcd → response back</h2></code></pre>
+<strong>Key Concept</strong>: kubectl doesn't "do" anything - it's a sophisticated HTTP client that formats API requests.
+<h4>Command Structure Pattern</h4>
+<pre><code>kubectl [COMMAND] [TYPE] [NAME] [FLAGS]
+<h2>      ↓       ↓     ↓      ↓</h2>
+<h2>   action  resource name  options</h2></code></pre>
+<p>---</p>
+<h3>Essential Command Categories</h3>
+<h4>1. Resource Management (CRUD Operations)</h4>
+<p>#### Creating Resources
+<pre><code><h2>Imperative creation (exam-friendly for speed)</h2>
+kubectl create deployment nginx --image=nginx
+kubectl create service clusterip my-svc --tcp=80:80
+kubectl create configmap app-config --from-literal=key1=value1</p>
+<h2>Declarative creation (production-friendly)</h2>
+kubectl apply -f deployment.yaml
+kubectl apply -f . # Apply all YAML files in directory
+kubectl apply -k . # Kustomize application</code></pre>
+<strong>Gotcha</strong>: <code>create</code> fails if resource exists, <code>apply</code> updates it. Use <code>apply</code> for idempotency.
+<p>#### Reading Resources
+<pre><code><h2>Basic listing</h2>
+kubectl get pods
+kubectl get pods -o wide # More details
+kubectl get pods -o yaml # Full YAML output
+kubectl get pods -o json | jq '.items[0].metadata.name' # JSON with parsing</p>
+<h2>Filtering and selection</h2>
+kubectl get pods --selector=app=nginx
+kubectl get pods -l app=nginx,version=v1
+kubectl get pods --field-selector=status.phase=Running
+kubectl get pods --show-labels
+<h2>Cross-namespace operations</h2>
+kubectl get pods --all-namespaces
+kubectl get pods -A # Shorthand for all namespaces</code></pre>
+<strong>Pro Tip</strong>: Learn output formats (-o): <code>wide</code>, <code>yaml</code>, <code>json</code>, <code>jsonpath</code>, <code>custom-columns</code>
+<p>#### Updating Resources
+<pre><code><h2>Direct edits (opens default editor)</h2>
+kubectl edit deployment nginx</p>
+<h2>Patch operations</h2>
+kubectl patch deployment nginx -p '{"spec":{"replicas":3}}'
+kubectl patch pod nginx --type='json' -p='[{"op": "replace", "path": "/spec/containers/0/image", "value":"nginx:1.20"}]'
+<h2>Scaling</h2>
+kubectl scale deployment nginx --replicas=5
+kubectl scale --replicas=3 -f deployment.yaml</code></pre>
+<p>#### Deleting Resources
+<pre><code><h2>Single resource</h2>
+kubectl delete pod nginx
+kubectl delete deployment nginx --cascade=foreground # Wait for dependent resources</p>
+<h2>Multiple resources</h2>
+kubectl delete pods,services -l app=nginx
+kubectl delete -f deployment.yaml
+kubectl delete all -l app=nginx # Deletes most resource types
+<h2>Force deletion (use carefully)</h2>
+kubectl delete pod nginx --force --grace-period=0</code></pre>
+<strong>Gotcha</strong>: <code>--cascade=orphan</code> leaves dependent resources running (useful for Pod disruption testing).
+<h4>2. Inspection and Debugging</h4>
+<p>#### Detailed Resource Information
+<pre><code><h2>Describe (human-readable, includes events)</h2>
+kubectl describe pod nginx
+kubectl describe node worker-1</p>
+<h2>Logs</h2>
+kubectl logs nginx
+kubectl logs nginx -c container-name # Multi-container pods
+kubectl logs nginx --previous # Previous container instance
+kubectl logs -f nginx # Follow logs real-time
+kubectl logs nginx --since=1h # Time-based filtering</code></pre>
+<p>#### Interactive Debugging
+<pre><code><h2>Execute commands in pods</h2>
+kubectl exec nginx -- ls /usr/share/nginx/html
+kubectl exec -it nginx -- /bin/bash</p>
+<h2>Port forwarding for local access</h2>
+kubectl port-forward pod/nginx 8080:80
+kubectl port-forward service/nginx 8080:80
+<h2>File operations</h2>
+kubectl cp nginx:/etc/nginx/nginx.conf ./nginx.conf
+kubectl cp ./app.jar nginx:/app/</code></pre>
+<h4>3. Cluster Information and Context</h4>
+<p>#### Context Management
+<pre><code><h2>View contexts</h2>
+kubectl config get-contexts
+kubectl config current-context</p>
+<h2>Switch contexts</h2>
+kubectl config use-context production-cluster
+<h2>Namespace operations</h2>
+kubectl config set-context --current --namespace=kube-system
+kubectl get pods # Now defaults to kube-system namespace</code></pre>
+<p>#### Cluster inspection
+<pre><code><h2>Cluster information</h2>
+kubectl cluster-info
+kubectl cluster-info dump # Comprehensive cluster state</p>
+<h2>API resources</h2>
+kubectl api-resources # List all available resource types
+kubectl api-versions # List API versions
+kubectl explain pod.spec.containers # API documentation</code></pre>
+<p>---</p>
+<h3>Advanced kubectl Patterns</h3>
+<h4>1. JSONPath and Custom Columns</h4>
+<pre><code><h2>Extract specific fields</h2>
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+kubectl get pods -o jsonpath='{.items[*].status.podIP}'
+<h2>Custom columns (table format)</h2>
+kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,IP:.status.podIP
+<h2>Sorting</h2>
+kubectl get pods --sort-by=.metadata.creationTimestamp
+kubectl get pods --sort-by=.status.startTime</code></pre>
+<h4>2. Resource Generators (Exam Gold)</h4>
+<pre><code><h2>Generate YAML without creating</h2>
+kubectl create deployment nginx --image=nginx --dry-run=client -o yaml > deployment.yaml
+<h2>Create and save simultaneously</h2>
+kubectl create service clusterip my-svc --tcp=80:80 --dry-run=client -o yaml | kubectl apply -f -
+<h2>Complex resource generation</h2>
+kubectl create cronjob hello --image=busybox --schedule="<em>/1 </em> <em> </em> *" -- echo hello</code></pre>
+<h4>3. Bulk Operations</h4>
+<pre><code><h2>Apply labels to multiple resources</h2>
+kubectl label pods -l app=nginx version=v1
+<h2>Remove labels</h2>
+kubectl label pods nginx version-
+<h2>Annotations</h2>
+kubectl annotate pods nginx description="Web server pod"</code></pre>
+<p>---</p>
+<h3>Critical Exam Strategies</h3>
+<h4>1. Time-Saving Aliases and Shortcuts</h4>
+<pre><code><h2>Essential aliases to memorize</h2>
+alias k=kubectl
+alias kaf='kubectl apply -f'
+alias kdel='kubectl delete'
+alias kdes='kubectl describe'
+alias kex='kubectl exec -it'
+alias klog='kubectl logs'
+<h2>Use -o yaml --dry-run=client religiously</h2>
+k create deploy nginx --image=nginx -o yaml --dry-run=client</code></pre>
+<h4>2. Imperative vs Declarative Decision Matrix</h4>
+<strong>Use Imperative when</strong>:
+<li>Creating simple resources quickly</li>
+<li>Generating YAML templates</li>
+<li>One-off debugging tasks</li>
+<li>Time pressure in exam</li>
+<strong>Use Declarative when</strong>:
+<li>Complex multi-resource applications</li>
+<li>Need version control</li>
+<li>Production environments</li>
+<li>Updating existing resources</li></ul>
+<h4>3. Common Exam Gotchas</h4>
+<p>#### Namespace Awareness
+<pre><code><h2>Always specify namespace or set context</h2>
+kubectl get pods -n kube-system
+kubectl config set-context --current --namespace=target-ns</code></pre></p>
+<p>#### Resource Naming Conventions
+<pre><code><h2>Use consistent, predictable naming</h2>
+kubectl create deployment web-app --image=nginx
+kubectl expose deployment web-app --port=80 --target-port=8080</code></pre></p>
+<p>#### Validation and Testing
+<pre><code><h2>Always validate your work</h2>
+kubectl get all -l app=your-app
+kubectl describe pod pod-name # Check events section
+kubectl logs pod-name # Verify application startup</code></pre></p>
+<p>---</p>
+<h3>Troubleshooting Patterns</h3>
+<h4>1. Pod Issues</h4>
+<pre><code><h2>Pod won't start</h2>
+kubectl describe pod problem-pod # Check events
+kubectl logs problem-pod --previous # Previous instance logs
+<h2>Resource constraints</h2>
+kubectl top pods # Requires metrics-server
+kubectl describe node # Check allocatable resources</code></pre>
+<h4>2. Service Discovery</h4>
+<pre><code><h2>Test service connectivity</h2>
+kubectl run test-pod --image=busybox -it --rm -- nslookup service-name
+kubectl run test-pod --image=nginx:alpine -it --rm -- wget -qO- service-name</code></pre>
+<h4>3. Network Debugging</h4>
+<pre><code><h2>Pod-to-pod communication</h2>
+kubectl exec pod1 -- ping pod2-ip
+kubectl exec pod1 -- nc -zv service-name port
+<h2>DNS resolution</h2>
+kubectl exec pod1 -- nslookup kubernetes.default.svc.cluster.local</code></pre>
+<p>---</p>
+<h3>Performance and Efficiency</h3>
+<h4>1. Resource Queries</h4>
+<pre><code><h2>Efficient filtering</h2>
+kubectl get pods --field-selector=status.phase!=Running
+kubectl get events --sort-by='.lastTimestamp'
+<h2>Resource usage</h2>
+kubectl top pods --sort-by=cpu
+kubectl top pods --sort-by=memory</code></pre>
+<h4>2. Batch Operations</h4>
+<pre><code><h2>Process multiple files</h2>
+kubectl apply -f ./manifests/
+kubectl delete -f ./manifests/ --ignore-not-found=true
+<h2>Label-based operations</h2>
+kubectl delete pods -l app=old-version
+kubectl rollout restart deployment -l tier=frontend</code></pre>
+<p>---</p>
+<h3>Security Considerations</h3>
+<h4>1. RBAC Awareness</h4>
+<pre><code><h2>Check permissions</h2>
+kubectl auth can-i create pods
+kubectl auth can-i create pods --as=system:serviceaccount:default:my-sa
+<h2>Impersonation for testing</h2>
+kubectl get pods --as=user1
+kubectl get pods --as=system:serviceaccount:namespace:sa-name</code></pre>
+<h4>2. Secure Practices</h4>
+<pre><code><h2>Use specific namespaces</h2>
+kubectl apply -f deployment.yaml -n production
+<h2>Avoid --force unless necessary</h2>
+kubectl delete pod stuck-pod --force --grace-period=0 # Last resort only</code></pre>
+<p>---</p>
+<h3>Conceptual Mastery Checklist</h3>
+<p>✅ <strong>Understand kubectl as an API client, not the cluster itself</strong>
+✅ <strong>Know when to use imperative vs declarative approaches</strong>
+✅ <strong>Master resource lifecycle: create → apply → patch → delete</strong>
+✅ <strong>Internalize JSONPath for complex data extraction</strong>
+✅ <strong>Practice troubleshooting workflows with describe/logs/exec</strong>
+✅ <strong>Memorize time-saving flags and output formats</strong>
+✅ <strong>Understand kubectl's role in the broader Kubernetes ecosystem</strong></p>
+<p>---</p>
+<em>This depth of kubectl mastery provides the foundation for all other Kubernetes operations. Every advanced topic builds upon these fundamental command patterns.</em>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

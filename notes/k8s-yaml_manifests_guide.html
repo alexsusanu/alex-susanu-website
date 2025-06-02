@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAML Manifests - Comprehensive Study Guide - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>YAML Manifests - Comprehensive Study Guide</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>YAML Manifests - Comprehensive Study Guide</h2>
+<h3>WHY YAML Manifests Matter (Conceptual Foundation)</h3>
+<h4>The Infrastructure as Code Paradigm</h4>
+YAML manifests are <strong>declarative infrastructure definitions</strong> - the DNA of your Kubernetes applications:
+<ul><li><strong>Desired State Declaration</strong> - You describe WHAT you want, not HOW to achieve it</li>
+<li><strong>API Object Blueprints</strong> - Every manifest creates or modifies API objects in etcd</li>
+<li><strong>Reproducible Infrastructure</strong> - Same manifest = same result across environments</li>
+<li><strong>Version Control Integration</strong> - Infrastructure changes tracked like code</li>
+<li><strong>GitOps Foundation</strong> - Manifests enable automated deployment pipelines</li>
+<h4>Exam Context: Why YAML Mastery is Critical</h4>
+<li><strong>70% of exam tasks</strong> involve writing or modifying YAML</li>
+<li><strong>No syntax highlighting</strong> - you must know structure by heart</li>
+<li><strong>Complex nested relationships</strong> - understanding object hierarchy is crucial</li>
+<li><strong>Troubleshooting broken manifests</strong> - rapid YAML debugging skills essential</li>
+<li><strong>Template generation</strong> - converting kubectl commands to production-ready YAML</li>
+<p>---</p>
+<h3>Core Architectural Understanding</h3>
+<h4>Kubernetes API Object Model</h4>
+Every YAML manifest represents a <strong>desired state declaration</strong> to the API server:
+<pre><code><h2>This is NOT just configuration - it's a state transition request</h2>
+apiVersion: apps/v1  # Which API group handles this?
+kind: Deployment     # What type of object?
+metadata:           # How to identify this object?
+  name: web-app
+  namespace: production
+spec:               # What is the desired state?
+  replicas: 3
+  # ... more spec details
+status:             # What is the current state? (managed by controllers)
+  # Never write this section - it's controller-managed</code></pre>
+<strong>Key Concept</strong>: manifests define <code>spec</code> (desired), controllers reconcile to achieve it, and populate <code>status</code> (actual).
+<h4>YAML Syntax Foundation for Kubernetes</h4>
+<pre><code><h2>Indentation is CRITICAL (2 spaces standard)</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: example-pod
+  labels:           # Key-value pairs
+    app: web
+    tier: frontend
+  annotations:      # Extended metadata
+    description: "Main web application pod"
+spec:
+  containers:       # Array of objects
+  - name: web       # Array item starts with dash
+    image: nginx:1.20
+    ports:
+    - containerPort: 80
+      protocol: TCP
+  - name: sidecar   # Second container
+    image: busybox
+    command: ["sleep", "3600"]</code></pre>
+<strong>Critical YAML Rules</strong>:
+<li><strong>Indentation = hierarchy</strong> (spaces only, never tabs)</li>
+<li><strong>Hyphens (-) = array items</strong></li>
+<li><strong>Colons (:) = key-value pairs</strong></li>
+<li><strong>Quotes</strong> preserve strings with special characters</li>
+<p>---</p>
+<h3>Essential Manifest Patterns</h3>
+<h4>1. Pod Manifests (Building Block)</h4>
+<p>#### Basic Pod Structure
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: basic-pod
+  namespace: default
+  labels:
+    app: myapp
+    version: v1
+spec:
+  containers:
+  - name: main-container
+    image: nginx:1.20
+    ports:
+    - containerPort: 80
+    env:
+    - name: ENV_VAR
+      value: "production"
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  restartPolicy: Always
+  nodeSelector:
+    disktype: ssd</code></pre></p>
+<p>#### Multi-Container Pod (Sidecar Pattern)
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-pod
+spec:
+  containers:
+  - name: main-app
+    image: nginx
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log/nginx
+  - name: log-shipper
+    image: fluent/fluent-bit
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log/nginx
+      readOnly: true
+  volumes:
+  - name: shared-logs
+    emptyDir: {}</code></pre></p>
+<strong>Conceptual Insight</strong>: Multi-container pods share network, storage, and lifecycle - they're atomic deployment units.
+<h4>2. Deployment Manifests (Production Workloads)</h4>
+<p>#### Complete Deployment Pattern
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  labels:
+    app: web
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:        # MUST match template labels
+      app: web
+  template:            # Pod template
+    metadata:
+      labels:
+        app: web        # Referenced by selector above
+        version: v1
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.20
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"</code></pre></p>
+<strong>Critical Gotcha</strong>: <code>spec.selector.matchLabels</code> MUST match <code>spec.template.metadata.labels</code> exactly.
+<p>#### Advanced Deployment Strategies
+<pre><code><h2>Blue-Green Deployment Pattern</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-blue
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate  # All pods replaced simultaneously
+  selector:
+    matchLabels:
+      app: myapp
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: blue
+    spec:
+      containers:
+      - name: app
+        image: myapp:v1.0
+---
+<h2>Switch traffic by updating service selector</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  selector:
+    app: myapp
+    version: blue  # Change to 'green' for traffic switch
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre></p>
+<h4>3. Service Manifests (Network Abstraction)</h4>
+<p>#### ClusterIP Service (Internal)
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: internal-service
+spec:
+  type: ClusterIP  # Default type
+  selector:
+    app: web       # Matches pod labels
+  ports:
+  - name: http
+    port: 80       # Service port
+    targetPort: 8080  # Container port
+    protocol: TCP
+  sessionAffinity: ClientIP  # Optional: sticky sessions</code></pre></p>
+<p>#### NodePort Service (External Access)
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: nodeport-service
+spec:
+  type: NodePort
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30080  # Optional: specify port (30000-32767)</code></pre></p>
+<p>#### LoadBalancer Service (Cloud Provider)
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer-service
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080
+  loadBalancerSourceRanges:  # Restrict access
+  - "10.0.0.0/8"</code></pre></p>
+<p>#### Headless Service (StatefulSet Pattern)
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: headless-service
+spec:
+  clusterIP: None  # Headless - no cluster IP assigned
+  selector:
+    app: database
+  ports:
+  - port: 5432
+    targetPort: 5432</code></pre></p>
+<strong>Conceptual Insight</strong>: Services create stable network endpoints for ephemeral pods via label selection.
+<h4>4. ConfigMap and Secret Patterns</h4>
+<p>#### ConfigMap Varieties
+<pre><code><h2>Literal values</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  database_url: "postgresql://db:5432/myapp"
+  debug_mode: "false"
+  config.yaml: |
+    server:
+      port: 8080
+      host: "0.0.0.0"
+    database:
+      driver: postgres
+      maxConnections: 10
+---
+<h2>Using ConfigMap in Pod</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-pod
+spec:
+  containers:
+  - name: app
+    image: myapp
+    env:
+    - name: DATABASE_URL
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database_url
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-config</code></pre></p>
+<p>#### Secret Patterns
+<pre><code><h2>Opaque Secret (base64 encoded)</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+type: Opaque
+data:
+  username: YWRtaW4=  # admin (base64)
+  password: cGFzc3dvcmQ=  # password (base64)
+stringData:  # Plain text (automatically encoded)
+  connection-string: "postgresql://admin:password@db:5432/myapp"
+---
+<h2>TLS Secret</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tls-secret
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTi... # Base64 certificate
+  tls.key: LS0tLS1CRUdJTi... # Base64 private key
+---
+<h2>Docker Registry Secret</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registry-secret
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: eyJhdXRocyI6... # Base64 docker config</code></pre></p>
+<h4>5. Volume and Storage Patterns</h4>
+<p>#### PersistentVolume and PersistentVolumeClaim
+<pre><code><h2>PersistentVolume (cluster-wide resource)</h2>
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /mnt/disks/vol1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-node-1
+---
+<h2>PersistentVolumeClaim (namespace resource)</h2>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-storage
+---
+<h2>Using PVC in Pod</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-pod
+spec:
+  containers:
+  - name: app
+    image: nginx
+    volumeMounts:
+    - name: storage
+      mountPath: /data
+  volumes:
+  - name: storage
+    persistentVolumeClaim:
+      claimName: app-pvc</code></pre></p>
+<p>#### Volume Types Reference
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-examples
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - name: empty-dir
+      mountPath: /tmp/empty
+    - name: host-path
+      mountPath: /tmp/host
+    - name: config-volume
+      mountPath: /etc/config
+    - name: secret-volume
+      mountPath: /etc/secrets
+  volumes:
+  - name: empty-dir
+    emptyDir:
+      sizeLimit: 1Gi
+  - name: host-path
+    hostPath:
+      path: /var/log
+      type: Directory
+  - name: config-volume
+    configMap:
+      name: app-config
+  - name: secret-volume
+    secret:
+      secretName: app-secret
+      defaultMode: 0400  # Read-only for owner</code></pre></p>
+<p>---</p>
+<h3>Advanced Manifest Patterns</h3>
+<h4>1. StatefulSet for Stateful Applications</h4>
+<pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: database
+spec:
+  serviceName: "database-headless"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:13
+        env:
+        - name: POSTGRES_DB
+          value: myapp
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: username
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:  # Unique PVC per pod
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi</code></pre>
+<strong>Key Concept</strong>: StatefulSets provide stable network identity and persistent storage per replica.
+<h4>2. DaemonSet for Node-level Services</h4>
+<pre><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      hostNetwork: true  # Use host networking
+      hostPID: true      # Access host process namespace
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter:latest
+        args:
+        - '--path.rootfs=/host'
+        ports:
+        - containerPort: 9100
+          hostPort: 9100  # Expose on host
+        volumeMounts:
+        - name: rootfs
+          mountPath: /host
+          readOnly: true
+      volumes:
+      - name: rootfs
+        hostPath:
+          path: /
+      tolerations:  # Run on all nodes, including masters
+      - operator: Exists</code></pre>
+<h4>3. Job and CronJob Patterns</h4>
+<pre><code><h2>One-time Job</h2>
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-migration
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 3
+  template:
+    spec:
+      containers:
+      - name: migrator
+        image: migrate/migrate
+        command: ["migrate", "-path", "/migrations", "-database", "$(DATABASE_URL)", "up"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: connection-string
+      restartPolicy: Never
+---
+<h2>Scheduled CronJob</h2>
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-job
+spec:
+  schedule: "0 2 <em> </em> *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid  # Don't run concurrent jobs
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:13
+            command: ["/bin/bash"]
+            args:
+            - -c
+            - "pg_dump $DATABASE_URL > /backup/backup-$(date +%Y%m%d-%H%M%S).sql"
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          restartPolicy: OnFailure</code></pre>
+<h4>4. Ingress for HTTP Routing</h4>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - app.example.com
+    secretName: app-tls
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80</code></pre>
+<p>---</p>
+<h3>YAML Generation and Templating</h3>
+<h4>1. kubectl Generators (Exam Essential)</h4>
+<pre><code><h2>Generate deployment YAML</h2>
+kubectl create deployment web --image=nginx --dry-run=client -o yaml > deployment.yaml
+<h2>Generate service YAML</h2>
+kubectl expose deployment web --port=80 --target-port=8080 --dry-run=client -o yaml > service.yaml
+<h2>Generate configmap YAML</h2>
+kubectl create configmap app-config --from-literal=key1=value1 --dry-run=client -o yaml > configmap.yaml
+<h2>Generate secret YAML</h2>
+kubectl create secret generic app-secret --from-literal=password=secret123 --dry-run=client -o yaml > secret.yaml
+<h2>Generate job YAML</h2>
+kubectl create job data-job --image=busybox --dry-run=client -o yaml -- echo "hello world" > job.yaml</code></pre>
+<h4>2. Common Modifications Patterns</h4>
+<pre><code><h2>Start with generated base</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null  # Remove this line
+  labels:
+    app: web
+  name: web
+spec:
+  replicas: 1  # Change to desired count
+  selector:
+    matchLabels:
+      app: web
+  strategy: {}  # Replace with specific strategy
+  template:
+    metadata:
+      creationTimestamp: null  # Remove this line
+      labels:
+        app: web
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}  # Add actual resource limits
+status: {}  # Remove entire status section</code></pre>
+<strong>Exam Tip</strong>: Always remove <code>creationTimestamp: null</code>, <code>resources: {}</code>, <code>strategy: {}</code>, and entire <code>status: {}</code> sections.
+<p>---</p>
+<h3>Validation and Troubleshooting</h3>
+<h4>1. YAML Syntax Validation</h4>
+<pre><code><h2>Validate without applying</h2>
+kubectl apply --dry-run=client -f manifest.yaml
+<h2>Validate against cluster</h2>
+kubectl apply --dry-run=server -f manifest.yaml
+<h2>Explain API structure</h2>
+kubectl explain deployment.spec.template.spec.containers
+kubectl explain pod.spec --recursive</code></pre>
+<h4>2. Common YAML Errors and Fixes</h4>
+<p>#### Indentation Errors
+<pre><code><h2>WRONG - inconsistent indentation</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+ name: bad-pod
+spec:
+   containers:
+ - name: nginx
+    image: nginx</p>
+<h2>CORRECT - consistent 2-space indentation</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: good-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx</code></pre>
+<p>#### Label Selector Mismatches
+<pre><code><h2>WRONG - selector doesn't match template labels</h2>
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: frontend  # Mismatch!</p>
+<h2>CORRECT - labels match exactly</h2>
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web       # Match!</code></pre>
+<p>#### Resource Reference Errors
+<pre><code><h2>WRONG - referencing non-existent resources</h2>
+env:
+<li>name: CONFIG_VALUE</li>
+  valueFrom:
+    configMapKeyRef:
+      name: missing-config  # ConfigMap doesn't exist
+      key: missing-key      # Key doesn't exist</p>
+<h2>CORRECT - verify resources exist first</h2>
+kubectl get configmap app-config
+kubectl describe configmap app-config</code></pre>
+<h4>3. Debugging Workflow</h4>
+<pre><code><h2>1. Validate YAML syntax</h2>
+kubectl apply --dry-run=client -f manifest.yaml
+<h2>2. Check resource creation</h2>
+kubectl apply -f manifest.yaml
+kubectl get all -l app=myapp
+<h2>3. Investigate issues</h2>
+kubectl describe deployment myapp
+kubectl describe pod <pod-name>
+kubectl logs <pod-name>
+<h2>4. Check events</h2>
+kubectl get events --sort-by='.lastTimestamp'</code></pre>
+<p>---</p>
+<h3>Best Practices and Patterns</h3>
+<h4>1. Production-Ready Manifest Structure</h4>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: production-app
+  labels:
+    app: production-app
+    version: v1.2.3
+    tier: frontend
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    description: "Production web application"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: production-app
+  template:
+    metadata:
+      labels:
+        app: production-app
+        version: v1.2.3
+        tier: frontend
+    spec:
+      containers:
+      - name: web
+        image: myapp:v1.2.3
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+          readOnly: true
+        - name: secrets
+          mountPath: /etc/secrets
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: app-config
+      - name: secrets
+        secret:
+          secretName: app-secrets
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - production-app
+              topologyKey: kubernetes.io/hostname</code></pre>
+<h4>2. Multi-Resource Manifest Organization</h4>
+<pre><code><h2>namespace.yaml</h2>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myapp
+  labels:
+    name: myapp
+---
+<h2>configmap.yaml in same file (using ---)</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: myapp
+data:
+  app.properties: |
+    server.port=8080
+    database.url=jdbc:postgresql://db:5432/myapp
+---
+<h2>secret.yaml</h2>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: myapp
+type: Opaque
+stringData:
+  database-password: "supersecret"
+---
+<h2>deployment.yaml</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: myapp
+<h2>... rest of deployment spec</h2></code></pre>
+<h4>3. Resource Naming Conventions</h4>
+<pre><code><h2>Follow consistent naming patterns</h2>
+metadata:
+  name: myapp-frontend-deployment    # app-component-type
+  labels:
+    app.kubernetes.io/name: myapp
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/version: "1.2.3"
+    app.kubernetes.io/managed-by: kubectl</code></pre>
+<p>---</p>
+<h3>Exam-Specific Strategies</h3>
+<h4>1. Speed Optimization Techniques</h4>
+<pre><code><h2>Use generators + modifications instead of writing from scratch</h2>
+kubectl create deployment web --image=nginx -o yaml --dry-run=client > base.yaml
+<h2>Edit efficiently:</h2>
+<h2>1. Remove unnecessary fields (creationTimestamp, status, etc.)</h2>
+<h2>2. Add required specifications (resources, probes, etc.)</h2>
+<h2>3. Validate quickly with --dry-run=client</h2></code></pre>
+<h4>2. Common Exam Patterns</h4>
+<pre><code><h2>Multi-container pod with shared volume</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-container
+spec:
+  containers:
+  - name: producer
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo $(date) >> /shared/output.log; sleep 5; done"]
+    volumeMounts:
+    - name: shared
+      mountPath: /shared
+  - name: consumer
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "tail -f /shared/output.log"]
+    volumeMounts:
+    - name: shared
+      mountPath: /shared
+  volumes:
+  - name: shared
+    emptyDir: {}</code></pre>
+<h4>3. Critical Validation Checklist</h4>
+✅ <strong>YAML syntax is valid</strong> (proper indentation, no tabs)
+✅ <strong>apiVersion matches the resource type</strong>
+✅ <strong>Required fields are present</strong> (name, image, etc.)
+✅ <strong>Label selectors match template labels</strong>
+✅ <strong>Resource references exist</strong> (ConfigMaps, Secrets, PVCs)
+✅ <strong>Namespace consistency</strong> across related resources
+✅ <strong>Security contexts are appropriate</strong>
+✅ <strong>Resource limits are specified</strong>
+<p>---</p>
+<h3>Conceptual Mastery Framework</h3>
+<h4>Understanding the API Object Lifecycle</h4>
+1. <strong>Declaration</strong>: YAML defines desired state
+2. <strong>Submission</strong>: kubectl sends to API server
+3. <strong>Validation</strong>: API server validates syntax and permissions
+4. <strong>Storage</strong>: etcd stores the object definition
+5. <strong>Reconciliation</strong>: Controllers work to achieve desired state
+6. <strong>Status Updates</strong>: Controllers update status fields
+7. <strong>Monitoring</strong>: You observe actual vs desired state
+<h4>YAML as Infrastructure Language</h4>
+<li><strong>Declarative</strong>: Describe the end state, not the steps</li>
+<li><strong>Idempotent</strong>: Same input = same result</li>
+<li><strong>Composable</strong>: Complex systems built from simple primitives</li>
+<li><strong>Version-controlled</strong>: Infrastructure changes tracked over time</li>
+<li><strong>Portable</strong>: Same manifests work across clusters</li></ul>
+<p>---</p>
+<em>Mastering YAML manifests means understanding Kubernetes as a declarative system where you define desired state and controllers work to achieve it. Every manifest is a conversation with the API server about how you want your infrastructure to look.</em>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
