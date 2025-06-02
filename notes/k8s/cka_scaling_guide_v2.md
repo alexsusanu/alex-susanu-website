@@ -1,4 +1,6 @@
 # CKA Guide: Application Scaling - Manual and Automatic
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

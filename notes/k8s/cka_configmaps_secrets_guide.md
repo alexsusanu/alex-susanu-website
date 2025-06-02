@@ -1,4 +1,6 @@
 # CKA Guide: ConfigMaps and Secrets - Application Configuration
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

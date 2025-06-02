@@ -1,4 +1,6 @@
 # CKA Guide: Kubernetes Security - RBAC, ServiceAccounts, SecurityContext & NetworkPolicies
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

@@ -1,4 +1,6 @@
 # CKA Study Guide: Kubernetes Cluster Upgrades with kubeadm
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **The Complexity of Distributed System Upgrades**
 

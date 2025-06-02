@@ -1,4 +1,6 @@
 # CKA Study Guide: kubeadm Cluster Installation
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **The Fundamental Problem kubeadm Solves**
 

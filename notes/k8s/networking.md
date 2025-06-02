@@ -1,4 +1,6 @@
 # Kubernetes Services and Networking: Deep Dive
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Table of Contents
 

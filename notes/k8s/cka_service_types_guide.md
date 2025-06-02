@@ -1,4 +1,6 @@
 # CKA Study Guide: ClusterIP, NodePort, LoadBalancer Service Types and Endpoints
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **The Service Abstraction: Solving the Dynamic Pod Problem**
 

@@ -1,4 +1,6 @@
 # CKA Study Guide: Application Scaling in Kubernetes
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **The Economics of Scale: Why Application Scaling Matters**
 

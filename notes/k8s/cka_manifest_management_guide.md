@@ -1,4 +1,6 @@
 # CKA Study Guide: Manifest Management and Common Templating Tools
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **The Evolution from Simple YAML to Complex Application Management**
 

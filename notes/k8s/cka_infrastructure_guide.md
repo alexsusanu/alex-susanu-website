@@ -1,4 +1,6 @@
 # CKA Study Guide: Provisioning Infrastructure for Kubernetes
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **The Foundation Layer: Why Infrastructure Matters**
 

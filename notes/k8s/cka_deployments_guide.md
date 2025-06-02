@@ -1,4 +1,6 @@
 # CKA Guide: Deployments, Rolling Updates & Rollbacks
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

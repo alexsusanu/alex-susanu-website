@@ -1,4 +1,6 @@
 # Cluster Components - Comprehensive Study Guide
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## WHY Cluster Components Matter (Conceptual Foundation)
 

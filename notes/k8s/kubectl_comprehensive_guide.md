@@ -1,4 +1,6 @@
 # kubectl Commands - Comprehensive Study Guide
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## WHY kubectl Matters (Conceptual Foundation)
 

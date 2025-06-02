@@ -1,4 +1,6 @@
 # Deep Dive: Observability in Container Orchestration
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 Observability is the ability to understand the internal state of a system by examining its external outputs. In containerized environments, this becomes critical because applications are distributed, ephemeral, and often black boxes. Let's explore each component in depth.
 

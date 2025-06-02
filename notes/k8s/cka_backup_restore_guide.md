@@ -1,4 +1,6 @@
 # CKA Guide: Kubernetes Backup & Restore - etcd Backup, Disaster Recovery & Cluster Management
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

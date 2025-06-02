@@ -1,4 +1,6 @@
 # CKA Study Guide: Highly-Available Kubernetes Clusters
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **The Fundamental Problem of Single Points of Failure**
 

@@ -1,4 +1,6 @@
 # State Persistence in Kubernetes: A Deep Dive
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 State persistence is one of the most critical aspects of running production workloads in Kubernetes. Unlike stateless applications that can be easily replaced, stateful applications require their data to survive pod restarts, node failures, and cluster maintenance. Let's explore why this matters and how Kubernetes solves these challenges.
 

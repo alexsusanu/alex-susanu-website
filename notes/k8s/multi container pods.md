@@ -1,4 +1,6 @@
 # Multi-Container Pods: A Deep Dive
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Understanding the Foundation: Why Multi-Container Pods Exist
 

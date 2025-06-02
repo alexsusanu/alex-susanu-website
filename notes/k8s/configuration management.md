@@ -1,4 +1,6 @@
 # Kubernetes Configuration Management: A Deep Dive
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## The Fundamental Problem: Why Configuration Management Matters
 

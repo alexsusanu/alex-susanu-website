@@ -1,4 +1,6 @@
 # Pod Design Deep Dive: Labels, Selectors, Annotations & Networking
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## 1. Labels and Selectors: The Foundation of Kubernetes Organization
 

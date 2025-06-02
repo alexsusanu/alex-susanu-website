@@ -1,4 +1,6 @@
 # CKA Guide: Pod Lifecycle - Creation, Scheduling, Networking, Storage & Logging
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

@@ -1,4 +1,6 @@
 # CKA Guide: Ingress Controllers, CoreDNS, and Advanced Networking
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

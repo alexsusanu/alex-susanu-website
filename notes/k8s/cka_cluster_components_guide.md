@@ -1,4 +1,6 @@
 # CKA Guide: Kubernetes Cluster Components - Control Plane & Worker Node Architecture
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

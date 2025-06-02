@@ -226,6 +226,16 @@
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">networking</span><span class="tag">service</span><span class="tag">ingress</span><span class="tag">networkpolicy</span><span class="tag">dns</span>
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_security_guide.html'">
+        <h3>CKA Guide: Kubernetes Security - RBAC, ServiceAccounts, SecurityContext & NetworkPolicies</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Kubernetes Security Layers: The Principle of Least Privilege: Authentication, Authorization, and Admission Control: RBAC Component Model: RBAC Perm...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="ckad,kubectl,kubernetes,devops" onclick="window.location.href='notes/k8s-ckad_commands_guide.html'">
         <h3>CKAD Essential kubectl Commands Study Guide</h3>
         <div class="note-meta">Kubernetes (k8s) • May 31, 2025</div>
@@ -246,6 +256,16 @@
             <span class="tag">kubernetes</span><span class="tag">security</span><span class="tag">rbac</span><span class="tag">pod-security</span><span class="tag">secrets</span><span class="tag">admission-controllers</span><span class="tag">network-policies</span>
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_cluster_components_guide.html'">
+        <h3>CKA Guide: Kubernetes Cluster Components - Control Plane & Worker Node Architecture</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>From Monolithic to Distributed Control Plane: The Microservices Pattern Applied to Infrastructure: The Control Plane as a Control System: State Con...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="kubernetes,networking,cni,pod-networking,cluster-networking,network-policies,ingress,dns" onclick="window.location.href='notes/k8s-k8s_networking_guide.html'">
         <h3>Kubernetes Networking: Complete Deep Technical Guide</h3>
         <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
@@ -261,6 +281,16 @@
         <div class="note-meta">General (k8s) • June 02, 2025</div>
         <div class="note-preview">
             <p>Upgrading a Kubernetes cluster is fundamentally different from upgrading a monolithic application.</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_configmaps_secrets_guide.html'">
+        <h3>CKA Guide: ConfigMaps and Secrets - Application Configuration</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>The Twelve-Factor App Principle: ConfigMaps and Secrets embody the core principle: "Store config in the environment, not in code" The Immutable Inf...</p>
         </div>
         <div class="note-tags">
             
@@ -284,6 +314,16 @@
         </div>
         <div class="note-tags">
             <span class="tag">kubernetes</span><span class="tag">pods</span><span class="tag">multi-container</span><span class="tag">sidecar</span><span class="tag">init-containers</span><span class="tag">shared-volumes</span><span class="tag">networking</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_pod_lifecycle_guide.html'">
+        <h3>CKA Guide: Pod Lifecycle - Creation, Scheduling, Networking, Storage & Logging</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Pod Design Philosophy: Pod as Shared Execution Environment: Pod Phase Progression: Container State Model within Pods: Complete Pod Anatomy: Init Co...</p>
+        </div>
+        <div class="note-tags">
+            
         </div>
     </div>
     <div class="note-card" data-tags="secrets,security,base64,config,env" onclick="window.location.href='notes/k8s-secrets.html'">
@@ -376,11 +416,31 @@
             <span class="tag">kubernetes</span><span class="tag">initcontainers</span><span class="tag">pods</span><span class="tag">orchestration</span><span class="tag">containers</span>
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cluster_components_guide.html'">
+        <h3>Cluster Components - Comprehensive Study Guide</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Understanding cluster components is understanding how Kubernetes actually works - not just what it does: Control Plane = The brain of Kubernetes (d...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-exam modules.html'">
         <h3>Exam Modules</h3>
         <div class="note-meta">General (k8s) • May 27, 2025</div>
         <div class="note-preview">
             <p>Here are the key modules you should study for the Certified Kubernetes Application Developer (CKAD) exam: Understanding deployment strategies (roll...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_robust_deployments_guide.html'">
+        <h3>CKA Guide: Robust, Self-Healing Application Deployments</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Fault Tolerance vs Fault Avoidance: The Resilience Engineering Model: The Failure Domain Hierarchy: Blast Radius Minimization: The Chaos Engineerin...</p>
         </div>
         <div class="note-tags">
             
@@ -426,6 +486,26 @@
             
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-security_comprehensive_guide.html'">
+        <h3>Security - Comprehensive Study Guide</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Security in Kubernetes is about controlling access and enforcing boundaries in a shared platform: Identity and Access Management - Who can do what ...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-yaml_manifests_guide.html'">
+        <h3>YAML Manifests - Comprehensive Study Guide</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>YAML manifests are declarative infrastructure definitions - the DNA of your Kubernetes applications: Desired State Declaration - You describe WHAT ...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="annotations,kubernetes,observability,tooling,devops,metadata" onclick="window.location.href='notes/k8s-kubernetes-annotations-hidden-power.html'">
         <h3>Kubernetes Annotations – Hidden Power in Metadata</h3>
         <div class="note-meta">Kubernetes (k8s) • May 31, 2025</div>
@@ -434,6 +514,26 @@
         </div>
         <div class="note-tags">
             <span class="tag">annotations</span><span class="tag">kubernetes</span><span class="tag">observability</span><span class="tag">tooling</span><span class="tag">DevOps</span><span class="tag">metadata</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_deployments_guide.html'">
+        <h3>CKA Guide: Deployments, Rolling Updates & Rollbacks</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Declarative vs Imperative Paradigm: At its core, Kubernetes embraces a declarative model where you describe the desired end state, not the steps to...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-pod_lifecycle_guide.html'">
+        <h3>Pod Lifecycle - Comprehensive Study Guide</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Understanding pod lifecycle is understanding how Kubernetes actually runs your applications: Atomic Deployment Unit - Pods are the smallest deploya...</p>
+        </div>
+        <div class="note-tags">
+            
         </div>
     </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_service_types_guide.html'">
@@ -516,6 +616,16 @@
             
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_backup_restore_guide.html'">
+        <h3>CKA Guide: Kubernetes Backup & Restore - etcd Backup, Disaster Recovery & Cluster Management</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Understanding What Needs Protection: The Recovery Time Hierarchy: etcd as the Source of Truth: etcd Cluster Topology: Basic etcd Snapshot Creation:...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="health-checks,liveness,readiness,probes,k8s,monitoring" onclick="window.location.href='notes/k8s-kubernetes-health-probes.html'">
         <h3>Kubernetes Health Probes - Liveness vs Readiness</h3>
         <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
@@ -586,6 +696,16 @@
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">kubectl</span><span class="tag">troubleshooting</span><span class="tag">debugging</span><span class="tag">monitoring</span>
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_troubleshooting_guide.html'">
+        <h3>CKA Guide: Kubernetes Troubleshooting - Systematic Debugging and Problem Resolution</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>The Scientific Method Applied to Debugging: The Debugging Information Hierarchy: The Dependency Stack: The Five Whys Debugging Framework: API Serve...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="kubernetes,configmaps,secrets,environment-variables,helm,configuration,hot-reloading" onclick="window.location.href='notes/k8s-k8s_config_management_guide.html'">
         <h3>Kubernetes Configuration Management: Complete Deep Technical Guide</h3>
         <div class="note-meta">DevOps (k8s) • May 31, 2025</div>
@@ -606,6 +726,16 @@
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">storage</span><span class="tag">volumes</span><span class="tag">persistentvolume</span><span class="tag">pvc</span><span class="tag">storageclass</span>
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-backup_restore_guide.html'">
+        <h3>Backup/Restore - Comprehensive Study Guide</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>Understanding backup/restore is understanding cluster data protection and disaster recovery: etcd Contains Everything - All cluster state, configur...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="logging,sidecar,fluent-bit,elasticsearch,emptydir,volumes" onclick="window.location.href='notes/k8s-logging-architecture-sidecar-es.html'">
         <h3>Logging Architecture with Sidecar and Elasticsearch  </h3>
         <div class="note-meta">Kubernetes (k8s) • May 29, 2025</div>
@@ -616,11 +746,31 @@
             <span class="tag">logging</span><span class="tag">sidecar</span><span class="tag">fluent-bit</span><span class="tag">elasticsearch</span><span class="tag">emptyDir</span><span class="tag">volumes</span>
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_scaling_guide_v2.html'">
+        <h3>CKA Guide: Application Scaling - Manual and Automatic</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>The Scalability Triangle: Horizontal vs Vertical Scaling Mental Models: Kubernetes Philosophy: Embrace Horizontal Scaling Kubernetes is designed ar...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-observability.html'">
         <h3>Deep Dive: Observability in Container Orchestration</h3>
         <div class="note-meta">General (k8s) • May 27, 2025</div>
         <div class="note-preview">
             <p>Observability is the ability to understand the internal state of a system by examining its external outputs.</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_ingress_dns_guide.html'">
+        <h3>CKA Guide: Ingress Controllers, CoreDNS, and Advanced Networking</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>The Problem Ingress Solves: The Layer 7 Advantage: The Three-Layer Ingress Model: Ingress Traffic Flow: NGINX Ingress Controller: Traefik Ingress C...</p>
         </div>
         <div class="note-tags">
             
@@ -656,11 +806,31 @@
             <span class="tag">kubernetes</span><span class="tag">services</span><span class="tag">networking</span><span class="tag">virtual-ip</span><span class="tag">endpoints</span><span class="tag">load-balancing</span>
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-cka_kubectl_yaml_guide.html'">
+        <h3>CKA Guide: kubectl Commands & YAML Manifests - Practical Skills Mastery</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>kubectl as the Universal API Client: The Declarative vs Imperative Paradigm: kubectl Command Anatomy: Resource Naming Conventions: Core CRUD Operat...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-ckad_commands.html'">
         <h3>CKAD Commands</h3>
         <div class="note-meta">General (k8s) • June 01, 2025</div>
         <div class="note-preview">
             <p>Click to read more...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-kubectl_comprehensive_guide.html'">
+        <h3>kubectl Commands - Comprehensive Study Guide</h3>
+        <div class="note-meta">General (k8s) • June 02, 2025</div>
+        <div class="note-preview">
+            <p>kubectl is your primary interface to the Kubernetes API server.</p>
         </div>
         <div class="note-tags">
             

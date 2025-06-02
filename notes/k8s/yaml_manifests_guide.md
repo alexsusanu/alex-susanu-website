@@ -1,4 +1,6 @@
 # YAML Manifests - Comprehensive Study Guide
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## WHY YAML Manifests Matter (Conceptual Foundation)
 

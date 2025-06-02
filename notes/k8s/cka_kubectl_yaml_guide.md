@@ -1,4 +1,6 @@
 # CKA Guide: kubectl Commands & YAML Manifests - Practical Skills Mastery
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

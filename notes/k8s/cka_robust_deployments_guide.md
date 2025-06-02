@@ -1,4 +1,6 @@
 # CKA Guide: Robust, Self-Healing Application Deployments
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

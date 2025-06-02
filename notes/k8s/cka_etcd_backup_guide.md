@@ -1,4 +1,6 @@
 # CKA Study Guide: etcd Backup and Restore
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **Understanding etcd: The Heart of Kubernetes**
 

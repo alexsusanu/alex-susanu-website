@@ -1,4 +1,6 @@
 # CKA Guide: Kubernetes Troubleshooting - Systematic Debugging and Problem Resolution
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## Fundamental Conceptual Understanding
 

@@ -1,4 +1,6 @@
 # Pod Lifecycle - Comprehensive Study Guide
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## WHY Pod Lifecycle Matters (Conceptual Foundation)
 

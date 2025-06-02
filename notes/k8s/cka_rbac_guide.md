@@ -1,4 +1,6 @@
 # CKA Study Guide: RBAC (Role-Based Access Control)
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## **The Fundamental Problem RBAC Solves**
 

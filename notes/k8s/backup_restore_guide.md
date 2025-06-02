@@ -1,4 +1,6 @@
 # Backup/Restore - Comprehensive Study Guide
+category: Kubernetes Certification
+tags: cka, kubernetes, exam, kubectl, certification
 
 ## WHY Backup/Restore Matters (Conceptual Foundation)
 
