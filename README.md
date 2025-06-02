@@ -15,6 +15,28 @@ Not fuck up your navigation or duplicate content
 
 ----------------------------
 
+## 🚫 Disable Jekyll on GitHub Pages
+
+GitHub Pages uses [Jekyll](https://jekyllrb.com/) by default to build sites, which can cause issues if your project contains raw `.md`, `.html`, or templating syntax not compatible with Jekyll (e.g., `{{ .Names }}`).
+
+To **disable Jekyll processing** and deploy your files as-is:
+
+### ✅ Step: Add `.nojekyll`
+
+Create an empty file named `.nojekyll` at the root of your publishing branch (usually `main`, `master`, or `docs`):
+
+```bash
+touch .nojekyll
+git add .nojekyll
+git commit -m "Disable Jekyll on GitHub Pages"
+git push
+
+--------------------------------------
+This tells GitHub Pages to skip the Jekyll build step and serve your files directly.
+
+-------------------------------------
+
+
 TO DO
 
 start in dark mode
