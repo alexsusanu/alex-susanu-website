@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Study Guide: Application Scaling in Kubernetes - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Study Guide: Application Scaling in Kubernetes</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Study Guide: Application Scaling in Kubernetes</h2>
+<h3><strong>The Economics of Scale: Why Application Scaling Matters</strong></h3>
+<p>Application scaling in Kubernetes isn't just about handling more traffic—it's about optimizing resource utilization, cost efficiency, and user experience. Poor scaling strategies can lead to over-provisioning (wasted money) or under-provisioning (poor performance and lost revenue).</p>
+<h4>Understanding Scaling Trade-offs</h4>
+<strong>Resource Efficiency vs Responsiveness</strong>:
+<ul><li><strong>Aggressive scaling</strong>: Quick response to load changes, higher resource costs</li>
+<li><strong>Conservative scaling</strong>: Lower resource costs, potential performance degradation during spikes</li>
+<li><strong>Predictive scaling</strong>: Optimal efficiency but requires understanding traffic patterns</li>
+<strong>Horizontal vs Vertical Scaling</strong>:
+<li><strong>Horizontal (scale out)</strong>: Add more instances, better fault tolerance, Kubernetes-native</li>
+<li><strong>Vertical (scale up)</strong>: Increase instance resources, simpler but limited and requires restarts</li>
+<strong>Cost Implications</strong>:
+<li><strong>Under-scaling</strong>: Lost revenue from poor performance (e.g., 100ms latency increase = 1% revenue loss for e-commerce)</li>
+<li><strong>Over-scaling</strong>: Wasted infrastructure costs (typical organizations waste 30-50% of cloud resources)</li>
+<li><strong>Scaling delays</strong>: Slow scaling reactions can cascade into system-wide outages</li>
+<h4>Kubernetes Scaling Architecture</h4>
+<p>Kubernetes provides multiple scaling mechanisms that work together:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                     Cluster Autoscaler                      │
+│                   (scales nodes)                           │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────┴───────────────────────────────────────┐
+│              Horizontal Pod Autoscaler (HPA)               │
+│                 (scales pod replicas)                      │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────┴───────────────────────────────────────┐
+│              Vertical Pod Autoscaler (VPA)                 │
+│                (scales pod resources)                      │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────┴───────────────────────────────────────┐
+│                   Application                              │
+│                (deployments/pods)                          │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<p>This hierarchical approach allows optimization at multiple levels simultaneously.</p>
+<p>---</p>
+<h3><strong>Manual Scaling Operations</strong></h3>
+<h4>Basic Scaling Commands</h4>
+<strong>Immediate Scaling</strong>:
+<pre><code><h2>Scale deployment to specific replica count</h2>
+kubectl scale deployment web-app --replicas=5
+<h2>Scale multiple deployments</h2>
+kubectl scale deployment web-app api-server --replicas=3
+<h2>Scale by label selector</h2>
+kubectl scale deployments -l app=frontend --replicas=4
+<h2>Scale ReplicaSet directly (not recommended)</h2>
+kubectl scale rs web-app-5d4f8c7b9 --replicas=2
+<h2>Scale StatefulSet</h2>
+kubectl scale statefulset database --replicas=3</code></pre>
+<strong>Current Scaling Information</strong>:
+<pre><code><h2>Check current replica status</h2>
+kubectl get deployments
+kubectl get deployment web-app -o wide
+<h2>Detailed scaling information</h2>
+kubectl describe deployment web-app | grep -A5 "Replicas:"
+<h2>Historical scaling events</h2>
+kubectl get events --sort-by=.metadata.creationTimestamp | grep -i scale</code></pre>
+<h4>Understanding Scaling Behavior</h4>
+<strong>How Kubernetes Handles Scaling</strong>:
+1. <strong>Scale Up</strong>: Creates new pods immediately, subject to resource availability
+2. <strong>Scale Down</strong>: Respects graceful termination periods and PodDisruptionBudgets
+3. <strong>Rolling Updates</strong>: Scaling can happen simultaneously with deployments
+4. <strong>Resource Constraints</strong>: Scaling blocked if insufficient cluster resources
+<strong>Scaling Events and Timeline</strong>:
+<pre><code><h2>Monitor scaling in real-time</h2>
+kubectl get pods -l app=web-app --watch
+<h2>Check resource allocation during scaling</h2>
+kubectl top nodes
+kubectl top pods -l app=web-app
+<h2>Verify scaling completion</h2>
+kubectl rollout status deployment/web-app</code></pre>
+<strong>Scale-Down Behavior and Pod Selection</strong>:
+<pre><code><h2>Kubernetes selects pods for termination based on:</h2>
+<h2>1. Pods in Pending state (unscheduled)</h2>
+<h2>2. Pods with lower priority class</h2>
+<h2>3. Pods using more resources than requested</h2>
+<h2>4. Pods that have been running longer</h2>
+<h2>5. Random selection among equivalent pods</h2>
+<h2>Control termination order with priorities</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: high-priority-pod
+spec:
+  priorityClassName: high-priority
+  containers:
+  - name: app
+    image: nginx:1.21</code></pre>
+<p>---</p>
+<h3><strong>Horizontal Pod Autoscaler (HPA)</strong></h3>
+<h4>HPA Fundamentals and Architecture</h4>
+<strong>How HPA Works</strong>:
+1. <strong>Metrics Collection</strong>: HPA controller queries metrics server every 15 seconds
+2. <strong>Target Calculation</strong>: Compares current metrics to target values
+3. <strong>Scaling Decision</strong>: Calculates desired replica count using algorithms
+4. <strong>Scale Execution</strong>: Updates deployment replica count if change needed
+5. <strong>Stabilization</strong>: Waits for cooldown periods to prevent thrashing
+<strong>HPA Controller Algorithm</strong>:
+<pre><code>desiredReplicas = ceil[currentReplicas * (currentMetricValue / targetMetricValue)]
+<p>Example:
+<li>Current replicas: 3</li>
+<li>Current CPU utilization: 80%</li>
+<li>Target CPU utilization: 50%</li>
+<li>Desired replicas = ceil[3 * (80/50)] = ceil[4.8] = 5</code></pre></li></p>
+<h4>Basic HPA Configuration</h4>
+<strong>CPU-Based HPA</strong>:
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # 5 minutes
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60   # 1 minute
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60</code></pre>
+<strong>Memory-Based HPA</strong>:
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: memory-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: memory-intensive-app
+  minReplicas: 1
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80</code></pre>
+<h4>Advanced HPA Metrics</h4>
+<strong>Custom Metrics HPA</strong>:
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: custom-metrics-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  # CPU utilization
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  
+  # Custom application metric (requests per second)
+  - type: Pods
+    pods:
+      metric:
+        name: requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  
+  # External metric (SQS queue length)
+  - type: External
+    external:
+      metric:
+        name: sqs_queue_length
+        selector:
+          matchLabels:
+            queue: "processing-queue"
+      target:
+        type: Value
+        value: "100"</code></pre>
+<strong>Object Metrics HPA</strong>:
+<pre><code>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: object-metrics-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-frontend
+  minReplicas: 2
+  maxReplicas: 15
+  metrics:
+  # Scale based on ingress requests per second
+  - type: Object
+    object:
+      metric:
+        name: requests_per_second
+      describedObject:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        name: web-frontend-ingress
+      target:
+        type: Value
+        value: "10k"</code></pre>
+<h4>HPA Behavior and Tuning</h4>
+<strong>Understanding HPA Behavior Settings</strong>:
+<pre><code>spec:
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      # Don't scale down more than 50% of current replicas in 1 minute
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      # Don't scale down more than 2 pods in 1 minute
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min  # Use the most restrictive policy
+    
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      # Allow doubling replicas in 1 minute
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      # Allow adding up to 4 pods in 1 minute
+      - type: Pods
+        value: 4
+        periodSeconds: 60
+      selectPolicy: Max  # Use the most aggressive policy</code></pre>
+<strong>HPA Tuning Parameters</strong>:
+<p>| Parameter | Default | Purpose | Tuning Guidelines |
+|-----------|---------|---------|------------------|
+| <code>--horizontal-pod-autoscaler-sync-period</code> | 15s | How often HPA evaluates | Decrease for faster response |
+| <code>--horizontal-pod-autoscaler-upscale-delay</code> | 3m | Delay before scale up | Increase for bursty workloads |
+| <code>--horizontal-pod-autoscaler-downscale-delay</code> | 5m | Delay before scale down | Increase for stable workloads |
+| <code>--horizontal-pod-autoscaler-tolerance</code> | 0.1 | Tolerance for metric changes | Increase to reduce scaling frequency |</p>
+<strong>HPA Status and Monitoring</strong>:
+<pre><code><h2>Check HPA status</h2>
+kubectl get hpa
+kubectl describe hpa web-app-hpa
+<h2>Monitor HPA events</h2>
+kubectl get events --sort-by=.metadata.creationTimestamp | grep HorizontalPodAutoscaler
+<h2>Debug HPA issues</h2>
+kubectl logs -n kube-system deployment/metrics-server
+kubectl top pods -l app=web-app
+<h2>Manual HPA testing</h2>
+kubectl run load-generator --image=busybox --restart=Never -- /bin/sh -c "while true; do wget -q -O- http://web-app-service; done"</code></pre>
+<p>---</p>
+<h3><strong>Vertical Pod Autoscaler (VPA)</strong></h3>
+<h4>VPA Concepts and Components</h4>
+<strong>VPA Architecture</strong>:
+<pre><code>┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  VPA Recommender │    │  VPA Updater    │    │  VPA Admission  │
+│  (analyzes      │    │  (evicts pods   │    │  Controller     │
+│   resource      │    │   for resize)   │    │  (sets new      │
+│   usage)        │    │                 │    │   requests)     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                        │                        │
+         └────────────────────────┼────────────────────────┘
+                                  │
+                         ┌─────────────────┐
+                         │  Metrics Server │
+                         │  (resource      │
+                         │   usage data)   │
+                         └─────────────────┘</code></pre>
+<strong>VPA Modes</strong>:
+<li><strong>"Off"</strong>: Only provides recommendations, doesn't modify pods</li>
+<li><strong>"Initial"</strong>: Sets resource requests only for new pods</li>
+<li><strong>"Auto"</strong>: Automatically updates resource requests and recreates pods</li>
+<li><strong>"Recreation"</strong>: Similar to Auto but explicitly recreates pods</li>
+<h4>VPA Configuration</h4>
+<strong>Basic VPA Setup</strong>:
+<pre><code>apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: web-app-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app
+  updatePolicy:
+    updateMode: "Auto"  # Off, Initial, Auto
+  resourcePolicy:
+    containerPolicies:
+    - containerName: web
+      minAllowed:
+        cpu: 100m
+        memory: 128Mi
+      maxAllowed:
+        cpu: 2
+        memory: 2Gi
+      controlledResources: ["cpu", "memory"]</code></pre>
+<strong>VPA with Resource Bounds</strong>:
+<pre><code>apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: bounded-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: api
+      minAllowed:
+        cpu: 200m
+        memory: 256Mi
+      maxAllowed:
+        cpu: 4
+        memory: 8Gi
+      controlledValues: RequestsAndLimits  # RequestsOnly, RequestsAndLimits
+      mode: Auto  # Auto, Off</code></pre>
+<strong>VPA Recommendation Only Mode</strong>:
+<pre><code>apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: recommendation-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: database
+  updatePolicy:
+    updateMode: "Off"  # Only generate recommendations
+  resourcePolicy:
+    containerPolicies:
+    - containerName: postgres
+      controlledResources: ["cpu", "memory"]</code></pre>
+<h4>VPA Monitoring and Recommendations</h4>
+<strong>Viewing VPA Recommendations</strong>:
+<pre><code><h2>Get VPA status and recommendations</h2>
+kubectl get vpa
+kubectl describe vpa web-app-vpa
+<h2>View detailed recommendations</h2>
+kubectl get vpa web-app-vpa -o yaml
+<h2>Example output interpretation:</h2>
+<h2>recommendation:</h2>
+<h2>  containerRecommendations:</h2>
+<h2>  - containerName: web</h2>
+<h2>    lowerBound:     # Minimum recommended values</h2>
+<h2>      cpu: 50m</h2>
+<h2>      memory: 100Mi</h2>
+<h2>    target:         # Optimal recommended values</h2>
+<h2>      cpu: 100m</h2>
+<h2>      memory: 200Mi</h2>
+<h2>    upperBound:     # Maximum safe values before diminishing returns</h2>
+<h2>      cpu: 200m</h2>
+<h2>      memory: 400Mi</h2></code></pre>
+<strong>VPA Events and Troubleshooting</strong>:
+<pre><code><h2>Monitor VPA events</h2>
+kubectl get events --sort-by=.metadata.creationTimestamp | grep VerticalPodAutoscaler
+<h2>Check VPA controller logs</h2>
+kubectl logs -n kube-system deployment/vpa-recommender
+kubectl logs -n kube-system deployment/vpa-updater
+kubectl logs -n kube-system deployment/vpa-admission-controller
+<h2>Debug pod evictions</h2>
+kubectl get events --field-selector reason=Evicted</code></pre>
+<p>---</p>
+<h3><strong>Cluster Autoscaler</strong></h3>
+<h4>Cluster Autoscaler Fundamentals</h4>
+<strong>How Cluster Autoscaler Works</strong>:
+1. <strong>Pod Scheduling Monitoring</strong>: Watches for pods that can't be scheduled due to resource constraints
+2. <strong>Node Group Evaluation</strong>: Determines which node groups can accommodate pending pods
+3. <strong>Scale-Up Decision</strong>: Adds nodes to node groups when pods are unschedulable
+4. <strong>Scale-Down Decision</strong>: Removes underutilized nodes when resources are wasted
+5. <strong>Cloud Provider Integration</strong>: Communicates with cloud APIs to manage node lifecycle
+<strong>Scale-Up Triggers</strong>:
+<li>Pods in Pending state due to insufficient resources</li>
+<li>Pods with resource requests that don't fit on existing nodes</li>
+<li>Pods with specific node affinity/anti-affinity rules</li>
+<strong>Scale-Down Triggers</strong>:
+<li>Node utilization below threshold (default 50%) for scale-down delay period</li>
+<li>All pods on node can be rescheduled elsewhere</li>
+<li>No pods with local storage or specific node requirements</li>
+<h4>Cluster Autoscaler Configuration</h4>
+<strong>AWS Cluster Autoscaler Example</strong>:
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+    spec:
+      serviceAccountName: cluster-autoscaler
+      containers:
+      - image: k8s.gcr.io/autoscaling/cluster-autoscaler:v1.21.0
+        name: cluster-autoscaler
+        resources:
+          limits:
+            cpu: 100m
+            memory: 300Mi
+          requests:
+            cpu: 100m
+            memory: 300Mi
+        command:
+        - ./cluster-autoscaler
+        - --v=4
+        - --stderrthreshold=info
+        - --cloud-provider=aws
+        - --skip-nodes-with-local-storage=false
+        - --expander=least-waste
+        - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/my-cluster
+        - --balance-similar-node-groups
+        - --scale-down-enabled=true
+        - --scale-down-delay-after-add=10m
+        - --scale-down-unneeded-time=10m
+        - --scale-down-utilization-threshold=0.5
+        - --max-node-provision-time=15m</code></pre>
+<strong>Node Pool Annotations for Scaling Control</strong>:
+<pre><code><h2>Node pool configuration (cloud provider specific)</h2>
+metadata:
+  annotations:
+    # Prevent specific nodes from being scaled down
+    "cluster-autoscaler.kubernetes.io/scale-down-disabled": "true"
+    
+    # Set custom utilization threshold for this node
+    "cluster-autoscaler.kubernetes.io/scale-down-utilization-threshold": "0.3"
+    
+    # Specify maximum scale-down batch size
+    "cluster-autoscaler.kubernetes.io/max-scale-down-parallelism": "2"</code></pre>
+<strong>Pod Annotations for Scaling Behavior</strong>:
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: important-pod
+  annotations:
+    # Prevent this pod from triggering scale-down of its node
+    "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
+spec:
+  containers:
+  - name: app
+    image: my-app:1.0</code></pre>
+<h4>Cluster Autoscaler Tuning</h4>
+<strong>Key Configuration Parameters</strong>:
+<pre><code><h2>Scale-up parameters</h2>
+--max-node-provision-time=15m     # Max time to wait for node to become ready
+--scale-up-from-zero=true         # Allow scaling from 0 nodes
+<h2>Scale-down parameters</h2>
+--scale-down-delay-after-add=10m      # Wait time after scale-up before considering scale-down
+--scale-down-delay-after-delete=10s   # Wait time after node deletion
+--scale-down-delay-after-failure=3m   # Wait time after failed scale-down
+--scale-down-unneeded-time=10m        # How long node should be unneeded before removal
+--scale-down-utilization-threshold=0.5 # Node utilization threshold for scale-down
+<h2>Expander strategies</h2>
+--expander=least-waste           # Choose node group that wastes least resources
+--expander=most-pods            # Choose node group that can schedule most pending pods
+--expander=priority             # Use priority-based node group selection
+--expander=random               # Random selection among valid node groups</code></pre>
+<strong>Monitoring Cluster Autoscaler</strong>:
+<pre><code><h2>Check cluster autoscaler status</h2>
+kubectl get pods -n kube-system -l app=cluster-autoscaler
+kubectl logs -n kube-system deployment/cluster-autoscaler
+<h2>Monitor scaling events</h2>
+kubectl get events --sort-by=.metadata.creationTimestamp | grep -i "cluster-autoscaler"
+<h2>Check node status and capacity</h2>
+kubectl get nodes -o wide
+kubectl describe nodes | grep -A5 "Allocatable:"
+<h2>View pending pods (triggers for scale-up)</h2>
+kubectl get pods --all-namespaces --field-selector=status.phase=Pending</code></pre>
+<p>---</p>
+<h3><strong>Multi-Dimensional Scaling Strategies</strong></h3>
+<h4>Combining HPA, VPA, and Cluster Autoscaler</h4>
+<strong>Coordinated Scaling Architecture</strong>:
+<pre><code><h2>1. VPA for right-sizing containers</h2>
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: app-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: web
+      maxAllowed:
+        cpu: 2
+        memory: 4Gi
+<p>---
+<h2>2. HPA for horizontal scaling based on load</h2>
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app
+  minReplicas: 3
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Pods
+    pods:
+      metric:
+        name: requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"</p>
+<p>---
+<h2>3. Cluster Autoscaler handles node scaling automatically</h2>
+<h2>(configured at cluster level)</h2></code></pre></p>
+<strong>Scaling Interaction Patterns</strong>:
+1. <strong>VPA optimizes resource requests</strong> → More efficient pod packing
+2. <strong>HPA scales pod replicas</strong> → Increased resource demand
+3. <strong>Cluster Autoscaler adds nodes</strong> → Provides capacity for new pods
+4. <strong>Cluster Autoscaler removes nodes</strong> → Optimizes costs during low load
+<h4>Advanced Scaling Patterns</h4>
+<strong>Predictive Scaling with CronJobs</strong>:
+<pre><code><h2>Pre-scale for known traffic patterns</h2>
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: morning-scale-up
+spec:
+  schedule: "0 8 <em> </em> 1-5"  # 8 AM on weekdays
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: scaler
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              kubectl scale deployment web-app --replicas=10
+              kubectl scale deployment api-server --replicas=8
+          restartPolicy: OnFailure
+<p>---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: evening-scale-down
+spec:
+  schedule: "0 20 <em> </em> 1-5"  # 8 PM on weekdays
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: scaler
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              kubectl scale deployment web-app --replicas=3
+              kubectl scale deployment api-server --replicas=2
+          restartPolicy: OnFailure</code></pre></p>
+<strong>Multi-Tier Scaling Strategy</strong>:
+<pre><code><h2>Frontend tier - aggressive scaling</h2>
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: frontend
+  minReplicas: 3
+  maxReplicas: 100
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50  # Aggressive scaling
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+<p>---
+<h2>Backend tier - conservative scaling</h2>
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  # Conservative scaling
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 120
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 60</code></pre></p>
+<p>---</p>
+<h3><strong>Scaling Troubleshooting and Optimization</strong></h3>
+<h4>Common Scaling Issues</h4>
+<strong>HPA Not Scaling</strong>:
+<pre><code><h2>Debug HPA issues</h2>
+kubectl describe hpa web-app-hpa
+<h2>Common issues and solutions:</h2>
+<h2>1. Missing metrics server</h2>
+kubectl get deployment metrics-server -n kube-system
+<h2>2. Pods without resource requests</h2>
+kubectl get deployment web-app -o yaml | grep -A10 resources:
+<h2>3. Incorrect metric values</h2>
+kubectl top pods -l app=web-app
+<h2>4. HPA controller issues</h2>
+kubectl logs -n kube-system deployment/horizontal-pod-autoscaler-controller</code></pre>
+<strong>Cluster Autoscaler Not Scaling</strong>:
+<pre><code><h2>Debug cluster autoscaler</h2>
+kubectl logs -n kube-system deployment/cluster-autoscaler
+<h2>Check for common issues:</h2>
+<h2>1. Pending pods</h2>
+kubectl get pods --all-namespaces --field-selector=status.phase=Pending
+<h2>2. Node group configuration</h2>
+kubectl describe nodes | grep -E "(Taints|Labels)" | grep autoscaler
+<h2>3. Pod disruption budgets blocking scale-down</h2>
+kubectl get pdb --all-namespaces
+<h2>4. Pods preventing node drainage</h2>
+kubectl get pods --all-namespaces -o wide | grep <node-name></code></pre>
+<strong>Resource Contention During Scaling</strong>:
+<pre><code><h2>Monitor resource usage during scaling</h2>
+kubectl top nodes
+kubectl top pods --all-namespaces --sort-by=memory
+<h2>Check for resource limits preventing scaling</h2>
+kubectl describe nodes | grep -A5 "Allocated resources:"
+<h2>Identify pods consuming excessive resources</h2>
+kubectl get pods --all-namespaces -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,CPU:.spec.containers[<em>].resources.requests.cpu,MEMORY:.spec.containers[</em>].resources.requests.memory</code></pre>
+<h4>Performance Optimization</h4>
+<strong>Scaling Performance Metrics</strong>:
+<pre><code>#!/bin/bash
+<h2>scaling-performance-test.sh</h2>
+<p>DEPLOYMENT="web-app"
+TARGET_REPLICAS=20
+START_TIME=$(date +%s)</p>
+<p>echo "Starting scaling performance test..."
+echo "Target: $TARGET_REPLICAS replicas for $DEPLOYMENT"</p>
+<h2>Trigger scaling</h2>
+kubectl scale deployment $DEPLOYMENT --replicas=$TARGET_REPLICAS
+<h2>Monitor scaling progress</h2>
+while true; do
+    CURRENT_REPLICAS=$(kubectl get deployment $DEPLOYMENT -o jsonpath='{.status.readyReplicas}')
+    CURRENT_TIME=$(date +%s)
+    ELAPSED=$((CURRENT_TIME - START_TIME))
+    
+    echo "Time: ${ELAPSED}s, Ready replicas: ${CURRENT_REPLICAS:-0}/$TARGET_REPLICAS"
+    
+    if [ "${CURRENT_REPLICAS:-0}" -eq "$TARGET_REPLICAS" ]; then
+        echo "Scaling completed in ${ELAPSED} seconds"
+        break
+    fi
+    
+    if [ "$ELAPSED" -gt 300 ]; then
+        echo "Scaling timed out after 5 minutes"
+        exit 1
+    fi
+    
+    sleep 5
+done
+<h2>Verify all pods are ready</h2>
+kubectl wait --for=condition=ready pod -l app=$DEPLOYMENT --timeout=300s
+echo "All pods are ready"</code></pre>
+<strong>Scaling Latency Optimization</strong>:
+<pre><code><h2>Optimize pod startup time for faster scaling</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fast-scaling-app
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: app
+        image: my-app:1.0
+        # Optimize resource requests for faster scheduling
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        # Fast readiness probe for quicker traffic serving
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+        # Fast liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      # Use init containers for pre-warming
+      initContainers:
+      - name: cache-warmer
+        image: cache-warmer:1.0
+        command: ['warm-cache.sh']</code></pre>
+<p>---</p>
+<h3><strong>Cost Optimization and Resource Management</strong></h3>
+<h4>Right-Sizing Strategies</h4>
+<strong>Resource Utilization Analysis</strong>:
+<pre><code>#!/bin/bash
+<h2>resource-utilization-report.sh</h2>
+<p>echo "=== Resource Utilization Report ==="</p>
+<h2>Node utilization</h2>
+echo "Node Resource Utilization:"
+kubectl top nodes
+<h2>Pod resource requests vs usage</h2>
+echo -e "\nPod Resource Analysis:"
+kubectl get pods --all-namespaces -o custom-columns=\
+"NAMESPACE:.metadata.namespace,\
+NAME:.metadata.name,\
+CPU_REQUEST:.spec.containers[*].resources.requests.cpu,\
+MEMORY_REQUEST:.spec.containers[*].resources.requests.memory,\
+CPU_USAGE:.status.containerStatuses[*].usage.cpu,\
+MEMORY_USAGE:.status.containerStatuses[*].usage.memory"
+<h2>Identify over-provisioned pods</h2>
+echo -e "\nOver-provisioned Pods (request > 2x usage):"
+kubectl top pods --all-namespaces --containers | awk '
+NR>1 {
+    if ($3 > 0 && $4 > 0) {
+        cpu_ratio = $3 / $4
+        if (cpu_ratio > 2) {
+            print $1 "/" $2 ": CPU over-provisioned by " cpu_ratio "x"
+        }
+    }
+}'
+<h2>Cluster-wide resource summary</h2>
+echo -e "\nCluster Resource Summary:"
+kubectl describe nodes | grep -A4 "Allocated resources:" | grep -E "(cpu|memory)" | \
+awk '{total+=$2; used+=$4} END {print "Total CPU: " total ", Used: " used ", Utilization: " (used/total*100) "%"}'</code></pre>
+<strong>Cost-Aware Scaling Policies</strong>:
+<pre><code><h2>Cost-optimized HPA with conservative scaling</h2>
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cost-optimized-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80  # Higher threshold to reduce over-provisioning
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 600  # 10 minutes - slow scale-down
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 120
+    scaleUp:
+      stabilizationWindowSeconds: 120  # 2 minutes - moderate scale-up
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60</code></pre>
+<h4>Spot Instance Integration</h4>
+<strong>Spot Instance Node Pools for Scaling</strong>:
+<pre><code><h2>Node affinity for spot instances</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spot-tolerant-app
+spec:
+  replicas: 5
+  template:
+    spec:
+      # Tolerate spot instance interruptions
+      tolerations:
+      - key: "spot"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      
+      # Prefer spot instances but allow regular nodes
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: "node.kubernetes.io/instance-type"
+                operator: In
+                values: ["spot"]
+      
+      containers:
+      - name: app
+        image: resilient-app:1.0
+        # App must handle graceful shutdowns
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 30"]</code></pre>
+<strong>Spot Instance Drain Handling</strong>:
+<pre><code><h2>DaemonSet to handle spot instance termination</h2>
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: spot-termination-handler
+spec:
+  selector:
+    matchLabels:
+      app: spot-termination-handler
+  template:
+    metadata:
+      labels:
+        app: spot-termination-handler
+    spec:
+      tolerations:
+      - key: "spot"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: spot-handler
+        image: spot-termination-handler:1.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            # Check for spot termination notice
+            if curl -s http://169.254.169.254/latest/meta-data/spot/instance-action 2>/dev/null; then
+              echo "Spot termination notice received, draining node..."
+              kubectl drain $(hostname) --ignore-daemonsets --delete-emptydir-data --force --grace-period=30
+              break
+            fi
+            sleep 5
+          done
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: kubectl
+          mountPath: /usr/local/bin/kubectl
+      volumes:
+      - name: kubectl
+        hostPath:
+          path: /usr/local/bin/kubectl</code></pre>
+<p>---</p>
+<h3><strong>Production Best Practices and Patterns</strong></h3>
+<h4>Scaling SLAs and Monitoring</h4>
+<strong>Scaling Performance SLAs</strong>:
+<pre><code><h2>ServiceLevelObjective for scaling performance</h2>
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: scaling-slo
+spec:
+  groups:
+  - name: scaling-performance
+    rules:
+    - alert: SlowScaleUp
+      expr: |
+        (
+          increase(kube_deployment_status_replicas[5m]) > 0
+        ) and (
+          (kube_deployment_status_replicas - kube_deployment_status_ready_replicas) > 5
+        )
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Deployment scaling is slow"
+        description: "Deployment {{ $labels.deployment }} has been scaling for more than 2 minutes"
+    
+    - alert: HPANotScaling
+      expr: |
+        (
+          kube_horizontalpodautoscaler_status_desired_replicas != kube_horizontalpodautoscaler_status_current_replicas
+        ) and (
+          changes(kube_horizontalpodautoscaler_status_current_replicas[10m]) == 0
+        )
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "HPA not responding to scaling needs"
+        description: "HPA {{ $labels.horizontalpodautoscaler }} has desired {{ $value }} replicas but hasn't scaled in 10 minutes"</code></pre>
+<strong>Scaling Metrics Dashboard</strong>:
+<pre><code><h2>Grafana dashboard queries for scaling metrics</h2>
+scaling_responsiveness: |
+  rate(kube_deployment_status_replicas[5m])
+<p>scaling_efficiency: |
+  (
+    sum by (deployment) (kube_deployment_status_ready_replicas) / 
+    sum by (deployment) (kube_deployment_status_replicas)
+  ) * 100</p>
+<p>resource_utilization: |
+  (
+    sum(rate(container_cpu_usage_seconds_total[5m])) by (pod) / 
+    sum(kube_pod_container_resource_requests{resource="cpu"}) by (pod)
+  ) * 100</p>
+<p>scaling_events: |
+  increase(kube_hpa_status_current_replicas[1m])</code></pre></p>
+<h4>Disaster Recovery and Scaling</h4>
+<strong>Multi-Region Scaling Strategy</strong>:
+<pre><code><h2>Primary region deployment</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-primary
+  labels:
+    region: primary
+spec:
+  replicas: 10
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: topology.kubernetes.io/region
+                operator: In
+                values: ["us-west-2"]
+<p>---
+<h2>Disaster recovery region deployment</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-dr
+  labels:
+    region: dr
+spec:
+  replicas: 2  # Minimal capacity in DR region
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: topology.kubernetes.io/region
+                operator: In
+                values: ["us-east-1"]</code></pre></p>
+<strong>Emergency Scaling Procedures</strong>:
+<pre><code>#!/bin/bash
+<h2>emergency-scale.sh</h2>
+<p>INCIDENT_TYPE="$1"  # traffic-spike, node-failure, region-outage</p>
+<p>case "$INCIDENT_TYPE" in
+  "traffic-spike")
+    echo "Executing emergency scale-up for traffic spike..."
+    kubectl scale deployment web-app --replicas=50
+    kubectl scale deployment api-server --replicas=20
+    kubectl patch hpa web-app-hpa -p '{"spec":{"maxReplicas":100}}'
+    ;;
+  
+  "node-failure")
+    echo "Responding to node failure..."
+    # Force rescheduling of affected pods
+    kubectl get pods --field-selector=status.phase=Pending -o name | xargs kubectl delete
+    # Temporarily increase replica count to compensate
+    kubectl scale deployment web-app --replicas=15
+    ;;
+    
+  "region-outage")
+    echo "Activating disaster recovery scaling..."
+    kubectl scale deployment web-app-dr --replicas=10
+    # Update ingress to route traffic to DR region
+    kubectl patch ingress web-app-ingress -p '{"spec":{"rules":[{"host":"app.example.com","http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"web-app-dr-service","port":{"number":80}}}}]}}]}}'
+    ;;
+    
+  *)
+    echo "Unknown incident type. Available types: traffic-spike, node-failure, region-outage"
+    exit 1
+    ;;
+esac</p>
+<p>echo "Emergency scaling procedure completed"</code></pre></p>
+<p>---</p>
+<h3><strong>Exam Tips</strong></h3>
+<h4>Essential Commands to Master</h4>
+<pre><code><h2>Manual scaling</h2>
+kubectl scale deployment app --replicas=5
+kubectl scale deployment app --replicas=10 --timeout=300s
+<h2>HPA management</h2>
+kubectl autoscale deployment app --min=2 --max=10 --cpu-percent=70
+kubectl get hpa
+kubectl describe hpa app-hpa
+<h2>Monitoring scaling</h2>
+kubectl get deployments -w
+kubectl top pods -l app=web-app
+kubectl get events --sort-by=.metadata.creationTimestamp | grep -i scale</code></pre>
+<h4>Key Concepts for Exam</h4>
+<li><strong>Manual scaling is immediate but requires active management</strong></li>
+<li><strong>HPA requires metrics server and resource requests on containers</strong></li>
+<li><strong>VPA and HPA should not target the same resource (CPU/memory) simultaneously</strong></li>
+<li><strong>Cluster Autoscaler works at node level, triggered by unschedulable pods</strong></li>
+<li><strong>PodDisruptionBudgets can prevent scaling down</strong></li>
+<h4>Common Exam Scenarios</h4>
+1. <strong>Manually scale a deployment to specific replica count</strong>
+2. <strong>Create HPA for deployment based on CPU utilization</strong>
+3. <strong>Troubleshoot HPA that's not scaling (missing metrics, no resource requests)</strong>
+4. <strong>Configure HPA with custom scaling behavior (min/max replicas, scale policies)</strong>
+5. <strong>Debug why cluster autoscaler isn't adding nodes</strong>
+<h4>Time-Saving Shortcuts</h4>
+<pre><code><h2>Quick HPA creation</h2>
+kubectl autoscale deploy app --min=2 --max=10 --cpu-percent=70
+<h2>Fast scaling check</h2>
+kubectl get deploy,hpa,pods -l app=myapp
+<h2>Quick resource verification</h2>
+kubectl top pods -l app=myapp
+kubectl describe deploy app | grep -A5 "Replicas:"
+<h2>Monitor scaling</h2>
+kubectl get pods -l app=myapp --watch</code></pre>
+<h4>Critical Details to Remember</h4>
+<li>HPA requires resource requests on containers to function</li>
+<li>HPA default sync period is 15 seconds for metric collection</li>
+<li>VPA in "Auto" mode will recreate pods to apply new resource requests</li>
+<li>Cluster Autoscaler won't remove nodes with pods that have local storage</li>
+<li>PodDisruptionBudgets can block both manual and automatic scaling</li>
+<li>Default HPA behavior includes stabilization windows to prevent thrashing</li>
+<li>Use <code>kubectl wait</code> to wait for scaling operations to complete</li>
+<li>HPA metrics are averaged across all pods in the deployment</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

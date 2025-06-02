@@ -366,6 +366,16 @@
             <span class="tag">kubernetes</span><span class="tag">observability</span><span class="tag">monitoring</span><span class="tag">logging</span><span class="tag">metrics</span><span class="tag">tracing</span><span class="tag">prometheus</span><span class="tag">grafana</span><span class="tag">jaeger</span>
         </div>
     </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-k8s_common_errors.html'">
+        <h3>Common Kubernetes Errors</h3>
+        <div class="note-meta">General (k8s) • June 01, 2025</div>
+        <div class="note-preview">
+            <p>Click to read more...</p>
+        </div>
+        <div class="note-tags">
+            
+        </div>
+    </div>
     <div class="note-card" data-tags="kubernetes,k8s,configuration,configmap,secret,serviceaccount,rbac" onclick="window.location.href='notes/k8s-k8s_configuration.html'">
         <h3>Kubernetes Configuration & Security</h3>
         <div class="note-meta">DevOps (k8s) • May 29, 2025</div>
@@ -574,6 +584,16 @@
         </div>
         <div class="note-tags">
             <span class="tag">kubernetes</span><span class="tag">k8s</span><span class="tag">containers</span><span class="tag">orchestration</span><span class="tag">core-concepts</span>
+        </div>
+    </div>
+    <div class="note-card" data-tags="" onclick="window.location.href='notes/k8s-ckad_tips.html'">
+        <h3>CKAD Essential Tips & Commands</h3>
+        <div class="note-meta">General (k8s) • June 01, 2025</div>
+        <div class="note-preview">
+            <p>HTTP: 80 HTTPS: 443 SSH: 22 Common app ports: 8080, 3000, 5000 CPU: 1000m = 1 core Memory: 1Gi = 1024Mi Always (default for Deployments) OnFailure ...</p>
+        </div>
+        <div class="note-tags">
+            
         </div>
     </div>
     <div class="note-card" data-tags="" onclick="window.location.href='notes/observability-monitoring_observability_why.html'">

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Study Guide: kubeadm Cluster Installation - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Study Guide: kubeadm Cluster Installation</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Study Guide: kubeadm Cluster Installation</h2>
+<h3><strong>The Fundamental Problem kubeadm Solves</strong></h3>
+<p>Before kubeadm, installing Kubernetes was a nightmare of manual configuration, cryptographic complexity, and system administration. You had to:
+<ul><li>Generate and distribute TLS certificates manually</li>
+<li>Configure etcd cluster with proper certificates</li>
+<li>Set up the API server with correct flags and certificates</li>
+<li>Bootstrap the kubelet on each node with proper authentication</li>
+<li>Configure networking, DNS, and service discovery</li>
+<li>Handle certificate rotation and cluster lifecycle</li></p>
+<p>kubeadm abstracts this complexity into a simple, opinionated workflow while maintaining production-grade security and best practices.</p>
+<h4>Why NOT Use Managed Services for Learning?</h4>
+<p>While cloud providers offer managed Kubernetes (EKS, GKE, AKS), understanding kubeadm is crucial because:
+<li><strong>Debugging skills</strong>: When things go wrong, you need to understand the underlying components</li>
+<li><strong>Cost management</strong>: Self-managed clusters can be significantly cheaper</li>
+<li><strong>Compliance requirements</strong>: Some organizations require on-premises or specific configurations</li>
+<li><strong>Educational value</strong>: Understanding how the sausage is made makes you a better Kubernetes operator</li>
+<li><strong>Career advancement</strong>: Many companies run self-managed clusters</li></p>
+<p>---</p>
+<h3><strong>Understanding Kubernetes Cluster Architecture</strong></h3>
+<h4>The Control Plane Components</h4>
+<p>Before diving into kubeadm, you must understand what you're actually building:</p>
+<strong>etcd</strong>: The distributed key-value store that holds all cluster state. Everything else is stateless and can be rebuilt from etcd data.
+<strong>kube-apiserver</strong>: The REST API frontend that validates and stores resources in etcd. Everything talks to the cluster through this component.
+<strong>kube-controller-manager</strong>: Runs the control loops that watch cluster state and make changes to achieve desired state (deployment scaling, node health management, etc.).
+<strong>kube-scheduler</strong>: Decides which nodes should run which pods based on resource requirements, constraints, and policies.
+<strong>kube-proxy</strong>: Runs on each node and implements service networking (load balancing to pod endpoints).
+<strong>kubelet</strong>: The node agent that manages pods, containers, and communicates with the API server.
+<h4>Why This Architecture Matters</h4>
+<p>This design implements several critical patterns:
+<li><strong>Separation of concerns</strong>: Each component has a single responsibility</li>
+<li><strong>Declarative state</strong>: Everything is stored as desired state, controllers reconcile to that state</li>
+<li><strong>API-driven</strong>: All interactions go through the API server, enabling consistent access control and auditing</li>
+<li><strong>Horizontal scaling</strong>: Multiple instances of stateless components for high availability</li>
+<li><strong>Pluggable</strong>: Components can be replaced or enhanced (different CNI, CRI, storage)</li></p>
+<p>---</p>
+<h3><strong>How kubeadm Approaches the Bootstrapping Problem</strong></h3>
+<h4>The Bootstrap Paradox</h4>
+<p>How do you start a Kubernetes cluster when Kubernetes manages itself? This is a chicken-and-egg problem:
+<li>kubelet needs to know about the API server to get pod specs</li>
+<li>API server needs to be running for kubelet to communicate with it</li>
+<li>But API server itself runs as pods managed by kubelet</li></p>
+<h4>kubeadm's Solution: Static Pods</h4>
+<p>kubeadm solves this with static pods - pods that kubelet manages directly from local files without requiring an API server:</p>
+<p>1. <strong>Phase 1</strong>: kubelet starts and finds static pod manifests in <code>/etc/kubernetes/manifests/</code>
+2. <strong>Phase 2</strong>: kubelet starts control plane components (API server, controller-manager, scheduler) as static pods
+3. <strong>Phase 3</strong>: Once API server is running, kubeadm uses it to configure the rest of the cluster
+4. <strong>Phase 4</strong>: Install networking, DNS, and other cluster components through the API</p>
+<p>This bootstrapping approach is elegant because it uses Kubernetes to manage Kubernetes, but doesn't require Kubernetes to already be running.</p>
+<h4>The kubeadm Workflow Philosophy</h4>
+<p>kubeadm follows these principles:
+<li><strong>Minimal and opinionated</strong>: Provides a working cluster with sensible defaults</li>
+<li><strong>Composable</strong>: Can be used as part of larger automation</li>
+<li><strong>Production-ready</strong>: Implements security best practices by default</li>
+<li><strong>Extensible</strong>: Allows customization through configuration files and phases</li></p>
+<p>---</p>
+<h3><strong>Prerequisites and System Requirements</strong></h3>
+<h4>Hardware Requirements</h4>
+<pre><code><h2>Minimum requirements for each node:</h2>
+<h2>- 2 CPUs (for control plane nodes)</h2>
+<h2>- 2GB RAM</h2>
+<h2>- Network connectivity between nodes</h2>
+<h2>- Unique hostname, MAC address, and product_uuid for each node</h2>
+<h2>Check system requirements</h2>
+lscpu | grep "CPU(s)"                    # Check CPU count
+free -h                                  # Check memory
+ip link                                  # Check network interfaces
+cat /sys/class/dmi/id/product_uuid       # Check product UUID</code></pre>
+<h4>Why These Requirements Exist</h4>
+<strong>2 CPUs minimum</strong>: The control plane components (especially etcd) are CPU-intensive during cluster operations. Single CPU nodes will be slow and potentially unstable.
+<strong>2GB RAM minimum</strong>: Control plane components have memory overhead, plus space for system pods, networking, and monitoring.
+<strong>Unique identifiers</strong>: Kubernetes uses these to distinguish nodes. Cloned VMs often have identical values, causing cluster issues.
+<h4>Network Requirements</h4>
+<pre><code><h2>Required ports for control plane:</h2>
+<h2>6443: kube-apiserver</h2>
+<h2>2379-2380: etcd server client API</h2>
+<h2>10250: kubelet API</h2>
+<h2>10259: kube-scheduler</h2>
+<h2>10257: kube-controller-manager</h2>
+<h2>Check if ports are available</h2>
+netstat -tlnp | grep :6443
+ss -tlnp | grep :2379
+<h2>Required ports for worker nodes:</h2>
+<h2>10250: kubelet API</h2>
+<h2>30000-32767: NodePort services</h2></code></pre>
+<h4>Container Runtime Setup</h4>
+<p>Kubernetes needs a container runtime (CRI-compatible). Docker is no longer supported directly; containerd is the recommended choice:</p>
+<pre><code><h2>Install containerd</h2>
+apt-get update
+apt-get install -y containerd
+<h2>Configure containerd for Kubernetes</h2>
+mkdir -p /etc/containerd
+containerd config default | tee /etc/containerd/config.toml
+<h2>Enable systemd cgroup driver (required for kubelet)</h2>
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+<h2>Restart containerd</h2>
+systemctl restart containerd
+systemctl enable containerd</code></pre>
+<strong>Why systemd cgroup driver?</strong> kubelet and the container runtime must use the same cgroup driver to manage resource limits. systemd is the standard on most Linux distributions.
+<h4>System Configuration</h4>
+<pre><code><h2>Disable swap (Kubernetes requires this)</h2>
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+<h2>Load required kernel modules</h2>
+cat <<EOF | tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+<p>modprobe overlay
+modprobe br_netfilter</p>
+<h2>Configure sysctl for networking</h2>
+cat <<EOF | tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+<p>sysctl --system</code></pre></p>
+<strong>Why disable swap?</strong> kubelet's memory management assumes predictable memory allocation. Swap can cause unpredictable performance and OOM behavior.
+<strong>Why these kernel modules?</strong> 
+<li><code>overlay</code>: Required for container filesystems</li>
+<li><code>br_netfilter</code>: Required for bridge networking and iptables rules</li>
+<strong>Why these sysctl settings?</strong>
+<li>Bridge netfilter: Allows iptables to process bridged traffic (pod-to-pod networking)</li>
+<li>IP forwarding: Required for routing between pods and services</li>
+<p>---</p>
+<h3><strong>Installing kubeadm, kubelet, and kubectl</strong></h3>
+<h4>Package Installation</h4>
+<pre><code><h2>Add Kubernetes apt repository</h2>
+apt-get update
+apt-get install -y apt-transport-https ca-certificates curl
+<p>curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg</p>
+<p>echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list</p>
+<h2>Install specific versions (important for cluster consistency)</h2>
+apt-get update
+apt-get install -y kubelet=1.28.0-00 kubeadm=1.28.0-00 kubectl=1.28.0-00
+<h2>Prevent automatic updates</h2>
+apt-mark hold kubelet kubeadm kubectl
+<h2>Start kubelet (it will fail until cluster is initialized)</h2>
+systemctl enable --now kubelet</code></pre>
+<h4>Why Version Pinning Matters</h4>
+<strong>Cluster consistency</strong>: All nodes should run the same kubelet version to avoid compatibility issues.
+<strong>Controlled upgrades</strong>: Kubernetes has a strict upgrade path (N to N+1 minor versions only). Automatic updates can break this.
+<strong>API compatibility</strong>: kubectl should be within one minor version of the API server to ensure full compatibility.
+<h4>Understanding the Components</h4>
+<strong>kubeadm</strong>: The cluster bootstrapping tool. Only used during installation and upgrades.
+<strong>kubelet</strong>: The node agent that runs on every node. Manages pods and communicates with the API server.
+<strong>kubectl</strong>: The CLI client for interacting with the cluster. Can be installed on any machine with network access to the API server.
+<p>---</p>
+<h3><strong>Initializing the Control Plane</strong></h3>
+<h4>Basic Cluster Initialization</h4>
+<pre><code><h2>Initialize control plane with specific pod subnet</h2>
+kubeadm init --pod-network-cidr=10.244.0.0/16
+<h2>Alternative with custom API server address</h2>
+kubeadm init \
+  --apiserver-advertise-address=192.168.1.100 \
+  --pod-network-cidr=10.244.0.0/16 \
+  --service-cidr=10.96.0.0/12</code></pre>
+<h4>Understanding the Parameters</h4>
+<strong>--pod-network-cidr</strong>: Defines the IP range for pod networking. Must not overlap with node or service networks. Different CNI plugins have different requirements:
+<li>Flannel: typically uses 10.244.0.0/16</li>
+<li>Calico: flexible, often 192.168.0.0/16</li>
+<li>Weave: typically 10.32.0.0/12</li>
+<strong>--apiserver-advertise-address</strong>: The IP address the API server advertises to other cluster members. Critical for multi-node clusters and load balancers.
+<strong>--service-cidr</strong>: IP range for cluster services (ClusterIP). Default is 10.96.0.0/12, which provides ~1M service IPs.
+<h4>What kubeadm init Actually Does</h4>
+<p>1. <strong>Preflight checks</strong>: Validates system requirements, ports, container runtime
+2. <strong>Certificate generation</strong>: Creates CA and component certificates with proper SANs
+3. <strong>Control plane static pods</strong>: Generates manifests for API server, controller-manager, scheduler
+4. <strong>etcd setup</strong>: Initializes etcd cluster (local or external)
+5. <strong>kubectl configuration</strong>: Sets up admin kubeconfig
+6. <strong>Bootstrap tokens</strong>: Creates tokens for node joining
+7. <strong>Add-ons</strong>: Installs CoreDNS and kube-proxy</p>
+<h4>The Generated Certificates</h4>
+<p>kubeadm creates a complete PKI infrastructure:</p>
+<pre><code><h2>Certificate files location</h2>
+ls -la /etc/kubernetes/pki/
+<h2>Key certificates:</h2>
+<h2>ca.crt/ca.key - Cluster CA (signs all other certs)</h2>
+<h2>apiserver.crt/apiserver.key - API server TLS cert</h2>
+<h2>apiserver-kubelet-client.crt/key - API server to kubelet authentication</h2>
+<h2>front-proxy-ca.crt/key - Front proxy CA</h2>
+<h2>etcd/ca.crt/key - etcd CA (if using local etcd)</h2>
+<h2>sa.pub/sa.key - Service account token signing keys</h2></code></pre>
+<strong>Why so many certificates?</strong> Each component needs its own identity and encryption. This implements zero-trust networking where every connection is authenticated and encrypted.
+<h4>Setting Up kubectl Access</h4>
+<pre><code><h2>Copy admin config (as root)</h2>
+mkdir -p $HOME/.kube
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+<h2>Verify cluster status</h2>
+kubectl cluster-info
+kubectl get nodes
+kubectl get pods -n kube-system</code></pre>
+<p>---</p>
+<h3><strong>Understanding and Installing Container Network Interface (CNI)</strong></h3>
+<h4>Why CNI is Required</h4>
+<p>After kubeadm init, nodes show "NotReady" status because there's no pod networking:</p>
+<pre><code>kubectl get nodes
+<h2>NAME           STATUS     ROLES           AGE   VERSION</h2>
+<h2>control-plane  NotReady   control-plane   5m    v1.28.0</h2></code></pre>
+<p>Kubernetes defines the networking model but doesn't implement it. CNI plugins provide:
+<li>Pod-to-pod networking across nodes</li>
+<li>Network policies for security</li>
+<li>Service load balancing (in cooperation with kube-proxy)</li></p>
+<h4>Installing Flannel (Simple Example)</h4>
+<pre><code><h2>Install Flannel CNI</h2>
+kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
+<h2>Watch nodes become ready</h2>
+kubectl get nodes -w</code></pre>
+<h4>Installing Calico (Production Example)</h4>
+<pre><code><h2>Install Calico operator</h2>
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
+<h2>Configure Calico with custom pod CIDR</h2>
+cat <<EOF | kubectl apply -f -
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    ipPools:
+    - blockSize: 26
+      cidr: 10.244.0.0/16
+      encapsulation: VXLANCrossSubnet
+      natOutgoing: Enabled
+      nodeSelector: all()
+EOF</code></pre>
+<h4>CNI Plugin Comparison</h4>
+<strong>Flannel</strong>:
+<li>Pros: Simple, minimal configuration, stable</li>
+<li>Cons: Limited network policy support, basic routing</li>
+<li>Use case: Development, simple clusters</li>
+<strong>Calico</strong>:
+<li>Pros: Rich network policies, BGP routing, performance</li>
+<li>Cons: More complex, requires understanding of networking</li>
+<li>Use case: Production, security-focused environments</li>
+<strong>Weave</strong>:
+<li>Pros: Built-in encryption, automatic mesh networking</li>
+<li>Cons: Performance overhead, less actively maintained</li>
+<li>Use case: Secure environments, multi-cloud</li>
+<h4>Verifying CNI Installation</h4>
+<pre><code><h2>Check that nodes are Ready</h2>
+kubectl get nodes
+<h2>Verify CNI pods are running</h2>
+kubectl get pods -n kube-system | grep -E "(flannel|calico|weave)"
+<h2>Test pod networking</h2>
+kubectl run test-pod --image=nginx --restart=Never
+kubectl get pod test-pod -o wide  # Note the pod IP
+kubectl exec test-pod -- ip addr show eth0</code></pre>
+<p>---</p>
+<h3><strong>Adding Worker Nodes</strong></h3>
+<h4>The Join Process</h4>
+<p>During <code>kubeadm init</code>, you get a join command:
+<pre><code>kubeadm join 192.168.1.100:6443 --token abcdef.0123456789abcdef \
+    --discovery-token-ca-cert-hash sha256:1234567890abcdef...</code></pre></p>
+<h4>Understanding the Join Parameters</h4>
+<strong>--token</strong>: A bootstrap token that allows the node to authenticate with the API server during the join process. Tokens are time-limited (24 hours by default).
+<strong>--discovery-token-ca-cert-hash</strong>: A hash of the cluster CA certificate. This prevents man-in-the-middle attacks during bootstrap.
+<strong>--discovery-token-unsafe-skip-ca-verification</strong>: Alternative to CA hash for testing (never use in production).
+<h4>What Happens During Node Join</h4>
+<p>1. <strong>Token validation</strong>: New node presents token to API server
+2. <strong>CA verification</strong>: Node verifies it's talking to the correct cluster
+3. <strong>TLS bootstrap</strong>: Node requests client certificate from API server
+4. <strong>kubelet registration</strong>: Node registers itself with the API server
+5. <strong>Pod scheduling</strong>: Node becomes available for pod scheduling</p>
+<h4>Managing Join Tokens</h4>
+<pre><code><h2>List existing tokens</h2>
+kubeadm token list
+<h2>Create new token (if original expired)</h2>
+kubeadm token create
+<h2>Create token with custom TTL</h2>
+kubeadm token create --ttl 2h
+<h2>Get CA cert hash for join command</h2>
+openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+<h2>Generate complete join command</h2>
+kubeadm token create --print-join-command</code></pre>
+<h4>Worker Node Setup</h4>
+<pre><code><h2>On worker node: Install container runtime and kubelet (same as control plane)</h2>
+<h2>Then join the cluster</h2>
+kubeadm join 192.168.1.100:6443 --token abc123.xyz789 \
+    --discovery-token-ca-cert-hash sha256:hash...
+<h2>Verify from control plane</h2>
+kubectl get nodes
+kubectl describe node worker-node-1</code></pre>
+<p>---</p>
+<h3><strong>Advanced Configuration with kubeadm</strong></h3>
+<h4>Using Configuration Files</h4>
+<p>For complex setups, use configuration files instead of command-line flags:</p>
+<pre><code><h2>kubeadm-config.yaml</h2>
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 192.168.1.100
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  kubeletExtraArgs:
+    node-labels: "environment=production,zone=us-west-1a"
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: v1.28.0
+clusterName: production-cluster
+controlPlaneEndpoint: "k8s-api.company.com:6443"
+networking:
+  serviceSubnet: "10.96.0.0/12"
+  podSubnet: "10.244.0.0/16"
+  dnsDomain: "cluster.local"
+apiServer:
+  extraArgs:
+    audit-log-maxage: "30"
+    audit-log-maxbackup: "10"
+    audit-log-maxsize: "100"
+    audit-log-path: "/var/log/audit.log"
+  extraVolumes:
+  - name: audit-log
+    hostPath: "/var/log"
+    mountPath: "/var/log"
+    readOnly: false
+    pathType: DirectoryOrCreate
+controllerManager:
+  extraArgs:
+    bind-address: "0.0.0.0"
+scheduler:
+  extraArgs:
+    bind-address: "0.0.0.0"
+etcd:
+  local:
+    dataDir: "/var/lib/etcd"
+    extraArgs:
+      listen-metrics-urls: "http://0.0.0.0:2381"
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+serverTLSBootstrap: true
+rotateCertificates: true</code></pre>
+<pre><code><h2>Initialize with config file</h2>
+kubeadm init --config=kubeadm-config.yaml</code></pre>
+<h4>Why Configuration Files Matter</h4>
+<strong>Version control</strong>: Cluster configuration can be stored in git and reviewed
+<strong>Repeatability</strong>: Identical clusters can be created consistently
+<strong>Complexity management</strong>: Advanced configurations become manageable
+<strong>Documentation</strong>: Serves as documentation of cluster setup
+<h4>External etcd Setup</h4>
+<p>For production high availability, use external etcd:</p>
+<pre><code><h2>In ClusterConfiguration</h2>
+etcd:
+  external:
+    endpoints:
+    - https://etcd1.company.com:2379
+    - https://etcd2.company.com:2379
+    - https://etcd3.company.com:2379
+    caFile: /etc/etcd/ca.crt
+    certFile: /etc/etcd/etcd-client.crt
+    keyFile: /etc/etcd/etcd-client.key</code></pre>
+<strong>Why external etcd?</strong>
+<li><strong>Isolation</strong>: etcd failures don't affect control plane components</li>
+<li><strong>Scaling</strong>: etcd can be scaled independently</li>
+<li><strong>Backup/restore</strong>: Easier to manage etcd lifecycle</li>
+<li><strong>Performance</strong>: Dedicated resources for the most critical component</li>
+<p>---</p>
+<h3><strong>Troubleshooting kubeadm Installations</strong></h3>
+<h4>Common Initialization Failures</h4>
+<strong>Port conflicts</strong>:
+<pre><code><h2>Check if required ports are in use</h2>
+netstat -tlnp | grep -E ":(6443|2379|2380|10250|10259|10257)"
+<h2>Kill processes using required ports</h2>
+lsof -ti:6443 | xargs kill -9</code></pre>
+<strong>Container runtime issues</strong>:
+<pre><code><h2>Check containerd status</h2>
+systemctl status containerd
+<h2>Check container runtime detection</h2>
+crictl info
+<h2>Verify kubelet can communicate with runtime</h2>
+journalctl -u kubelet -f</code></pre>
+<strong>Certificate issues</strong>:
+<pre><code><h2>Check certificate validity</h2>
+openssl x509 -in /etc/kubernetes/pki/ca.crt -text -noout
+<h2>Regenerate certificates if needed</h2>
+kubeadm certs renew all</code></pre>
+<h4>Node Join Failures</h4>
+<strong>Token expiration</strong>:
+<pre><code><h2>Check token status</h2>
+kubeadm token list
+<h2>Create new token</h2>
+kubeadm token create --print-join-command</code></pre>
+<strong>Network connectivity</strong>:
+<pre><code><h2>Test connectivity to API server</h2>
+telnet 192.168.1.100 6443
+<h2>Check firewall rules</h2>
+iptables -L INPUT -n | grep 6443</code></pre>
+<strong>CA hash mismatch</strong>:
+<pre><code><h2>Regenerate correct hash</h2>
+openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'</code></pre>
+<h4>kubelet Troubleshooting</h4>
+<p>The kubelet logs are crucial for diagnosing issues:</p>
+<pre><code><h2>Check kubelet status</h2>
+systemctl status kubelet
+<h2>Follow kubelet logs</h2>
+journalctl -u kubelet -f
+<h2>Check kubelet configuration</h2>
+cat /var/lib/kubelet/config.yaml
+<h2>Verify kubelet can reach API server</h2>
+curl -k https://localhost:10250/healthz</code></pre>
+<h4>Common Log Messages and Solutions</h4>
+<strong>"failed to run Kubelet: unable to load bootstrap kubeconfig"</strong>
+<li>Solution: Regenerate bootstrap tokens and kubeconfig</li>
+<strong>"node not found"</strong>
+<li>Solution: Check node registration and API server connectivity</li>
+<strong>"pod sandbox changed, it will be killed and re-created"</strong>
+<li>Solution: Usually normal during networking setup, but check CNI</li>
+<strong>"failed to create pod sandbox"</strong>
+<li>Solution: Check container runtime and CNI configuration</li>
+<p>---</p>
+<h3><strong>Cluster Validation and Health Checks</strong></h3>
+<h4>Comprehensive Cluster Testing</h4>
+<pre><code><h2>Check all nodes are ready</h2>
+kubectl get nodes -o wide
+<h2>Verify system pods</h2>
+kubectl get pods -n kube-system
+<h2>Test DNS resolution</h2>
+kubectl run dnsutils --image=gcr.io/kubernetes-e2e-test-images/dnsutils:1.3 --restart=Never
+kubectl exec dnsutils -- nslookup kubernetes.default
+kubectl delete pod dnsutils
+<h2>Test service connectivity</h2>
+kubectl create deployment nginx --image=nginx
+kubectl expose deployment nginx --port=80 --type=ClusterIP
+kubectl run test --image=busybox --restart=Never -- wget -qO- nginx
+kubectl delete deployment nginx
+kubectl delete service nginx
+kubectl delete pod test
+<h2>Check cluster info</h2>
+kubectl cluster-info
+kubectl cluster-info dump > cluster-dump.txt</code></pre>
+<h4>Performance and Resource Validation</h4>
+<pre><code><h2>Check resource allocation</h2>
+kubectl top nodes
+kubectl top pods -A
+<h2>Verify scheduler is placing pods</h2>
+kubectl get events --sort-by=.metadata.creationTimestamp
+<h2>Test horizontal scaling</h2>
+kubectl create deployment test-scale --image=nginx
+kubectl scale deployment test-scale --replicas=3
+kubectl get pods -l app=test-scale -o wide
+kubectl delete deployment test-scale</code></pre>
+<h4>Security Validation</h4>
+<pre><code><h2>Check RBAC is working</h2>
+kubectl auth can-i create pods
+kubectl auth can-i create pods --as=system:anonymous
+<h2>Verify network policies (if using Calico/other NP-capable CNI)</h2>
+kubectl get networkpolicies -A
+<h2>Check Pod Security Standards</h2>
+kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.securityContext}{"\n"}{end}'</code></pre>
+<p>---</p>
+<h3><strong>Cluster Lifecycle Management</strong></h3>
+<h4>Backing Up the Cluster</h4>
+<strong>etcd backup (most critical)</strong>:
+<pre><code><h2>Create etcd snapshot</h2>
+ETCDCTL_API=3 etcdctl snapshot save backup.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+<h2>Verify backup</h2>
+ETCDCTL_API=3 etcdctl snapshot status backup.db</code></pre>
+<strong>Certificate backup</strong>:
+<pre><code><h2>Backup certificates and configs</h2>
+tar -czf k8s-backup-$(date +%Y%m%d).tar.gz \
+  /etc/kubernetes/pki/ \
+  /etc/kubernetes/admin.conf \
+  /etc/kubernetes/kubelet.conf \
+  /etc/kubernetes/controller-manager.conf \
+  /etc/kubernetes/scheduler.conf</code></pre>
+<h4>Node Maintenance</h4>
+<strong>Draining nodes safely</strong>:
+<pre><code><h2>Cordon node (prevent new pods)</h2>
+kubectl cordon worker-node-1
+<h2>Drain node (move existing pods)</h2>
+kubectl drain worker-node-1 --ignore-daemonsets --delete-emptydir-data
+<h2>Perform maintenance...</h2>
+<h2>Uncordon node (allow scheduling)</h2>
+kubectl uncordon worker-node-1</code></pre>
+<strong>Removing nodes</strong>:
+<pre><code><h2>Drain and remove from cluster</h2>
+kubectl drain worker-node-1 --ignore-daemonsets --force
+kubectl delete node worker-node-1
+<h2>On the node itself: reset and clean up</h2>
+kubeadm reset
+iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+ipvsadm -C  # if using ipvs</code></pre>
+<p>---</p>
+<h3><strong>Security Best Practices for kubeadm Clusters</strong></h3>
+<h4>Certificate Management</h4>
+<li><strong>Regular rotation</strong>: Use <code>kubeadm certs renew all</code> before expiration</li>
+<li><strong>Secure storage</strong>: Protect private keys and backup certificates securely</li>
+<li><strong>Monitoring</strong>: Set up alerts for certificate expiration</li>
+<h4>Network Security</h4>
+<pre><code><h2>Disable insecure API server port (if accidentally enabled)</h2>
+<h2>Remove --insecure-port=8080 from API server manifest</h2>
+<h2>Use network policies to restrict pod-to-pod communication</h2>
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+EOF</code></pre>
+<h4>Access Control</h4>
+<li><strong>Disable default ServiceAccount auto-mount</strong>: Add <code>automountServiceAccountToken: false</code></li>
+<li><strong>Use dedicated ServiceAccounts</strong>: Don't use default SA for applications</li>
+<li><strong>Implement proper RBAC</strong>: Follow principle of least privilege</li>
+<li><strong>Regular audits</strong>: Review who has cluster-admin access</li>
+<h4>System Hardening</h4>
+<pre><code><h2>Set up audit logging in API server</h2>
+<h2>Add to /etc/kubernetes/manifests/kube-apiserver.yaml:</h2>
+<h2>--audit-log-path=/var/log/audit.log</h2>
+<h2>--audit-policy-file=/etc/kubernetes/audit-policy.yaml</h2>
+<h2>Restrict kubelet permissions</h2>
+<h2>In kubelet config: authorization-mode=Webhook,RBAC</h2>
+<h2>Enable Pod Security Standards</h2>
+<h2>Add to API server: --enable-admission-plugins=PodSecurity</h2></code></pre>
+<p>---</p>
+<h3><strong>Exam Tips</strong></h3>
+<h4>Time Management</h4>
+<li><strong>Practice the full workflow</strong>: From fresh VMs to working cluster in under 30 minutes</li>
+<li><strong>Use configuration files</strong>: Faster than remembering all command-line flags</li>
+<li><strong>Know the common troubleshooting steps</strong>: Port conflicts, token expiration, CNI issues</li>
+<h4>Key Commands to Master</h4>
+<pre><code><h2>Fast cluster setup</h2>
+kubeadm init --pod-network-cidr=10.244.0.0/16
+kubectl apply -f flannel.yaml
+<h2>Quick troubleshooting</h2>
+journalctl -u kubelet -f
+kubectl get pods -n kube-system
+kubeadm token create --print-join-command
+<h2>Validation</h2>
+kubectl get nodes
+kubectl run test --image=nginx --restart=Never
+kubectl delete pod test</code></pre>
+<h4>Common Scenarios</h4>
+1. <strong>Initialize control plane with specific networking</strong>
+2. <strong>Add worker nodes to existing cluster</strong>
+3. <strong>Troubleshoot node join failures</strong>
+4. <strong>Verify cluster networking and DNS</strong>
+5. <strong>Backup and restore cluster state</strong>
+<h4>Things to Remember</h4>
+<li>Always check prerequisites (swap, ports, container runtime)</li>
+<li>CNI must match the pod-network-cidr specified during init</li>
+<li>Tokens expire - know how to generate new ones</li>
+<li>Node names must be unique and resolvable</li>
+<li>kubelet logs are your best friend for troubleshooting</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

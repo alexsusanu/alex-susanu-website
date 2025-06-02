@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Study Guide: Manifest Management and Common Templating Tools - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Study Guide: Manifest Management and Common Templating Tools</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Study Guide: Manifest Management and Common Templating Tools</h2>
+<h3><strong>The Evolution from Simple YAML to Complex Application Management</strong></h3>
+<p>As Kubernetes adoption grows, organizations quickly discover that managing raw YAML manifests becomes unwieldy. What starts as a few simple deployments evolves into hundreds of interconnected resources across multiple environments, teams, and clusters.</p>
+<h4>The Manifest Management Problem</h4>
+<strong>Traditional Approach Limitations</strong>:
+<ul><li><strong>Copy-paste proliferation</strong>: Duplicating YAML files for different environments</li>
+<li><strong>Configuration drift</strong>: Manual changes leading to inconsistent environments  </li>
+<li><strong>Change tracking difficulty</strong>: No clear audit trail of what changed when</li>
+<li><strong>Environment-specific variations</strong>: Hard-coding values that should be configurable</li>
+<li><strong>Dependency management</strong>: No clear way to manage related resources as units</li>
+<strong>Scale-Related Challenges</strong>:
+<li><strong>Hundreds of YAML files</strong>: Difficult to organize and maintain</li>
+<li><strong>Multi-team coordination</strong>: Different teams modifying shared resources</li>
+<li><strong>Release coordination</strong>: Managing dependencies between applications</li>
+<li><strong>Rollback complexity</strong>: Reverting changes across multiple related resources</li>
+<li><strong>Secret management</strong>: Handling sensitive data across environments</li>
+<strong>The Cost of Poor Manifest Management</strong>:
+<li><strong>Deployment errors</strong>: Manual processes are error-prone</li>
+<li><strong>Security vulnerabilities</strong>: Inconsistent security configurations</li>
+<li><strong>Operational overhead</strong>: Time spent on deployment mechanics vs business value</li>
+<li><strong>Reduced deployment frequency</strong>: Fear of breaking production slows innovation</li>
+<h4>Modern Manifest Management Philosophy</h4>
+<strong>Declarative Configuration Management</strong>:
+<li><strong>Infrastructure as Code</strong>: All configuration versioned and auditable</li>
+<li><strong>Environment parity</strong>: Consistent configuration across dev/staging/production</li>
+<li><strong>Separation of concerns</strong>: Application logic separated from configuration</li>
+<li><strong>Composability</strong>: Reusable components that can be combined</li>
+<strong>GitOps Workflow</strong>:
+<li><strong>Git as source of truth</strong>: All changes flow through version control</li>
+<li><strong>Automated deployment</strong>: Changes automatically applied to clusters</li>
+<li><strong>Immutable deployments</strong>: No manual cluster modifications</li>
+<li><strong>Complete audit trail</strong>: Every change tracked and reversible</li>
+<p>---</p>
+<h3><strong>Raw Manifest Organization Strategies</strong></h3>
+<h4>Directory Structure Patterns</h4>
+<strong>Environment-Based Organization</strong>:
+<pre><code>manifests/
+├── base/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── configmap.yaml
+│   └── ingress.yaml
+├── environments/
+│   ├── development/
+│   │   ├── kustomization.yaml
+│   │   ├── configmap-patch.yaml
+│   │   └── replica-patch.yaml
+│   ├── staging/
+│   │   ├── kustomization.yaml
+│   │   ├── configmap-patch.yaml
+│   │   └── ingress-patch.yaml
+│   └── production/
+│       ├── kustomization.yaml
+│       ├── configmap-patch.yaml
+│       ├── replica-patch.yaml
+│       └── hpa.yaml
+└── scripts/
+    ├── deploy.sh
+    └── validate.sh</code></pre>
+<strong>Application-Based Organization</strong>:
+<pre><code>applications/
+├── frontend/
+│   ├── manifests/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── ingress.yaml
+│   ├── config/
+│   │   ├── dev-config.yaml
+│   │   ├── staging-config.yaml
+│   │   └── prod-config.yaml
+│   └── scripts/
+│       └── deploy.sh
+├── backend/
+│   ├── manifests/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── statefulset.yaml
+│   └── config/
+│       ├── secrets.yaml
+│       └── configmaps.yaml
+└── shared/
+    ├── ingress-controller/
+    ├── monitoring/
+    └── security/</code></pre>
+<h4>Multi-Document YAML Management</h4>
+<strong>Single File with Multiple Resources</strong>:
+<pre><code><h2>app-stack.yaml</h2>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+data:
+  database.host: "prod-db.example.com"
+  log.level: "INFO"
+<p>---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+      - name: web
+        image: web-app:v1.2.0
+        envFrom:
+        - configMapRef:
+            name: app-config</p>
+<p>---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-service
+  namespace: production
+spec:
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080</p>
+<p>---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-app-ingress
+  namespace: production
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - app.example.com
+    secretName: app-tls
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-app-service
+            port:
+              number: 80</code></pre></p>
+<strong>Benefits and Drawbacks</strong>:
+<pre><code><h2>Benefits:</h2>
+<h2>- Single file deployment: kubectl apply -f app-stack.yaml</h2>
+<h2>- Atomic operations: All resources created/updated together</h2>
+<h2>- Clear resource relationships</h2>
+<h2>- Version control simplicity</h2>
+<h2>Drawbacks:</h2>
+<h2>- Difficult to manage individual resources</h2>
+<h2>- No environment-specific variations</h2>
+<h2>- Large files become unwieldy</h2>
+<h2>- Sharing components between applications difficult</h2></code></pre>
+<h4>Environment-Specific Configuration</h4>
+<strong>Configuration Substitution Pattern</strong>:
+<pre><code>#!/bin/bash
+<h2>deploy.sh</h2>
+<p>ENVIRONMENT="$1"
+NAMESPACE="$ENVIRONMENT"</p>
+<p>if [ -z "$ENVIRONMENT" ]; then
+    echo "Usage: $0 <environment>"
+    exit 1
+fi</p>
+<h2>Load environment-specific variables</h2>
+source "config/${ENVIRONMENT}.env"
+<h2>Substitute variables in templates</h2>
+envsubst < templates/deployment.yaml | kubectl apply -n "$NAMESPACE" -f -
+envsubst < templates/service.yaml | kubectl apply -n "$NAMESPACE" -f -
+envsubst < templates/configmap.yaml | kubectl apply -n "$NAMESPACE" -f -</code></pre>
+<strong>Template Example</strong>:
+<pre><code><h2>templates/deployment.yaml</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APP_NAME}
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${REPLICA_COUNT}
+  selector:
+    matchLabels:
+      app: ${APP_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${APP_NAME}
+    spec:
+      containers:
+      - name: web
+        image: ${IMAGE_NAME}:${IMAGE_TAG}
+        resources:
+          requests:
+            memory: "${MEMORY_REQUEST}"
+            cpu: "${CPU_REQUEST}"
+          limits:
+            memory: "${MEMORY_LIMIT}"
+            cpu: "${CPU_LIMIT}"
+        env:
+        - name: DATABASE_URL
+          value: "${DATABASE_URL}"
+        - name: LOG_LEVEL
+          value: "${LOG_LEVEL}"</code></pre>
+<strong>Environment Configuration Files</strong>:
+<pre><code><h2>config/development.env</h2>
+APP_NAME=web-app
+NAMESPACE=development
+REPLICA_COUNT=1
+IMAGE_NAME=web-app
+IMAGE_TAG=latest
+MEMORY_REQUEST=128Mi
+CPU_REQUEST=100m
+MEMORY_LIMIT=256Mi
+CPU_LIMIT=200m
+DATABASE_URL=postgres://dev-db:5432/app
+LOG_LEVEL=DEBUG
+<h2>config/production.env</h2>
+APP_NAME=web-app
+NAMESPACE=production
+REPLICA_COUNT=5
+IMAGE_NAME=web-app
+IMAGE_TAG=v1.2.0
+MEMORY_REQUEST=256Mi
+CPU_REQUEST=200m
+MEMORY_LIMIT=512Mi
+CPU_LIMIT=500m
+DATABASE_URL=postgres://prod-db:5432/app
+LOG_LEVEL=INFO</code></pre>
+<p>---</p>
+<h3><strong>Kustomize: Native Kubernetes Configuration Management</strong></h3>
+<h4>Understanding Kustomize Philosophy</h4>
+<strong>Kustomize Principles</strong>:
+<li><strong>No templating</strong>: Works with valid YAML, no placeholders</li>
+<li><strong>Patch-based</strong>: Modify existing resources rather than generate new ones</li>
+<li><strong>Composition over inheritance</strong>: Build complex configurations from simple pieces</li>
+<li><strong>Environment specificity</strong>: Override base configurations for different environments</li>
+<strong>Why Kustomize Over Raw Manifests</strong>:
+<pre><code><h2>Traditional approach</h2>
+cp base/deployment.yaml environments/production/
+<h2>Edit production-specific values manually</h2>
+<h2>Result: Duplicated files, drift potential</h2>
+<h2>Kustomize approach</h2>
+<h2>Keep base files unchanged</h2>
+<h2>Apply patches for environment-specific changes</h2>
+<h2>Result: DRY principle, clear change tracking</h2></code></pre>
+<h4>Basic Kustomize Structure</h4>
+<strong>Base Configuration</strong>:
+<pre><code><h2>base/kustomization.yaml</h2>
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+<p>metadata:
+  name: web-app-base</p>
+<p>resources:
+<li>deployment.yaml</li>
+<li>service.yaml</li>
+<li>configmap.yaml</li></p>
+<p>commonLabels:
+  app: web-app
+  version: v1.2.0</p>
+<p>commonAnnotations:
+  managed-by: kustomize</code></pre></p>
+<pre><code><h2>base/deployment.yaml</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+      - name: web
+        image: web-app:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"</code></pre>
+<pre><code><h2>base/service.yaml</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-service
+spec:
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+<h4>Environment Overlays</h4>
+<strong>Production Overlay</strong>:
+<pre><code><h2>overlays/production/kustomization.yaml</h2>
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+<p>namespace: production</p>
+<p>resources:
+<li>../../base</li></p>
+<h2>Strategic merge patches</h2>
+patchesStrategicMerge:
+<li>deployment-patch.yaml</li>
+<li>service-patch.yaml</li>
+<h2>JSON6902 patches for precise modifications</h2>
+patchesJson6902:
+<li>target:</li>
+    version: v1
+    kind: Deployment
+    name: web-app
+  path: replica-patch.yaml
+<h2>Configure image tags</h2>
+images:
+<li>name: web-app</li>
+  newTag: v1.2.0
+<h2>Add production-specific resources</h2>
+resources:
+<li>hpa.yaml</li>
+<li>ingress.yaml</li>
+<h2>Generate ConfigMaps from files</h2>
+configMapGenerator:
+<li>name: app-config</li>
+  files:
+  - config.properties
+  - app.conf
+<h2>Add production labels</h2>
+commonLabels:
+  environment: production
+  tier: web</code></pre>
+<pre><code><h2>overlays/production/deployment-patch.yaml</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 5
+  template:
+    spec:
+      containers:
+      - name: web
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: DATABASE_URL
+          value: "postgres://prod-db:5432/app"</code></pre>
+<pre><code><h2>overlays/production/replica-patch.yaml</h2>
+<li>op: replace</li>
+  path: /spec/replicas
+  value: 5
+<li>op: add</li>
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: ENVIRONMENT
+    value: production</code></pre>
+<h4>Advanced Kustomize Features</h4>
+<strong>ConfigMap and Secret Generation</strong>:
+<pre><code><h2>kustomization.yaml</h2>
+configMapGenerator:
+<li>name: app-config</li>
+  literals:
+  - database.host=prod-db.example.com
+  - log.level=INFO
+  files:
+  - app.properties
+  - nginx.conf
+<p>secretGenerator:
+<li>name: app-secrets</li>
+  literals:
+  - username=admin
+  - password=secret123
+  files:
+  - tls.crt
+  - tls.key
+  type: kubernetes.io/tls</p>
+<h2>Adds hash suffix to ensure rolling updates</h2>
+<h2>app-config-m2t4kd6g8h</h2>
+<h2>app-secrets-k8s7h9f2d4</h2></code></pre>
+<strong>Component Composition</strong>:
+<pre><code><h2>components/monitoring/kustomization.yaml</h2>
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+<p>resources:
+<li>servicemonitor.yaml</li>
+<li>prometheusrule.yaml</li></p>
+<h2>Main kustomization.yaml</h2>
+components:
+<li>components/monitoring</li>
+<li>components/security</code></pre></li>
+<strong>Multiple Base Inheritance</strong>:
+<pre><code><h2>overlays/staging/kustomization.yaml</h2>
+resources:
+<li>../../base</li>
+<li>../../components/database</li>
+<li>additional-services.yaml</li>
+<p>patchesStrategicMerge:
+<li>staging-patches.yaml</code></pre></li></p>
+<h4>Kustomize Commands and Workflow</h4>
+<strong>Building and Applying Configurations</strong>:
+<pre><code><h2>Preview generated configuration</h2>
+kustomize build overlays/production
+<h2>Apply directly with kubectl</h2>
+kubectl apply -k overlays/production
+<h2>Save generated output</h2>
+kustomize build overlays/production > production-manifest.yaml
+<h2>Validate before applying</h2>
+kustomize build overlays/production | kubectl apply --dry-run=client -f -
+<h2>Compare environments</h2>
+diff <(kustomize build overlays/staging) <(kustomize build overlays/production)</code></pre>
+<strong>Development Workflow</strong>:
+<pre><code><h2>Edit base configuration</h2>
+vim base/deployment.yaml
+<h2>Test changes in development</h2>
+kubectl apply -k overlays/development
+<h2>Validate in staging</h2>
+kubectl apply -k overlays/staging
+<h2>Deploy to production</h2>
+kubectl apply -k overlays/production
+<h2>Monitor deployment</h2>
+kubectl rollout status deployment/web-app -n production</code></pre>
+<p>---</p>
+<h3><strong>Helm: The Kubernetes Package Manager</strong></h3>
+<h4>Understanding Helm Architecture</h4>
+<strong>Helm Components</strong>:
+<li><strong>Helm CLI</strong>: Client tool for managing charts and releases</li>
+<li><strong>Charts</strong>: Packages of pre-configured Kubernetes resources</li>
+<li><strong>Values</strong>: Configuration parameters for customizing charts</li>
+<li><strong>Releases</strong>: Installed instances of charts in clusters</li>
+<li><strong>Repositories</strong>: Collections of charts for sharing and distribution</li>
+<strong>Helm vs Kustomize Comparison</strong>:
+<p>| Aspect | Helm | Kustomize |
+|--------|------|-----------|
+| Approach | Templating with Go templates | Patching valid YAML |
+| Learning Curve | Moderate (template syntax) | Lower (YAML knowledge) |
+| Flexibility | High (full programming constructs) | Moderate (patch-based) |
+| Ecosystem | Large chart repository | Growing but smaller |
+| Native Support | Third-party tool | Built into kubectl |
+| Use Cases | Complex applications, reusable packages | Environment management, simple customization |</p>
+<h4>Helm Chart Structure</h4>
+<strong>Basic Chart Layout</strong>:
+<pre><code>my-app-chart/
+├── Chart.yaml          # Chart metadata
+├── values.yaml         # Default configuration values
+├── charts/             # Chart dependencies
+├── templates/          # Kubernetes manifest templates
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── ingress.yaml
+│   ├── configmap.yaml
+│   ├── _helpers.tpl    # Template helpers
+│   └── NOTES.txt       # Post-install instructions
+└── .helmignore         # Files to ignore when packaging</code></pre>
+<strong>Chart.yaml Metadata</strong>:
+<pre><code><h2>Chart.yaml</h2>
+apiVersion: v2
+name: my-web-app
+description: A web application Helm chart
+type: application
+version: 1.2.0        # Chart version
+appVersion: "2.1.0"   # Application version
+keywords:
+  - web
+  - application
+  - frontend
+home: https://github.com/company/my-web-app
+sources:
+  - https://github.com/company/my-web-app
+maintainers:
+  - name: Platform Team
+    email: platform@company.com
+dependencies:
+  - name: postgresql
+    version: "11.9.13"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled</code></pre>
+<h4>Helm Templating</h4>
+<strong>Basic Template Example</strong>:
+<pre><code><h2>templates/deployment.yaml</h2>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-app.fullname" . }}
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "my-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "my-app.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          {{- if .Values.healthCheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthCheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthCheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.env }}
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}</code></pre>
+<strong>Values.yaml Configuration</strong>:
+<pre><code><h2>values.yaml</h2>
+replicaCount: 1
+<p>image:
+  repository: my-web-app
+  pullPolicy: IfNotPresent
+  tag: ""</p>
+<p>imagePullSecrets: []</p>
+<p>service:
+  type: ClusterIP
+  port: 80</p>
+<p>ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []</p>
+<p>resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi</p>
+<p>autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80</p>
+<p>healthCheck:
+  enabled: true
+  path: /health
+  initialDelaySeconds: 30</p>
+<p>env:
+  LOG_LEVEL: "INFO"
+  DATABASE_HOST: "postgresql"</p>
+<p>postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "password123"
+    database: "myapp"</code></pre></p>
+<strong>Template Helpers</strong>:
+<pre><code><h2>templates/_helpers.tpl</h2>
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "my-app.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+<p>{{/*
+Create a default fully qualified app name.
+*/}}
+{{- define "my-app.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}</p>
+<p>{{/*
+Common labels
+*/}}
+{{- define "my-app.labels" -}}
+helm.sh/chart: {{ include "my-app.chart" . }}
+{{ include "my-app.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}</p>
+<p>{{/*
+Selector labels
+*/}}
+{{- define "my-app.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "my-app.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}</code></pre></p>
+<h4>Helm Release Management</h4>
+<strong>Installing and Upgrading</strong>:
+<pre><code><h2>Install chart from repository</h2>
+helm install my-release bitnami/nginx
+<h2>Install from local chart</h2>
+helm install my-web-app ./my-app-chart
+<h2>Install with custom values</h2>
+helm install my-web-app ./my-app-chart \
+  --values production-values.yaml \
+  --set image.tag=v1.2.0 \
+  --set replicaCount=5
+<h2>Upgrade existing release</h2>
+helm upgrade my-web-app ./my-app-chart \
+  --values production-values.yaml \
+  --set image.tag=v1.3.0
+<h2>Upgrade with rollback on failure</h2>
+helm upgrade my-web-app ./my-app-chart --atomic --timeout 5m
+<h2>Rollback to previous version</h2>
+helm rollback my-web-app 1</code></pre>
+<strong>Environment-Specific Values</strong>:
+<pre><code><h2>values-production.yaml</h2>
+replicaCount: 5
+<p>image:
+  tag: "v1.2.0"
+  pullPolicy: Always</p>
+<p>resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi</p>
+<p>ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: app-tls
+      hosts:
+        - app.example.com</p>
+<p>autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70</p>
+<p>env:
+  LOG_LEVEL: "WARN"
+  DATABASE_HOST: "prod-postgresql"</p>
+<p>postgresql:
+  enabled: false  # Use external database in production</code></pre></p>
+<strong>Release Operations</strong>:
+<pre><code><h2>List releases</h2>
+helm list
+helm list --all-namespaces
+<h2>Get release information</h2>
+helm get values my-web-app
+helm get manifest my-web-app
+helm get notes my-web-app
+<h2>Check release history</h2>
+helm history my-web-app
+<h2>Test release without installing</h2>
+helm install my-web-app ./my-app-chart --dry-run --debug
+<h2>Uninstall release</h2>
+helm uninstall my-web-app
+<h2>Keep release history after uninstall</h2>
+helm uninstall my-web-app --keep-history</code></pre>
+<p>---</p>
+<h3><strong>Advanced Templating and Configuration Patterns</strong></h3>
+<h4>Template Functions and Logic</h4>
+<strong>Conditional Logic</strong>:
+<pre><code>{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "my-app.fullname" . }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "my-app.fullname" $ }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+    {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+{{- end }}</code></pre>
+<strong>String Manipulation and Formatting</strong>:
+<pre><code><h2>String operations</h2>
+name: {{ .Values.name | lower | replace " " "-" | trunc 63 | trimSuffix "-" }}
+<h2>Default values</h2>
+image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+<h2>Numeric operations</h2>
+replicas: {{ .Values.replicaCount | int | max 1 | min 100 }}
+<h2>Date and hash functions</h2>
+timestamp: {{ now | date "2006-01-02T15:04:05Z" }}
+checksum: {{ include "my-app.configmap" . | sha256sum }}
+<h2>Base64 encoding</h2>
+secret-data: {{ .Values.secretData | b64enc | quote }}</code></pre>
+<strong>Complex Data Structures</strong>:
+<pre><code><h2>Iterate over maps</h2>
+{{- range $key, $value := .Values.env }}
+<li>name: {{ $key }}</li>
+  value: {{ $value | quote }}
+{{- end }}
+<h2>Iterate over arrays</h2>
+{{- range .Values.volumes }}
+<li>name: {{ .name }}</li>
+  {{- if .persistentVolumeClaim }}
+  persistentVolumeClaim:
+    claimName: {{ .persistentVolumeClaim.claimName }}
+  {{- else if .configMap }}
+  configMap:
+    name: {{ .configMap.name }}
+  {{- end }}
+{{- end }}
+<h2>Nested templates</h2>
+{{- include "my-app.labels" . | nindent 4 }}</code></pre>
+<h4>Configuration Validation</h4>
+<strong>Required Values Validation</strong>:
+<pre><code><h2>templates/deployment.yaml</h2>
+{{- if not .Values.image.repository }}
+{{- fail "image.repository is required" }}
+{{- end }}
+<p>{{- if and .Values.persistence.enabled (not .Values.persistence.storageClass) }}
+{{- fail "persistence.storageClass is required when persistence is enabled" }}
+{{- end }}</p>
+<h2>Validate enum values</h2>
+{{- if not (has .Values.service.type (list "ClusterIP" "NodePort" "LoadBalancer")) }}
+{{- fail "service.type must be one of: ClusterIP, NodePort, LoadBalancer" }}
+{{- end }}</code></pre>
+<strong>Resource Validation</strong>:
+<pre><code><h2>Ensure resource requests don't exceed limits</h2>
+{{- if .Values.resources.requests.cpu }}
+{{- if .Values.resources.limits.cpu }}
+{{- $requestCPU := .Values.resources.requests.cpu | toString | regexFind "[0-9.]+" | float64 }}
+{{- $limitCPU := .Values.resources.limits.cpu | toString | regexFind "[0-9.]+" | float64 }}
+{{- if gt $requestCPU $limitCPU }}
+{{- fail "CPU requests cannot exceed limits" }}
+{{- end }}
+{{- end }}
+{{- end }}</code></pre>
+<p>---</p>
+<h3><strong>GitOps and CI/CD Integration</strong></h3>
+<h4>GitOps Workflow with ArgoCD</h4>
+<strong>Application Definition</strong>:
+<pre><code><h2>argocd/web-app.yaml</h2>
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-app-production
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/company/k8s-manifests
+    targetRevision: HEAD
+    path: applications/web-app/overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m</code></pre>
+<strong>Multi-Environment GitOps</strong>:
+<pre><code><h2>argocd/app-of-apps.yaml</h2>
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-app-environments
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/company/k8s-manifests
+    targetRevision: HEAD
+    path: argocd/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+<h2>argocd/applications/development.yaml</h2>
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-app-development
+spec:
+  source:
+    path: applications/web-app/overlays/development
+  # ... other config
+<h2>argocd/applications/production.yaml  </h2>
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-app-production
+spec:
+  source:
+    path: applications/web-app/overlays/production
+  # ... other config</code></pre>
+<h4>CI/CD Pipeline Integration</h4>
+<strong>GitHub Actions with Kustomize</strong>:
+<pre><code><h2>.github/workflows/deploy.yml</h2>
+name: Deploy to Kubernetes
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+<p>jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Kustomize
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+        sudo mv kustomize /usr/local/bin/
+    
+    - name: Validate Manifests
+      run: |
+        kustomize build overlays/development | kubeval
+        kustomize build overlays/production | kubeval
+    
+    - name: Security Scan
+      run: |
+        kustomize build overlays/production | kubesec scan -</p>
+<p>deploy-staging:
+    needs: validate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+    
+    - name: Deploy to Staging
+      run: |
+        kubectl apply -k overlays/staging
+        kubectl rollout status deployment/web-app -n staging</p>
+<p>deploy-production:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Production
+      run: |
+        kubectl apply -k overlays/production
+        kubectl rollout status deployment/web-app -n production</code></pre></p>
+<strong>Helm in CI/CD</strong>:
+<pre><code><h2>.github/workflows/helm-deploy.yml</h2>
+name: Helm Deploy
+on:
+  push:
+    tags: ['v*']
+<p>jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: '3.10.0'
+    
+    - name: Package Chart
+      run: |
+        helm package charts/my-app --version ${GITHUB_REF#refs/tags/}
+    
+    - name: Deploy with Helm
+      run: |
+        helm upgrade --install my-app ./my-app-${GITHUB_REF#refs/tags/}.tgz \
+          --namespace production \
+          --values values-production.yaml \
+          --wait --timeout 5m</code></pre></p>
+<p>---</p>
+<h3><strong>Security and Secret Management</strong></h3>
+<h4>Secure Configuration Patterns</h4>
+<strong>External Secret Management</strong>:
+<pre><code><h2>Using External Secrets Operator with Helm</h2>
+<h2>templates/external-secret.yaml</h2>
+{{- if .Values.externalSecrets.enabled }}
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: {{ include "my-app.fullname" . }}-secrets
+spec:
+  refreshInterval: {{ .Values.externalSecrets.refreshInterval | default "300s" }}
+  secretStoreRef:
+    name: {{ .Values.externalSecrets.secretStore }}
+    kind: SecretStore
+  target:
+    name: {{ include "my-app.fullname" . }}-secrets
+    creationPolicy: Owner
+  data:
+  {{- range .Values.externalSecrets.secrets }}
+  - secretKey: {{ .secretKey }}
+    remoteRef:
+      key: {{ .remoteKey }}
+      property: {{ .property | default .secretKey }}
+  {{- end }}
+{{- end }}</code></pre>
+<strong>Values Configuration</strong>:
+<pre><code><h2>values-production.yaml</h2>
+externalSecrets:
+  enabled: true
+  secretStore: vault-backend
+  refreshInterval: "300s"
+  secrets:
+  - secretKey: database-password
+    remoteKey: secret/production/database
+    property: password
+  - secretKey: api-key
+    remoteKey: secret/production/api
+    property: key</code></pre>
+<strong>Sealed Secrets Integration</strong>:
+<pre><code><h2>Using Sealed Secrets with Kustomize</h2>
+<h2>base/sealed-secret.yaml</h2>
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: app-secrets
+spec:
+  encryptedData:
+    database-password: AgBy3i4OJSWK+PiTySYZZA9rO43cGDEQAx...
+    api-key: AgAKAoiQm7VWHpFjV1BZJRe0HpAaGhJGGS...
+  template:
+    metadata:
+      name: app-secrets
+    type: Opaque</code></pre>
+<h4>Configuration Security Best Practices</h4>
+<strong>Principle of Least Privilege</strong>:
+<pre><code><h2>RBAC for configuration management</h2>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: config-manager
+rules:
+<li>apiGroups: [""]</li>
+  resources: ["configmaps"]
+  verbs: ["get", "list", "create", "update", "patch"]
+<li>apiGroups: [""]</li>
+  resources: ["secrets"]
+  verbs: ["get", "list"]  # Read-only for secrets
+<li>apiGroups: ["apps"]</li>
+  resources: ["deployments"]
+  verbs: ["get", "list", "patch"]</code></pre>
+<strong>Configuration Validation</strong>:
+<pre><code>#!/bin/bash
+<h2>validate-config.sh</h2>
+<p>echo "=== Configuration Security Validation ==="</p>
+<h2>Check for hardcoded secrets in manifests</h2>
+echo "Checking for hardcoded secrets..."
+grep -r "password\|secret\|key" manifests/ && echo "WARNING: Potential secrets found in manifests"
+<h2>Validate resource limits are set</h2>
+echo "Checking resource limits..."
+kustomize build overlays/production | yq eval 'select(.kind == "Deployment") | .spec.template.spec.containers[].resources.limits' -
+<h2>Check for deprecated API versions</h2>
+echo "Checking for deprecated APIs..."
+kustomize build overlays/production | kubeval --ignore-missing-schemas
+<h2>Scan for security issues</h2>
+echo "Security scanning..."
+kustomize build overlays/production | kubesec scan -
+<p>echo "=== Validation completed ==="</code></pre></p>
+<p>---</p>
+<h3><strong>Troubleshooting and Debugging</strong></h3>
+<h4>Common Manifest Issues</h4>
+<strong>Kustomize Troubleshooting</strong>:
+<pre><code><h2>Debug kustomize build process</h2>
+kustomize build overlays/production --enable-alpha-plugins --load-restrictor=LoadRestrictionsNone
+<h2>Validate kustomization files</h2>
+kustomize build overlays/production | kubectl apply --dry-run=client -f -
+<h2>Check for resource conflicts</h2>
+kustomize build overlays/production | kubectl apply --server-dry-run -f -
+<h2>Debug specific patches</h2>
+kustomize cfg tree overlays/production</code></pre>
+<strong>Helm Troubleshooting</strong>:
+<pre><code><h2>Debug template rendering</h2>
+helm template my-app ./charts/my-app --debug --values values-production.yaml
+<h2>Validate chart syntax</h2>
+helm lint ./charts/my-app
+<h2>Test installation without applying</h2>
+helm install my-app ./charts/my-app --dry-run --debug
+<h2>Check release status</h2>
+helm status my-app
+helm get manifest my-app
+<h2>Debug failed upgrades</h2>
+helm history my-app
+helm get values my-app --revision 1</code></pre>
+<strong>Manifest Validation Tools</strong>:
+<pre><code><h2>kubeval - Kubernetes manifest validation</h2>
+kubeval deployment.yaml
+<h2>kube-score - Best practices analysis</h2>
+kube-score score deployment.yaml
+<h2>conftest - Policy testing with OPA</h2>
+conftest test --policy security-policies/ deployment.yaml
+<h2>kubesec - Security analysis</h2>
+kubesec scan deployment.yaml</code></pre>
+<h4>Configuration Drift Detection</h4>
+<strong>Drift Monitoring Script</strong>:
+<pre><code>#!/bin/bash
+<h2>detect-drift.sh</h2>
+<p>NAMESPACE="production"
+APP_NAME="web-app"</p>
+<p>echo "=== Configuration Drift Detection ==="</p>
+<h2>Compare desired vs actual state</h2>
+echo "Comparing desired configuration with cluster state..."
+<h2>Get desired state from git</h2>
+DESIRED_CONFIG=$(kustomize build overlays/production)
+<h2>Get actual state from cluster</h2>
+ACTUAL_CONFIG=$(kubectl get deployment,service,configmap -n $NAMESPACE -l app=$APP_NAME -o yaml)
+<h2>Compare configurations</h2>
+diff <(echo "$DESIRED_CONFIG" | yq eval 'sort_keys(.)' -) \
+     <(echo "$ACTUAL_CONFIG" | yq eval 'sort_keys(.)' -) \
+     > drift-report.txt
+<p>if [ -s drift-report.txt ]; then
+    echo "DRIFT DETECTED - see drift-report.txt"
+    cat drift-report.txt
+    exit 1
+else
+    echo "No configuration drift detected"
+fi</code></pre></p>
+<strong>ArgoCD Drift Detection</strong>:
+<pre><code><h2>Check ArgoCD application sync status</h2>
+argocd app list
+argocd app get web-app-production
+<h2>View differences between git and cluster</h2>
+argocd app diff web-app-production
+<h2>Sync application to resolve drift</h2>
+argocd app sync web-app-production</code></pre>
+<p>---</p>
+<h3><strong>Production Best Practices</strong></h3>
+<h4>Manifest Organization Standards</h4>
+<strong>Repository Structure Standards</strong>:
+<pre><code>k8s-manifests/
+├── .github/
+│   └── workflows/
+│       ├── validate.yml
+│       └── deploy.yml
+├── applications/
+│   ├── web-app/
+│   ├── api-server/
+│   └── database/
+├── infrastructure/
+│   ├── ingress-controller/
+│   ├── monitoring/
+│   └── security/
+├── environments/
+│   ├── development/
+│   ├── staging/
+│   └── production/
+├── scripts/
+│   ├── deploy.sh
+│   ├── validate.sh
+│   └── rollback.sh
+├── docs/
+│   ├── README.md
+│   ├── deployment-guide.md
+│   └── troubleshooting.md
+└── policies/
+    ├── security.rego
+    └── governance.rego</code></pre>
+<strong>Change Management Process</strong>:
+<pre><code>#!/bin/bash
+<h2>change-management.sh</h2>
+<h2>1. Create feature branch</h2>
+git checkout -b feature/update-app-version
+<h2>2. Make changes with validation</h2>
+vim overlays/production/kustomization.yaml
+kustomize build overlays/production | kubectl apply --dry-run=client -f -
+<h2>3. Run security and policy checks</h2>
+kustomize build overlays/production | conftest test --policy policies/ -
+kustomize build overlays/production | kubesec scan -
+<h2>4. Create pull request with automated testing</h2>
+git add . && git commit -m "Update app version to v1.3.0"
+git push origin feature/update-app-version
+<h2>5. After review and merge, automated deployment triggers</h2>
+<h2>6. Monitor deployment success</h2>
+kubectl rollout status deployment/web-app -n production</code></pre>
+<h4>Release Management</h4>
+<strong>Versioning Strategy</strong>:
+<pre><code><h2>Chart.yaml versioning</h2>
+version: 1.2.3        # Chart version (semantic versioning)
+appVersion: "2.1.0"   # Application version
+<h2>Git tagging strategy</h2>
+git tag -a v1.2.3 -m "Release version 1.2.3"
+git push origin v1.2.3
+<h2>Container image tagging</h2>
+image:
+  repository: my-app
+  tag: "v2.1.0"       # Explicit version, not "latest"</code></pre>
+<strong>Rollback Procedures</strong>:
+<pre><code>#!/bin/bash
+<h2>rollback.sh</h2>
+<p>ENVIRONMENT="$1"
+TARGET_VERSION="$2"</p>
+<p>if [ -z "$ENVIRONMENT" ] || [ -z "$TARGET_VERSION" ]; then
+    echo "Usage: $0 <environment> <target-version>"
+    exit 1
+fi</p>
+<p>echo "Rolling back $ENVIRONMENT to version $TARGET_VERSION"</p>
+<p>case "$ENVIRONMENT" in
+    "helm")
+        helm rollback my-app $TARGET_VERSION
+        ;;
+    "kustomize")
+        git checkout $TARGET_VERSION
+        kubectl apply -k overlays/production
+        ;;
+    "argocd")
+        argocd app sync web-app-production --revision $TARGET_VERSION
+        ;;
+esac</p>
+<h2>Verify rollback success</h2>
+kubectl rollout status deployment/web-app -n production
+kubectl get pods -n production -l app=web-app</code></pre>
+<p>---</p>
+<h3><strong>Exam Tips</strong></h3>
+<h4>Essential Commands to Master</h4>
+<pre><code><h2>Kustomize</h2>
+kustomize build overlays/production
+kubectl apply -k overlays/production
+kustomize create --autodetect
+<h2>Helm</h2>
+helm install release-name chart-name
+helm upgrade release-name chart-name --values values.yaml
+helm template release-name chart-name --debug
+helm rollback release-name revision-number
+<h2>Manifest management</h2>
+kubectl apply -f manifest.yaml
+kubectl delete -f manifest.yaml
+kubectl diff -f manifest.yaml</code></pre>
+<h4>Key Concepts for Exam</h4>
+<li><strong>Kustomize uses patches to modify base configurations</strong></li>
+<li><strong>Helm uses templating to generate manifests from values</strong></li>
+<li><strong>Both tools help manage environment-specific configurations</strong></li>
+<li><strong>GitOps workflows use git as source of truth for cluster state</strong></li>
+<li><strong>Manifest validation prevents deployment of invalid configurations</strong></li>
+<h4>Common Exam Scenarios</h4>
+1. <strong>Create Kustomize overlays for different environments</strong>
+2. <strong>Write Helm templates with conditional logic</strong>
+3. <strong>Troubleshoot failed manifest applications</strong>
+4. <strong>Debug templating issues in Helm charts</strong>
+5. <strong>Organize manifests for multi-application deployments</strong>
+6. <strong>Validate manifest syntax and security</strong>
+<h4>Time-Saving Shortcuts</h4>
+<pre><code><h2>Quick Kustomize validation</h2>
+kubectl apply -k . --dry-run=client
+<h2>Fast Helm template debugging</h2>
+helm template . --debug | head -50
+<h2>Rapid manifest validation</h2>
+kubectl apply -f manifest.yaml --dry-run=client -o yaml
+<h2>Quick diff checking</h2>
+kubectl diff -f manifest.yaml</code></pre>
+<h4>Critical Details to Remember</h4>
+<li>Kustomize is built into kubectl (use <code>kubectl apply -k</code>)</li>
+<li>Helm charts should have Chart.yaml and values.yaml at minimum</li>
+<li>Template validation with <code>--dry-run=client</code> before applying</li>
+<li>Use semantic versioning for charts and applications</li>
+<li>Keep base configurations environment-agnostic</li>
+<li>Always validate manifests before deployment</li>
+<li>GitOps requires automated sync policies for effective management</li>
+<li>Secret management should use external secret stores, not hardcoded values</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

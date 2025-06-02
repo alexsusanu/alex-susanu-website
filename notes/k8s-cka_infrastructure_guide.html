@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Study Guide: Provisioning Infrastructure for Kubernetes - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Study Guide: Provisioning Infrastructure for Kubernetes</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Study Guide: Provisioning Infrastructure for Kubernetes</h2>
+<h3><strong>The Foundation Layer: Why Infrastructure Matters</strong></h3>
+<p>Kubernetes doesn't exist in a vacuum - it's a sophisticated orchestration platform that makes specific assumptions about the underlying infrastructure. Poor infrastructure decisions made early can create performance bottlenecks, security vulnerabilities, and operational nightmares that are expensive to fix later.</p>
+<h4>The Infrastructure-Kubernetes Dependency Chain</h4>
+<p>Every Kubernetes operation ultimately depends on infrastructure:
+<ul><li><strong>Pod scheduling</strong> requires CPU and memory resources from nodes</li>
+<li><strong>Persistent storage</strong> needs block devices, filesystems, and network protocols</li>
+<li><strong>Service networking</strong> relies on IP routing, load balancing, and DNS resolution</li>
+<li><strong>etcd performance</strong> is directly tied to disk I/O and network latency</li>
+<li><strong>Container images</strong> require registry connectivity and local storage</li>
+<li><strong>Security</strong> depends on network isolation, certificate management, and access controls</li></p>
+<p>Understanding these dependencies helps you design infrastructure that supports, rather than constrains, your Kubernetes workloads.</p>
+<h4>The Cost of Getting Infrastructure Wrong</h4>
+<strong>Performance Issues</strong>:
+<li>Slow disk I/O causes etcd to timeout, making the entire cluster unresponsive</li>
+<li>Insufficient network bandwidth creates bottlenecks for pod-to-pod communication</li>
+<li>Undersized nodes force resource contention and poor application performance</li>
+<strong>Security Vulnerabilities</strong>:
+<li>Overly permissive network configurations expose internal services</li>
+<li>Shared storage without proper isolation allows cross-tenant data access</li>
+<li>Missing encryption in transit exposes sensitive application data</li>
+<strong>Operational Complexity</strong>:
+<li>Manual provisioning processes create inconsistent environments</li>
+<li>Lack of automation makes scaling and recovery slow and error-prone</li>
+<li>Poor monitoring infrastructure obscures root causes during incidents</li>
+<p>---</p>
+<h3><strong>Understanding Kubernetes Infrastructure Requirements</strong></h3>
+<h4>Compute Resources: Beyond CPU and Memory</h4>
+<strong>CPU Architecture Considerations</strong>:
+<pre><code><h2>Check CPU architecture and features</h2>
+lscpu | grep -E "(Architecture|CPU op-mode|Virtualization|L1d cache|L2 cache|L3 cache)"
+<h2>Verify required CPU features for containers</h2>
+grep -E "(vmx|svm)" /proc/cpuinfo  # Hardware virtualization support
+cat /proc/cpuinfo | grep flags | grep sse4_2  # SSE 4.2 for performance</code></pre>
+<strong>Why CPU Architecture Matters</strong>:
+<li><strong>x86_64 vs ARM</strong>: Container images must match architecture (multi-arch builds needed)</li>
+<li><strong>Virtualization extensions</strong>: Required for nested virtualization scenarios</li>
+<li><strong>Cache hierarchy</strong>: Affects performance of CPU-intensive workloads</li>
+<li><strong>NUMA topology</strong>: Important for high-performance computing workloads</li>
+<strong>Memory Hierarchy and Management</strong>:
+<pre><code><h2>Check memory configuration</h2>
+free -h
+cat /proc/meminfo | grep -E "(MemTotal|MemAvailable|SwapTotal|HugePages)"
+<h2>Verify NUMA configuration</h2>
+numactl --hardware
+cat /proc/sys/vm/zone_reclaim_mode  # Should be 0 for Kubernetes</code></pre>
+<strong>Memory Design Principles</strong>:
+<li><strong>No swap</strong>: Kubernetes requires swap to be disabled for predictable performance</li>
+<li><strong>Memory overcommit</strong>: Understand how kernel manages memory allocation vs usage</li>
+<li><strong>Page cache</strong>: Affects container startup times and I/O performance</li>
+<li><strong>Huge pages</strong>: Can improve performance for memory-intensive applications</li>
+<h4>Storage: The Performance Foundation</h4>
+<strong>Disk I/O Characteristics</strong>:
+<pre><code><h2>Test disk performance (critical for etcd)</h2>
+fio --name=seq-write --ioengine=libaio --iodepth=1 --rw=write --bs=4k --direct=1 --size=1G --numjobs=1 --runtime=60 --group_reporting
+<h2>Expected results for etcd:</h2>
+<h2>- Sequential write: >50 MB/s</h2>
+<h2>- 99th percentile latency: <10ms</h2>
+<h2>- fsync latency: <10ms</h2>
+<h2>Test fsync performance specifically</h2>
+fio --name=fsync-test --ioengine=sync --rw=write --bs=4k --direct=1 --size=100M --fsync=1</code></pre>
+<strong>Why Storage Performance Matters</strong>:
+<li><strong>etcd durability</strong>: Every write must be committed to disk before acknowledgment</li>
+<li><strong>Container image pulls</strong>: Slow disk affects pod startup times</li>
+<li><strong>Log aggregation</strong>: High I/O from container logs can saturate storage</li>
+<li><strong>Persistent volumes</strong>: Application performance directly tied to storage speed</li>
+<strong>Storage Types and Use Cases</strong>:
+<p>| Storage Type | Use Case | Performance | Cost |
+|--------------|----------|-------------|------|
+| NVMe SSD | etcd, high-IOPS databases | Excellent | High |
+| SATA SSD | General workloads, container images | Good | Medium |
+| NVMe over Fabric | Shared high-performance storage | Excellent | Very High |
+| Network-attached | Shared storage for stateful apps | Variable | Medium |
+| Object storage | Backup, archival, static content | Low latency | Low |</p>
+<h4>Network Architecture: The Connectivity Layer</h4>
+<strong>Physical Network Design</strong>:
+<pre><code><h2>Check network interface capabilities</h2>
+ethtool eth0 | grep -E "(Speed|Duplex|Auto-negotiation)"
+<h2>Verify network performance between nodes</h2>
+iperf3 -s  # on server
+iperf3 -c server-ip -t 60  # on client
+<h2>Expected results:</h2>
+<h2>- 1Gbps minimum for small clusters</h2>
+<h2>- 10Gbps recommended for production</h2>
+<h2>- <1ms latency between nodes in same datacenter</h2></code></pre>
+<strong>Network Topology Considerations</strong>:
+<strong>Flat L2 Network (Simple)</strong>:
+<pre><code>┌─────────┐    ┌─────────┐    ┌─────────┐
+│  Node1  │    │  Node2  │    │  Node3  │
+│10.0.1.10│    │10.0.1.11│    │10.0.1.12│
+└────┬────┘    └────┬────┘    └────┬────┘
+     │              │              │
+     └──────────────┼──────────────┘
+                    │
+              ┌─────┴─────┐
+              │  Switch   │
+              │10.0.1.0/24│
+              └───────────┘</code></pre>
+<strong>Pros</strong>: Simple configuration, easy troubleshooting
+<strong>Cons</strong>: Broadcast domain size, limited scalability
+<strong>Routed L3 Network (Scalable)</strong>:
+<pre><code>┌─────────┐    ┌─────────┐    ┌─────────┐
+│  Node1  │    │  Node2  │    │  Node3  │
+│10.1.1.10│    │10.1.2.10│    │10.1.3.10│
+└────┬────┘    └────┬────┘    └────┬────┘
+     │              │              │
+┌────┴────┐    ┌────┴────┐    ┌────┴────┐
+│ Switch1 │    │ Switch2 │    │ Switch3 │
+│10.1.1/24│    │10.1.2/24│    │10.1.3/24│
+└────┬────┘    └────┬────┘    └────┬────┘
+     │              │              │
+     └──────────────┼──────────────┘
+                    │
+              ┌─────┴─────┐
+              │  Router   │
+              │           │
+              └───────────┘</code></pre>
+<strong>Pros</strong>: Better isolation, scalable, supports network policies
+<strong>Cons</strong>: More complex routing, requires BGP or similar
+<h4>IP Address Planning</h4>
+<strong>Address Space Allocation</strong>:
+<pre><code><h2>Plan non-overlapping CIDR blocks:</h2>
+<h2>Node network (where VMs/bare metal live)</h2>
+NODE_CIDR="10.0.0.0/16"        # 65,534 possible nodes
+<h2>Pod network (assigned by CNI)  </h2>
+POD_CIDR="10.244.0.0/16"       # 65,534 possible pods
+<h2>Service network (cluster services)</h2>
+SERVICE_CIDR="10.96.0.0/12"    # 1,048,574 possible services
+<h2>Example IP allocation:</h2>
+<h2>Nodes: 10.0.1.0/24 (254 nodes)</h2>
+<h2>Load balancers: 10.0.2.0/24</h2>
+<h2>Storage: 10.0.3.0/24</h2></code></pre>
+<strong>Why IP Planning Matters</strong>:
+<li><strong>No overlap</strong>: Overlapping CIDRs cause routing conflicts</li>
+<li><strong>Growth planning</strong>: Account for cluster expansion over time</li>
+<li><strong>CNI compatibility</strong>: Different CNI plugins have different requirements</li>
+<li><strong>Cloud integration</strong>: Must not conflict with cloud provider networks</li>
+<p>---</p>
+<h3><strong>Cloud Provider Infrastructure Patterns</strong></h3>
+<h4>AWS Infrastructure for Kubernetes</h4>
+<strong>VPC Design for Kubernetes</strong>:
+<pre><code><h2>Create VPC with proper CIDR</h2>
+aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=k8s-vpc}]'
+<h2>Create subnets across AZs</h2>
+aws ec2 create-subnet --vpc-id vpc-xxx --cidr-block 10.0.1.0/24 --availability-zone us-west-2a
+aws ec2 create-subnet --vpc-id vpc-xxx --cidr-block 10.0.2.0/24 --availability-zone us-west-2b
+aws ec2 create-subnet --vpc-id vpc-xxx --cidr-block 10.0.3.0/24 --availability-zone us-west-2c
+<h2>Create private subnets for nodes</h2>
+aws ec2 create-subnet --vpc-id vpc-xxx --cidr-block 10.0.10.0/24 --availability-zone us-west-2a
+aws ec2 create-subnet --vpc-id vpc-xxx --cidr-block 10.0.11.0/24 --availability-zone us-west-2b
+aws ec2 create-subnet --vpc-id vpc-xxx --cidr-block 10.0.12.0/24 --availability-zone us-west-2c</code></pre>
+<strong>Security Groups for Kubernetes</strong>:
+<pre><code><h2>Control plane security group</h2>
+aws ec2 create-security-group --group-name k8s-control-plane --description "Kubernetes control plane"
+<h2>Add rules for control plane</h2>
+aws ec2 authorize-security-group-ingress --group-id sg-xxx --protocol tcp --port 6443 --source-group sg-xxx  # API server
+aws ec2 authorize-security-group-ingress --group-id sg-xxx --protocol tcp --port 2379-2380 --source-group sg-xxx  # etcd
+aws ec2 authorize-security-group-ingress --group-id sg-xxx --protocol tcp --port 10250 --source-group sg-xxx  # kubelet
+<h2>Worker node security group  </h2>
+aws ec2 create-security-group --group-name k8s-workers --description "Kubernetes worker nodes"
+aws ec2 authorize-security-group-ingress --group-id sg-yyy --protocol tcp --port 10250 --source-group sg-xxx  # kubelet from control plane
+aws ec2 authorize-security-group-ingress --group-id sg-yyy --protocol tcp --port 30000-32767 --cidr 0.0.0.0/0  # NodePort services</code></pre>
+<strong>Instance Selection Strategy</strong>:
+<pre><code><h2>Control plane nodes: CPU and memory optimized</h2>
+<h2>m5.large (2 vCPU, 8GB) - minimum</h2>
+<h2>m5.xlarge (4 vCPU, 16GB) - recommended</h2>
+<h2>c5.xlarge (4 vCPU, 8GB) - CPU intensive</h2>
+<h2>Worker nodes: Depends on workload</h2>
+<h2>t3.medium (2 vCPU, 4GB) - development</h2>
+<h2>m5.large (2 vCPU, 8GB) - general purpose</h2>
+<h2>c5.xlarge (4 vCPU, 8GB) - CPU intensive workloads  </h2>
+<h2>r5.xlarge (4 vCPU, 32GB) - memory intensive workloads</h2>
+<h2>Check available instance types</h2>
+aws ec2 describe-instance-types --query 'InstanceTypes[?VCpuInfo.DefaultVCpus>=<code>2</code>].[InstanceType,VCpuInfo.DefaultVCpus,MemoryInfo.SizeInMiB]' --output table</code></pre>
+<h4>Google Cloud Platform Infrastructure</h4>
+<strong>Network Design with Custom VPC</strong>:
+<pre><code><h2>Create custom VPC</h2>
+gcloud compute networks create k8s-network --subnet-mode custom
+<h2>Create regional subnets</h2>
+gcloud compute networks subnets create k8s-nodes \
+  --network k8s-network \
+  --range 10.0.0.0/16 \
+  --region us-west1 \
+  --secondary-range pods=10.244.0.0/16,services=10.96.0.0/12
+<h2>Create firewall rules</h2>
+gcloud compute firewall-rules create k8s-internal \
+  --network k8s-network \
+  --allow tcp,udp,icmp \
+  --source-ranges 10.0.0.0/16,10.244.0.0/16,10.96.0.0/12
+<p>gcloud compute firewall-rules create k8s-api-server \
+  --network k8s-network \
+  --allow tcp:6443 \
+  --source-ranges 0.0.0.0/0</code></pre></p>
+<strong>Instance Template for Worker Nodes</strong>:
+<pre><code><h2>Create instance template</h2>
+gcloud compute instance-templates create k8s-worker-template \
+  --machine-type n1-standard-2 \
+  --network-interface subnet=k8s-nodes,no-address \
+  --boot-disk-size 100GB \
+  --boot-disk-type pd-ssd \
+  --image-family ubuntu-2004-lts \
+  --image-project ubuntu-os-cloud \
+  --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
+  --metadata startup-script='#!/bin/bash
+    apt-get update
+    apt-get install -y docker.io kubelet kubeadm kubectl
+    systemctl enable docker kubelet'</code></pre>
+<h4>Azure Infrastructure Patterns</h4>
+<strong>Resource Group and Virtual Network</strong>:
+<pre><code><h2>Create resource group</h2>
+az group create --name k8s-rg --location westus2
+<h2>Create virtual network</h2>
+az network vnet create \
+  --resource-group k8s-rg \
+  --name k8s-vnet \
+  --address-prefix 10.0.0.0/16
+<h2>Create subnets</h2>
+az network vnet subnet create \
+  --resource-group k8s-rg \
+  --vnet-name k8s-vnet \
+  --name control-plane-subnet \
+  --address-prefix 10.0.1.0/24
+<p>az network vnet subnet create \
+  --resource-group k8s-rg \
+  --vnet-name k8s-vnet \
+  --name worker-subnet \
+  --address-prefix 10.0.2.0/24</code></pre></p>
+<strong>Network Security Groups</strong>:
+<pre><code><h2>Create NSG for control plane</h2>
+az network nsg create --resource-group k8s-rg --name k8s-control-plane-nsg
+<h2>Add rules</h2>
+az network nsg rule create \
+  --resource-group k8s-rg \
+  --nsg-name k8s-control-plane-nsg \
+  --name allow-api-server \
+  --protocol Tcp \
+  --priority 1001 \
+  --destination-port-range 6443 \
+  --access Allow
+<p>az network nsg rule create \
+  --resource-group k8s-rg \
+  --nsg-name k8s-control-plane-nsg \
+  --name allow-etcd \
+  --protocol Tcp \
+  --priority 1002 \
+  --destination-port-range 2379-2380 \
+  --source-address-prefix 10.0.1.0/24 \
+  --access Allow</code></pre></p>
+<p>---</p>
+<h3><strong>On-Premises Infrastructure Considerations</strong></h3>
+<h4>Hardware Selection and Sizing</h4>
+<strong>Server Specifications for Different Roles</strong>:
+<strong>Control Plane Nodes</strong>:
+<pre><code><h2>Minimum requirements:</h2>
+<h2>- CPU: 4 cores, 2.0+ GHz</h2>
+<h2>- Memory: 16GB RAM</h2>
+<h2>- Storage: 100GB SSD (for etcd and OS)</h2>
+<h2>- Network: 1Gbps NIC</h2>
+<h2>Production recommendations:</h2>
+<h2>- CPU: 8 cores, 2.5+ GHz (Intel Xeon or AMD EPYC)</h2>
+<h2>- Memory: 32GB RAM</h2>
+<h2>- Storage: 500GB NVMe SSD</h2>
+<h2>- Network: 10Gbps NIC with redundancy</h2>
+<h2>Hardware validation</h2>
+dmidecode -t processor | grep -E "(Family|Model|Speed|Core Count)"
+lshw -class memory | grep -E "(size|clock)"
+lsblk -d -o NAME,SIZE,ROTA,TYPE | grep -v loop  # Check for SSDs (ROTA=0)</code></pre>
+<strong>Worker Nodes</strong>:
+<pre><code><h2>Variable based on workload, but typical starting point:</h2>
+<h2>- CPU: 8-16 cores</h2>
+<h2>- Memory: 32-64GB RAM  </h2>
+<h2>- Storage: 200GB+ SSD (OS + container images)</h2>
+<h2>- Network: 1-10Gbps based on workload</h2>
+<h2>Resource allocation planning:</h2>
+<h2>Reserve 20% CPU and memory for system overhead</h2>
+<h2>Plan for 80% average utilization to handle bursts</h2>
+<h2>Size storage for 6+ months of log retention</h2></code></pre>
+<h4>Network Infrastructure Design</h4>
+<strong>Physical Network Architecture</strong>:
+<pre><code>                    ┌─────────────┐
+                    │   Gateway   │
+                    │   Router    │
+                    └──────┬──────┘
+                           │
+                    ┌──────┴──────┐
+                    │    Core     │
+                    │   Switch    │
+                    └─┬─────────┬─┘
+                      │         │
+            ┌─────────┴─┐   ┌───┴─────────┐
+            │   ToR     │   │    ToR      │
+            │ Switch 1  │   │  Switch 2   │
+            └─┬─┬─┬─┬─┬─┘   └─┬─┬─┬─┬─┬─┘
+              │ │ │ │ │       │ │ │ │ │
+            ┌─┴┐│┌┴┐│┌┴┐   ┌─┴┐│┌┴┐│┌┴┐
+            │N1││N2││N3│   │N4││N5││N6│
+            └──┘└──┘└──┘   └──┘└──┘└──┘</code></pre>
+<strong>VLAN Segmentation Strategy</strong>:
+<pre><code><h2>Management VLAN (VLAN 100)</h2>
+<h2>- BMC/IPMI interfaces</h2>
+<h2>- Management switches</h2>
+<h2>- Monitoring systems</h2>
+<h2>Control Plane VLAN (VLAN 200)  </h2>
+<h2>- Kubernetes control plane nodes</h2>
+<h2>- etcd cluster communication</h2>
+<h2>- Administrative access</h2>
+<h2>Worker VLAN (VLAN 300)</h2>
+<h2>- Worker node management interfaces</h2>
+<h2>- Pod-to-pod communication</h2>
+<h2>- Service networking</h2>
+<h2>Storage VLAN (VLAN 400)</h2>
+<h2>- SAN/NAS communication</h2>
+<h2>- Backup traffic</h2>
+<h2>- High-bandwidth storage protocols</h2></code></pre>
+<h4>Storage Infrastructure Patterns</h4>
+<strong>Shared Storage for Persistent Volumes</strong>:
+<strong>iSCSI Configuration</strong>:
+<pre><code><h2>Install iSCSI initiator</h2>
+apt-get install open-iscsi
+<h2>Configure iSCSI initiator</h2>
+echo "InitiatorName=iqn.1993-08.org.debian:01:$(hostname)" > /etc/iscsi/initiatorname.iscsi
+<h2>Discover iSCSI targets</h2>
+iscsiadm -m discovery -t sendtargets -p storage-server:3260
+<h2>Login to target</h2>
+iscsiadm -m node -T iqn.2021-01.com.company:storage.lun1 -p storage-server:3260 --login
+<h2>Verify connection</h2>
+lsblk | grep iscsi</code></pre>
+<strong>NFS for Shared ReadWriteMany Volumes</strong>:
+<pre><code><h2>Install NFS client</h2>
+apt-get install nfs-common
+<h2>Test NFS mount</h2>
+mount -t nfs storage-server:/exports/shared /mnt/test
+df -h /mnt/test
+umount /mnt/test
+<h2>Configure NFS client optimizations</h2>
+echo "storage-server:/exports/shared /mnt/nfs nfs rsize=1048576,wsize=1048576,hard,timeo=600 0 0" >> /etc/fstab</code></pre>
+<strong>Local Storage Performance Testing</strong>:
+<pre><code><h2>Test local disk performance for dynamic local volumes</h2>
+fio --name=random-write --ioengine=libaio --iodepth=32 --rw=randwrite --bs=4k --direct=1 --size=4G --numjobs=4 --runtime=60 --group_reporting
+<h2>Expected results for production workloads:</h2>
+<h2>Random write IOPS: 1000+ (SSD), 100+ (HDD)</h2>
+<h2>Sequential write: 100+ MB/s (SSD), 50+ MB/s (HDD)</h2>
+<h2>Latency 99th percentile: <20ms (SSD), <100ms (HDD)</h2></code></pre>
+<p>---</p>
+<h3><strong>Infrastructure as Code and Automation</strong></h3>
+<h4>Terraform for Infrastructure Provisioning</h4>
+<strong>AWS Infrastructure Module</strong>:
+<pre><code><h2>infrastructure/aws/main.tf</h2>
+variable "cluster_name" {
+  description = "Name of the Kubernetes cluster"
+  type        = string
+}
+<p>variable "node_count" {
+  description = "Number of worker nodes"
+  type        = number
+  default     = 3
+}</p>
+<h2>VPC and networking</h2>
+resource "aws_vpc" "k8s_vpc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+<p>tags = {
+    Name = "${var.cluster_name}-vpc"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+  }
+}</p>
+<p>resource "aws_internet_gateway" "k8s_igw" {
+  vpc_id = aws_vpc.k8s_vpc.id</p>
+<p>tags = {
+    Name = "${var.cluster_name}-igw"
+  }
+}</p>
+<h2>Public subnets for load balancers</h2>
+resource "aws_subnet" "k8s_public" {
+  count                   = 3
+  vpc_id                  = aws_vpc.k8s_vpc.id
+  cidr_block              = "10.0.${count.index + 1}.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  map_public_ip_on_launch = true
+<p>tags = {
+    Name = "${var.cluster_name}-public-${count.index + 1}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb" = "1"
+  }
+}</p>
+<h2>Private subnets for nodes</h2>
+resource "aws_subnet" "k8s_private" {
+  count         = 3
+  vpc_id        = aws_vpc.k8s_vpc.id
+  cidr_block    = "10.0.${count.index + 10}.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+<p>tags = {
+    Name = "${var.cluster_name}-private-${count.index + 1}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    "kubernetes.io/role/internal-elb" = "1"
+  }
+}</p>
+<h2>Control plane nodes</h2>
+resource "aws_instance" "control_plane" {
+  count                  = 3
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "m5.large"
+  key_name              = aws_key_pair.k8s_key.key_name
+  vpc_security_group_ids = [aws_security_group.control_plane.id]
+  subnet_id             = aws_subnet.k8s_private[count.index].id
+<p>root_block_device {
+    volume_type = "gp3"
+    volume_size = 100
+    encrypted   = true
+  }</p>
+<p>user_data = base64encode(templatefile("${path.module}/userdata/control-plane.sh", {
+    cluster_name = var.cluster_name
+  }))</p>
+<p>tags = {
+    Name = "${var.cluster_name}-control-plane-${count.index + 1}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+  }
+}</p>
+<h2>Worker nodes</h2>
+resource "aws_instance" "workers" {
+  count                  = var.node_count
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "m5.xlarge"
+  key_name              = aws_key_pair.k8s_key.key_name
+  vpc_security_group_ids = [aws_security_group.workers.id]
+  subnet_id             = aws_subnet.k8s_private[count.index % 3].id
+<p>root_block_device {
+    volume_type = "gp3"
+    volume_size = 200
+    encrypted   = true
+  }</p>
+<p>user_data = base64encode(file("${path.module}/userdata/worker.sh"))</p>
+<p>tags = {
+    Name = "${var.cluster_name}-worker-${count.index + 1}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+  }
+}</code></pre></p>
+<strong>User Data Scripts for Automation</strong>:
+<pre><code><h2>userdata/control-plane.sh</h2>
+#!/bin/bash
+<h2>Update system</h2>
+apt-get update
+apt-get upgrade -y
+<h2>Install container runtime</h2>
+apt-get install -y containerd
+mkdir -p /etc/containerd
+containerd config default | tee /etc/containerd/config.toml
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+systemctl restart containerd
+systemctl enable containerd
+<h2>Install Kubernetes components</h2>
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
+<p>apt-get update
+apt-get install -y kubelet kubeadm kubectl
+apt-mark hold kubelet kubeadm kubectl</p>
+<h2>Configure system</h2>
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+<h2>Load kernel modules</h2>
+cat <<EOF | tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+<p>modprobe overlay
+modprobe br_netfilter</p>
+<h2>Configure sysctl</h2>
+cat <<EOF | tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+<p>sysctl --system</p>
+<p>systemctl enable kubelet</code></pre></p>
+<h4>Ansible for Configuration Management</h4>
+<strong>Kubernetes Cluster Playbook</strong>:
+<pre><code><h2>playbooks/k8s-cluster.yml</h2>
+---
+<li>name: Configure Kubernetes cluster</li>
+  hosts: all
+  become: yes
+  vars:
+    kubernetes_version: "1.28.0"
+    pod_network_cidr: "10.244.0.0/16"
+    service_cidr: "10.96.0.0/12"
+<p>pre_tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600</p>
+<p>roles:
+    - common
+    - container-runtime
+    - kubernetes</p>
+<li>name: Initialize control plane</li>
+  hosts: control_plane[0]
+  become: yes
+  tasks:
+    - name: Initialize kubeadm
+      command: >
+        kubeadm init
+        --pod-network-cidr={{ pod_network_cidr }}
+        --service-cidr={{ service_cidr }}
+        --upload-certs
+      register: kubeadm_init
+      
+    - name: Save join commands
+      copy:
+        content: "{{ kubeadm_init.stdout }}"
+        dest: /tmp/kubeadm-join-commands.txt
+<li>name: Join additional control plane nodes</li>
+  hosts: control_plane[1:]
+  become: yes
+  tasks:
+    - name: Extract control plane join command
+      shell: grep -A2 "control-plane" /tmp/kubeadm-join-commands.txt
+      register: cp_join_command
+      delegate_to: "{{ groups['control_plane'][0] }}"
+<p>- name: Join control plane
+      shell: "{{ cp_join_command.stdout }}"</p>
+<li>name: Join worker nodes</li>
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Extract worker join command
+      shell: grep "kubeadm join" /tmp/kubeadm-join-commands.txt | head -1
+      register: worker_join_command
+      delegate_to: "{{ groups['control_plane'][0] }}"
+<p>- name: Join worker nodes
+      shell: "{{ worker_join_command.stdout }}"</code></pre></p>
+<strong>Inventory File</strong>:
+<pre><code><h2>inventory/production.ini</h2>
+[control_plane]
+k8s-master-1 ansible_host=10.0.10.10 node_role=master
+k8s-master-2 ansible_host=10.0.10.11 node_role=master  
+k8s-master-3 ansible_host=10.0.10.12 node_role=master
+<p>[workers]
+k8s-worker-1 ansible_host=10.0.11.10 node_role=worker
+k8s-worker-2 ansible_host=10.0.11.11 node_role=worker
+k8s-worker-3 ansible_host=10.0.11.12 node_role=worker</p>
+<p>[all:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=~/.ssh/k8s-cluster.pem
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'</code></pre></p>
+<p>---</p>
+<h3><strong>Security and Compliance Infrastructure</strong></h3>
+<h4>Network Security Architecture</h4>
+<strong>Defense in Depth Strategy</strong>:
+<pre><code>┌─────────────────────────────────────────┐
+│              Internet                   │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────┴───────────────────────┐
+│         Perimeter Firewall              │
+│    - DDoS protection                    │
+│    - WAF rules                          │
+│    - Rate limiting                      │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────┴───────────────────────┐
+│         Load Balancer                   │
+│    - TLS termination                    │
+│    - Health checking                    │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────┴───────────────────────┐
+│      DMZ Network (Public Subnets)      │
+│    - Ingress controllers               │
+│    - Jump hosts                        │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────┴───────────────────────┐
+│    Application Network (Private)       │
+│    - Kubernetes nodes                  │
+│    - Internal services                 │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────┴───────────────────────┐
+│      Data Network (Isolated)           │
+│    - Databases                         │
+│    - Storage systems                   │
+│    - Backup infrastructure             │
+└─────────────────────────────────────────┘</code></pre>
+<strong>Firewall Rule Examples</strong>:
+<pre><code><h2>iptables rules for Kubernetes nodes</h2>
+<h2>Allow loopback</h2>
+iptables -A INPUT -i lo -j ACCEPT
+<h2>Allow established connections</h2>
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+<h2>Allow SSH from management network</h2>
+iptables -A INPUT -p tcp --dport 22 -s 10.0.100.0/24 -j ACCEPT
+<h2>Allow Kubernetes API server</h2>
+iptables -A INPUT -p tcp --dport 6443 -s 10.0.0.0/16 -j ACCEPT
+<h2>Allow kubelet API</h2>
+iptables -A INPUT -p tcp --dport 10250 -s 10.0.0.0/16 -j ACCEPT
+<h2>Allow etcd (control plane only)</h2>
+iptables -A INPUT -p tcp --dport 2379:2380 -s 10.0.10.0/24 -j ACCEPT
+<h2>Allow NodePort services</h2>
+iptables -A INPUT -p tcp --dport 30000:32767 -j ACCEPT
+<h2>Allow pod network traffic (adjust for your CNI)</h2>
+iptables -A INPUT -s 10.244.0.0/16 -j ACCEPT
+<h2>Drop everything else</h2>
+iptables -A INPUT -j DROP</code></pre>
+<h4>Certificate Management Infrastructure</h4>
+<strong>Certificate Authority Setup</strong>:
+<pre><code><h2>Create root CA for the cluster</h2>
+mkdir -p /etc/ssl/k8s-ca
+cd /etc/ssl/k8s-ca
+<h2>Generate root CA private key</h2>
+openssl genrsa -out ca-key.pem 4096
+<h2>Create root CA certificate</h2>
+openssl req -new -x509 -days 3650 -key ca-key.pem -out ca.pem -subj "/CN=Kubernetes-CA/O=Kubernetes"
+<h2>Create intermediate CA for different components</h2>
+openssl genrsa -out etcd-ca-key.pem 2048
+openssl req -new -key etcd-ca-key.pem -out etcd-ca.csr -subj "/CN=etcd-CA/O=Kubernetes"
+openssl x509 -req -in etcd-ca.csr -CA ca.pem -CAkey ca-key.pem -out etcd-ca.pem -days 1825 -CAcreateserial
+<h2>Set proper permissions</h2>
+chmod 600 *-key.pem
+chmod 644 *.pem</code></pre>
+<strong>Automated Certificate Rotation</strong>:
+<pre><code>#!/bin/bash
+<h2>cert-rotation.sh</h2>
+<p>CERT_DIR="/etc/kubernetes/pki"
+BACKUP_DIR="/backup/certs/$(date +%Y%m%d)"</p>
+<h2>Create backup</h2>
+mkdir -p $BACKUP_DIR
+cp -r $CERT_DIR $BACKUP_DIR
+<h2>Check certificate expiration (warn if < 30 days)</h2>
+for cert in $CERT_DIR/*.crt; do
+    if [ -f "$cert" ]; then
+        expiry=$(openssl x509 -in "$cert" -noout -enddate | cut -d= -f2)
+        expiry_epoch=$(date -d "$expiry" +%s)
+        current_epoch=$(date +%s)
+        days_left=$(( (expiry_epoch - current_epoch) / 86400 ))
+        
+        if [ $days_left -lt 30 ]; then
+            echo "WARNING: Certificate $cert expires in $days_left days"
+            # Trigger renewal process
+            kubeadm certs renew $(basename "$cert" .crt)
+        fi
+    fi
+done
+<h2>Restart kubelet to pick up new certificates</h2>
+systemctl restart kubelet</code></pre>
+<h4>Compliance and Auditing</h4>
+<strong>System Auditing Configuration</strong>:
+<pre><code><h2>/etc/audit/audit.rules - auditd configuration for Kubernetes</h2>
+<h2>Monitor file access to sensitive directories</h2>
+-w /etc/kubernetes/ -p wa -k kubernetes-config
+-w /var/lib/etcd/ -p wa -k etcd-data
+-w /etc/ssl/ -p wa -k ssl-certs
+<h2>Monitor process execution</h2>
+-a always,exit -F arch=b64 -S execve -F path=/usr/bin/kubectl -k kubectl-usage
+-a always,exit -F arch=b64 -S execve -F path=/usr/bin/kubeadm -k kubeadm-usage
+<h2>Monitor network connections</h2>
+-a always,exit -F arch=b64 -S connect -F a1=16 -k network-connect
+<h2>Monitor privilege escalation</h2>
+-w /bin/su -p x -k privilege-escalation
+-w /usr/bin/sudo -p x -k privilege-escalation</code></pre>
+<strong>Kubernetes Audit Policy</strong>:
+<pre><code><h2>/etc/kubernetes/audit-policy.yaml</h2>
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+<h2>Log all requests at metadata level</h2>
+<li>level: Metadata</li>
+  omitStages:
+  - RequestReceived
+<h2>Log secret access at request level</h2>
+<li>level: Request</li>
+  resources:
+  - group: ""
+    resources: ["secrets"]
+<h2>Log authentication failures</h2>
+<li>level: Metadata</li>
+  omitStages:
+  - RequestReceived
+  namespaces: ["kube-system"]
+  verbs: ["create", "update", "patch", "delete"]
+<h2>Don't log read-only requests to certain resources</h2>
+<li>level: None</li>
+  resources:
+  - group: ""
+    resources: ["events"]
+  verbs: ["get", "list", "watch"]</code></pre>
+<p>---</p>
+<h3><strong>Monitoring and Observability Infrastructure</strong></h3>
+<h4>Infrastructure Monitoring Stack</h4>
+<strong>Prometheus for Metrics Collection</strong>:
+<pre><code><h2>prometheus-config.yml</h2>
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+<p>rule_files:
+  - "kubernetes-rules.yml"
+  - "infrastructure-rules.yml"</p>
+<p>scrape_configs:
+<h2>Kubernetes API server</h2>
+<li>job_name: 'kubernetes-apiservers'</li>
+  kubernetes_sd_configs:
+  - role: endpoints
+  scheme: https
+  tls_config:
+    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  relabel_configs:
+  - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+    action: keep
+    regex: default;kubernetes;https</p>
+<h2>Node metrics</h2>
+<li>job_name: 'node-exporter'</li>
+  kubernetes_sd_configs:
+  - role: node
+  relabel_configs:
+  - action: labelmap
+    regex: __meta_kubernetes_node_label_(.+)
+<h2>etcd metrics</h2>
+<li>job_name: 'etcd'</li>
+  static_configs:
+  - targets: ['10.0.10.10:2381', '10.0.10.11:2381', '10.0.10.12:2381']
+  scheme: https
+  tls_config:
+    ca_file: /etc/kubernetes/pki/etcd/ca.crt
+    cert_file: /etc/kubernetes/pki/etcd/healthcheck-client.crt
+    key_file: /etc/kubernetes/pki/etcd/healthcheck-client.key</code></pre>
+<strong>Key Infrastructure Metrics</strong>:
+<pre><code><h2>Node-level metrics to monitor:</h2>
+<h2>- node_cpu_seconds_total (CPU usage)</h2>
+<h2>- node_memory_MemAvailable_bytes (Available memory)</h2>
+<h2>- node_disk_io_time_seconds_total (Disk I/O)</h2>
+<h2>- node_network_receive_bytes_total (Network I/O)</h2>
+<h2>- node_filesystem_avail_bytes (Disk space)</h2>
+<h2>etcd metrics:</h2>
+<h2>- etcd_server_is_leader (Leader status)</h2>
+<h2>- etcd_disk_wal_fsync_duration_seconds (Disk performance)</h2>
+<h2>- etcd_network_peer_round_trip_time_seconds (Network latency)</h2>
+<h2>- etcd_server_proposals_failed_total (Consensus failures)</h2>
+<h2>Query examples:</h2>
+<h2>CPU utilization by node</h2>
+100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+<h2>Memory utilization by node  </h2>
+100 - ((node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100)
+<h2>Disk I/O utilization</h2>
+rate(node_disk_io_time_seconds_total[5m]) * 100</code></pre>
+<h4>Logging Infrastructure</h4>
+<strong>Centralized Logging with Fluent Bit</strong>:
+<pre><code><h2>fluent-bit-config.yaml</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: logging
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         1
+        Log_Level     info
+        Daemon        off
+        Parsers_File  parsers.conf
+<p>[INPUT]
+        Name              tail
+        Path              /var/log/containers/*.log
+        Parser            docker
+        Tag               kube.*
+        Refresh_Interval  5
+        Mem_Buf_Limit     50MB
+        Skip_Long_Lines   On</p>
+<p>[INPUT]
+        Name              systemd
+        Tag               systemd.*
+        Systemd_Filter    _SYSTEMD_UNIT=kubelet.service
+        Systemd_Filter    _SYSTEMD_UNIT=containerd.service</p>
+<p>[FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Merge_Log           On
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude Off</p>
+<p>[OUTPUT]
+        Name  es
+        Match *
+        Host  elasticsearch.logging.svc.cluster.local
+        Port  9200
+        Index kubernetes
+        Type  _doc</code></pre></p>
+<strong>Log Retention and Management</strong>:
+<pre><code><h2>Configure log rotation for container logs</h2>
+cat > /etc/logrotate.d/kubernetes <<EOF
+/var/log/containers/*.log {
+    daily
+    rotate 7
+    compress
+    missingok
+    notifempty
+    maxage 7
+    copytruncate
+}
+EOF
+<h2>Configure journal limits</h2>
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/kubernetes.conf <<EOF
+[Journal]
+SystemMaxUse=1G
+SystemMaxFileSize=100M
+MaxRetentionSec=1week
+EOF
+<p>systemctl restart systemd-journald</code></pre></p>
+<p>---</p>
+<h3><strong>Performance Optimization and Tuning</strong></h3>
+<h4>System-Level Performance Tuning</h4>
+<strong>Kernel Parameter Optimization</strong>:
+<pre><code><h2>/etc/sysctl.d/kubernetes.conf</h2>
+<h2>Network performance</h2>
+net.core.somaxconn = 65535
+net.core.netdev_max_backlog = 5000
+net.ipv4.tcp_max_syn_backlog = 4096
+net.ipv4.ip_local_port_range = 1024 65535
+<h2>Memory management</h2>
+vm.swappiness = 0
+vm.max_map_count = 262144
+vm.overcommit_memory = 1
+<h2>File system</h2>
+fs.file-max = 2097152
+fs.inotify.max_user_instances = 8192
+fs.inotify.max_user_watches = 524288
+<h2>Apply settings</h2>
+sysctl --system</code></pre>
+<strong>I/O Scheduler Optimization</strong>:
+<pre><code><h2>Check current I/O scheduler</h2>
+cat /sys/block/sda/queue/scheduler
+<h2>Set optimal scheduler for SSDs (deadline or noop)</h2>
+echo deadline > /sys/block/sda/queue/scheduler
+<h2>Make permanent</h2>
+echo 'ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="deadline"' > /etc/udev/rules.d/60-ssd-scheduler.rules
+<h2>For NVMe drives, use none or mq-deadline</h2>
+echo 'ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"' >> /etc/udev/rules.d/60-ssd-scheduler.rules</code></pre>
+<h4>Container Runtime Optimization</h4>
+<strong>containerd Performance Tuning</strong>:
+<pre><code><h2>/etc/containerd/config.toml</h2>
+version = 2
+<p>[plugins."io.containerd.grpc.v1.cri"]
+  # Increase concurrent image pulls
+  max_concurrent_downloads = 10
+  
+  # Configure registry mirrors for faster pulls
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+        endpoint = ["https://registry-mirror.company.com", "https://registry-1.docker.io"]</p>
+<p>[plugins."io.containerd.runtime.v2.task"]
+  # Optimize for container startup time
+  platforms = ["linux/amd64"]</p>
+<p>[plugins."io.containerd.snapshotter.v1.overlayfs"]
+  # Use native diff for better performance
+  upperdir_label = false</code></pre></p>
+<strong>kubelet Performance Configuration</strong>:
+<pre><code><h2>/var/lib/kubelet/config.yaml</h2>
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+<h2>Resource management</h2>
+maxPods: 250
+podsPerCore: 10
+<h2>Image management</h2>
+imageMinimumGCAge: 2m
+imageGCHighThresholdPercent: 85
+imageGCLowThresholdPercent: 80
+<h2>Garbage collection</h2>
+containerLogMaxSize: 50Mi
+containerLogMaxFiles: 5
+<h2>Performance tuning</h2>
+cpuManagerPolicy: static
+reservedSystemCPUs: "0,1"
+kubeReserved:
+  cpu: "1000m"
+  memory: "2Gi"
+  ephemeral-storage: "10Gi"
+systemReserved:
+  cpu: "500m"
+  memory: "1Gi"
+  ephemeral-storage: "10Gi"
+<h2>Monitoring and health</h2>
+healthzBindAddress: 0.0.0.0
+healthzPort: 10248</code></pre>
+<p>---</p>
+<h3><strong>Disaster Recovery and Business Continuity</strong></h3>
+<h4>Infrastructure Backup Strategies</h4>
+<strong>Full Infrastructure Backup Plan</strong>:
+<pre><code>#!/bin/bash
+<h2>infrastructure-backup.sh</h2>
+<p>BACKUP_DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_ROOT="/backup/infrastructure"
+BACKUP_DIR="$BACKUP_ROOT/$BACKUP_DATE"</p>
+<p>mkdir -p "$BACKUP_DIR"</p>
+<h2>1. Backup etcd data</h2>
+echo "Backing up etcd..."
+ETCDCTL_API=3 etcdctl snapshot save "$BACKUP_DIR/etcd-snapshot.db" \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+<h2>2. Backup certificates and configurations</h2>
+echo "Backing up certificates and configs..."
+tar -czf "$BACKUP_DIR/kubernetes-config.tar.gz" \
+  /etc/kubernetes/ \
+  /var/lib/kubelet/ \
+  /etc/containerd/
+<h2>3. Backup persistent volume data</h2>
+echo "Backing up persistent volumes..."
+for pv in $(kubectl get pv -o jsonpath='{.items[*].metadata.name}'); do
+    pv_path=$(kubectl get pv $pv -o jsonpath='{.spec.hostPath.path}')
+    if [ ! -z "$pv_path" ]; then
+        tar -czf "$BACKUP_DIR/pv-$pv.tar.gz" -C $(dirname $pv_path) $(basename $pv_path)
+    fi
+done
+<h2>4. Export cluster resources</h2>
+echo "Exporting cluster resources..."
+kubectl get all --all-namespaces -o yaml > "$BACKUP_DIR/all-resources.yaml"
+kubectl get pv,pvc,storageclass -o yaml > "$BACKUP_DIR/storage-resources.yaml"
+kubectl get secrets --all-namespaces -o yaml > "$BACKUP_DIR/secrets.yaml"
+kubectl get configmaps --all-namespaces -o yaml > "$BACKUP_DIR/configmaps.yaml"
+<h2>5. Cleanup old backups (keep last 30 days)</h2>
+find "$BACKUP_ROOT" -type d -mtime +30 -exec rm -rf {} \;
+<p>echo "Backup completed: $BACKUP_DIR"</code></pre></p>
+<h4>Multi-Region Disaster Recovery</h4>
+<strong>Cross-Region Infrastructure Replication</strong>:
+<pre><code><h2>terraform/multi-region/main.tf</h2>
+variable "regions" {
+  description = "List of regions for multi-region deployment"
+  type        = list(string)
+  default     = ["us-west-2", "us-east-1"]
+}
+<h2>Create infrastructure in each region</h2>
+module "kubernetes_cluster" {
+  for_each = toset(var.regions)
+  source   = "./modules/kubernetes-cluster"
+  
+  region           = each.value
+  cluster_name     = "${var.cluster_name}-${each.value}"
+  backup_bucket    = aws_s3_bucket.backup_bucket.bucket
+  monitoring_topic = aws_sns_topic.alerts.arn
+}
+<h2>Cross-region backup replication</h2>
+resource "aws_s3_bucket_replication_configuration" "backup_replication" {
+  role   = aws_iam_role.replication.arn
+  bucket = aws_s3_bucket.backup_bucket.id
+<p>rule {
+    id     = "backup-replication"
+    status = "Enabled"</p>
+<p>destination {
+      bucket = aws_s3_bucket.backup_bucket_replica.arn
+      storage_class = "STANDARD_IA"
+    }
+  }
+}</code></pre></p>
+<p>---</p>
+<h3><strong>Cost Optimization Strategies</strong></h3>
+<h4>Resource Right-Sizing</h4>
+<strong>Automated Resource Analysis</strong>:
+<pre><code>#!/bin/bash
+<h2>resource-analysis.sh</h2>
+<p>echo "=== Node Resource Utilization ==="
+kubectl top nodes</p>
+<p>echo -e "\n=== Pod Resource Requests vs Usage ==="
+kubectl get pods --all-namespaces -o json | jq -r '
+.items[] | 
+select(.status.phase == "Running") |
+{
+  namespace: .metadata.namespace,
+  name: .metadata.name,
+  requests: (.spec.containers[0].resources.requests // {}),
+  usage: (.status | select(.containerStatuses != null) | .containerStatuses[0])
+} |
+"\(.namespace)/\(.name): CPU Req=\(.requests.cpu // "none"), Mem Req=\(.requests.memory // "none")"'</p>
+<p>echo -e "\n=== Unused Resources ==="
+<h2>Find nodes with low utilization</h2>
+kubectl top nodes --sort-by=cpu | awk 'NR>1 && $3+0 < 20 {print "Low CPU node: " $1 " (" $3 ")"}'
+kubectl top nodes --sort-by=memory | awk 'NR>1 && $5+0 < 20 {print "Low memory node: " $1 " (" $5 ")"}'</p>
+<h2>Find pods without resource requests</h2>
+kubectl get pods --all-namespaces -o json | jq -r '
+.items[] |
+select(.spec.containers[0].resources.requests == null) |
+"\(.metadata.namespace)/\(.metadata.name): No resource requests set"'</code></pre>
+<h4>Infrastructure Cost Optimization</h4>
+<strong>Spot Instance Strategy for Development</strong>:
+<pre><code><h2>terraform/cost-optimized/workers.tf</h2>
+resource "aws_launch_template" "worker_spot" {
+  name_prefix   = "${var.cluster_name}-worker-spot-"
+  image_id      = data.aws_ami.ubuntu.id
+  instance_type = "m5.large"
+  
+  vpc_security_group_ids = [aws_security_group.workers.id]
+  
+  # Request spot instances
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      max_price = "0.10"  # Set maximum price
+    }
+  }
+  
+  user_data = base64encode(file("${path.module}/userdata/worker.sh"))
+  
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${var.cluster_name}-worker-spot"
+      "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    }
+  }
+}
+<h2>Auto Scaling Group with mixed instance types</h2>
+resource "aws_autoscaling_group" "workers" {
+  name                = "${var.cluster_name}-workers"
+  vpc_zone_identifier = aws_subnet.k8s_private[*].id
+  target_group_arns   = []
+  health_check_type   = "EC2"
+  
+  min_size         = 1
+  max_size         = 10
+  desired_capacity = 3
+  
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.worker_spot.id
+        version           = "$Latest"
+      }
+      
+      override {
+        instance_type = "m5.large"
+      }
+      override {
+        instance_type = "m5.xlarge"
+      }
+      override {
+        instance_type = "m4.large"
+      }
+    }
+    
+    instances_distribution {
+      on_demand_base_capacity                  = 1
+      on_demand_percentage_above_base_capacity = 25
+      spot_allocation_strategy                 = "diversified"
+    }
+  }
+  
+  tag {
+    key                 = "kubernetes.io/cluster/${var.cluster_name}"
+    value               = "owned"
+    propagate_at_launch = true
+  }
+}</code></pre>
+<p>---</p>
+<h3><strong>Exam Tips</strong></h3>
+<h4>Infrastructure Planning Skills</h4>
+<li><strong>Understand the full stack</strong>: Know how each layer (hardware, OS, network, storage) affects Kubernetes</li>
+<li><strong>Size appropriately</strong>: Practice calculating resource requirements for different cluster sizes</li>
+<li><strong>Network design</strong>: Understand CIDR planning and how it affects CNI choice</li>
+<li><strong>Storage performance</strong>: Know the difference between throughput and IOPS requirements</li>
+<h4>Practical Scenarios</h4>
+1. <strong>Design infrastructure for 100-node cluster</strong>: Calculate networking, storage, and compute requirements
+2. <strong>Troubleshoot infrastructure issues</strong>: Network connectivity, disk performance, resource constraints
+3. <strong>Plan disaster recovery</strong>: Design backup and restore procedures for entire clusters
+4. <strong>Optimize costs</strong>: Right-size infrastructure and choose appropriate instance types
+<h4>Key Commands to Master</h4>
+<pre><code><h2>Infrastructure validation</h2>
+lscpu && free -h && lsblk
+ip route show && ss -tulpn
+systemctl status containerd kubelet
+<h2>Performance testing</h2>
+fio --name=test --ioengine=libaio --rw=write --bs=4k --size=1G
+iperf3 -c target-host
+stress-ng --cpu 4 --timeout 60s
+<h2>Resource monitoring</h2>
+kubectl top nodes && kubectl top pods -A
+df -h && iostat 1 5</code></pre>
+<h4>Critical Concepts</h4>
+<li>Infrastructure choices directly impact Kubernetes performance and reliability</li>
+<li>Network design affects CNI options and security policies</li>
+<li>Storage performance is critical for etcd and stateful workloads</li>
+<li>Automation and IaC are essential for repeatable, consistent deployments</li>
+<li>Cost optimization requires understanding workload patterns and cloud pricing models</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

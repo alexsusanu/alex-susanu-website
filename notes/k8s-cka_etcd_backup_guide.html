@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Study Guide: etcd Backup and Restore - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Study Guide: etcd Backup and Restore</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Study Guide: etcd Backup and Restore</h2>
+<h3><strong>Understanding etcd: The Heart of Kubernetes</strong></h3>
+<p>etcd is not just another database - it's the single source of truth for your entire Kubernetes cluster. Every resource you create, every configuration change you make, every piece of state about running workloads exists only in etcd. Understanding this fundamental truth explains why etcd backup and restore is so critical.</p>
+<h4>What Lives in etcd</h4>
+<strong>All Kubernetes Resources</strong>:
+<ul><li>Pods, Services, Deployments, ConfigMaps, Secrets</li>
+<li>RBAC policies, Network policies, Custom resources</li>
+<li>Node registrations and health status</li>
+<li>Scheduler decisions and resource allocations</li>
+<strong>Cluster Configuration State</strong>:
+<li>API server configuration and feature gates</li>
+<li>Controller manager and scheduler configurations</li>
+<li>Cluster-wide settings and admission controllers</li>
+<li>Certificate data and encryption keys</li>
+<strong>Runtime State</strong>:
+<li>Which pods are running on which nodes</li>
+<li>Service endpoint mappings</li>
+<li>Persistent volume claims and bindings</li>
+<li>Lease information for leader election</li>
+<h4>The Catastrophic Risk of etcd Loss</h4>
+<strong>Without etcd backup, losing your etcd cluster means</strong>:
+<li><strong>Complete cluster rebuild</strong>: Start from scratch with new infrastructure</li>
+<li><strong>Application redeployment</strong>: Manually recreate all workloads and configurations</li>
+<li><strong>Data loss</strong>: Lose all secrets, configurations, and state history</li>
+<li><strong>Extended downtime</strong>: Hours to days of recovery time vs minutes with backup</li>
+<li><strong>Compliance violations</strong>: Loss of audit trails and configuration history</li>
+<strong>Real-world incident costs</strong>:
+<li>Netflix: 8-hour outage due to database corruption cost ~$150M in lost revenue</li>
+<li>GitHub: 24-hour partial outage in 2018 required complex data recovery</li>
+<li>Many companies report $100,000-$1M+ per hour costs for major system outages</li>
+<p>This explains why etcd backup is not optional - it's the foundation of disaster recovery.</p>
+<p>---</p>
+<h3><strong>etcd Architecture and Data Model</strong></h3>
+<h4>How etcd Stores Kubernetes Data</h4>
+<strong>Key-Value Structure</strong>:
+<pre><code><h2>etcd stores everything as key-value pairs in a hierarchical namespace</h2>
+<h2>Example keys in Kubernetes etcd:</h2>
+<p>/registry/pods/default/my-pod          # Pod definition
+/registry/services/specs/default/my-service  # Service spec
+/registry/secrets/default/my-secret    # Secret data
+/registry/configmaps/default/my-config # ConfigMap data
+/registry/nodes/worker-1               # Node registration</code></pre></p>
+<strong>Why This Matters for Backup</strong>:
+<li><strong>Atomic consistency</strong>: All related data is stored together</li>
+<li><strong>Point-in-time snapshots</strong>: Backup captures exact cluster state at specific moment</li>
+<li><strong>Incremental impossibility</strong>: Can't easily do incremental backups due to interdependencies</li>
+<li><strong>Restore atomicity</strong>: Must restore complete snapshot, not partial data</li>
+<h4>etcd Clustering and Replication</h4>
+<strong>Understanding etcd Consensus</strong>:
+<pre><code>┌─────────┐    ┌─────────┐    ┌─────────┐
+│ etcd-1  │    │ etcd-2  │    │ etcd-3  │
+│(Leader) │────│(Follower)───│(Follower)│
+└─────────┘    └─────────┘    └─────────┘
+     │              │              │
+     └──────────────┼──────────────┘
+                    │
+              ┌─────┴─────┐
+              │ Consensus │
+              │   Log     │
+              └───────────┘</code></pre>
+<strong>Raft Consensus Implications for Backup</strong>:
+<li><strong>Single backup suffices</strong>: All nodes contain identical data</li>
+<li><strong>Backup timing matters</strong>: Capture during stable periods for consistency</li>
+<li><strong>Restore coordination</strong>: Must restore to same point on all nodes</li>
+<li><strong>Quorum requirements</strong>: Need majority of nodes for restore validation</li>
+<h4>etcd Storage Engine Evolution</h4>
+<strong>Different etcd Storage Backends</strong>:
+<pre><code><h2>Check etcd storage version</h2>
+kubectl -n kube-system exec etcd-master1 -- etcdctl version
+<h2>etcd v3 uses bolt database (bbolt)</h2>
+<h2>- Better performance and reliability</h2>
+<h2>- More efficient storage format</h2>
+<h2>- Supports larger datasets</h2>
+<h2>- Different backup format than v2</h2></code></pre>
+<strong>Why Storage Version Matters</strong>:
+<li><strong>Backup compatibility</strong>: v2 and v3 backups are not interchangeable</li>
+<li><strong>Restore procedures</strong>: Different commands and options</li>
+<li><strong>Performance characteristics</strong>: v3 handles larger clusters better</li>
+<li><strong>Feature availability</strong>: Some features only in v3 (like lease management)</li>
+<p>---</p>
+<h3><strong>etcd Backup Strategies and Types</strong></h3>
+<h4>Snapshot-Based Backups (Recommended)</h4>
+<strong>What is an etcd Snapshot</strong>:
+A snapshot is a point-in-time copy of the entire etcd database that includes:
+<li>All key-value data</li>
+<li>Metadata and revision history</li>
+<li>Cluster membership information</li>
+<li>Consistent state across all keys</li>
+<strong>Why Snapshots vs File System Backups</strong>:
+<pre><code><h2>File system backup (WRONG approach)</h2>
+tar -czf etcd-backup.tar.gz /var/lib/etcd/
+<h2>Problems with filesystem backup:</h2>
+<h2>- May capture inconsistent state</h2>
+<h2>- Doesn't handle WAL (Write-Ahead Log) properly</h2>
+<h2>- Can't guarantee transactional consistency</h2>
+<h2>- Misses in-memory state</h2>
+<h2>Snapshot backup (CORRECT approach)</h2>
+ETCDCTL_API=3 etcdctl snapshot save backup.db
+<h2>Benefits of snapshot:</h2>
+<h2>- Guarantees consistency</h2>
+<h2>- Handles all etcd internals correctly</h2>
+<h2>- Includes complete cluster state</h2>
+<h2>- Can be restored atomically</h2></code></pre>
+<h4>Understanding etcd Data Consistency</h4>
+<strong>ACID Properties in etcd</strong>:
+<li><strong>Atomicity</strong>: Either all changes in a transaction succeed or all fail</li>
+<li><strong>Consistency</strong>: Database remains in valid state before/after transactions</li>
+<li><strong>Isolation</strong>: Concurrent transactions don't interfere with each other</li>
+<li><strong>Durability</strong>: Committed changes survive system failures</li>
+<strong>How Snapshots Preserve Consistency</strong>:
+<pre><code><h2>When you take a snapshot, etcd:</h2>
+<h2>1. Stops accepting new writes temporarily</h2>
+<h2>2. Flushes all pending writes to disk</h2>
+<h2>3. Creates consistent copy of database</h2>
+<h2>4. Resumes normal operations</h2>
+<h2>5. Returns snapshot with guaranteed consistency</h2></code></pre>
+<h4>Backup Frequency and Timing</h4>
+<strong>Backup Frequency Considerations</strong>:
+<pre><code><h2>Factors affecting backup frequency:</h2>
+<h2>- Change rate in cluster (how often resources are modified)</h2>
+<h2>- Recovery time objectives (RTO)</h2>
+<h2>- Recovery point objectives (RPO)</h2>
+<h2>- Storage costs and retention requirements</h2>
+<h2>Common backup schedules:</h2>
+<h2>High-change environments: Every 4-6 hours</h2>
+<h2>Medium-change environments: Every 12-24 hours  </h2>
+<h2>Low-change environments: Daily</h2>
+<h2>Before major changes: Always</h2></code></pre>
+<strong>Optimal Backup Timing</strong>:
+<pre><code><h2>Best times to take backups:</h2>
+<h2>- During low activity periods (minimize performance impact)</h2>
+<h2>- Before cluster upgrades or major changes</h2>
+<h2>- After significant configuration changes</h2>
+<h2>- Before maintenance windows</h2>
+<h2>Check cluster activity before backup</h2>
+kubectl top nodes
+kubectl get events --sort-by=.metadata.creationTimestamp | tail -10</code></pre>
+<p>---</p>
+<h3><strong>Implementing etcd Backup Procedures</strong></h3>
+<h4>Basic Snapshot Creation</h4>
+<strong>Standard Backup Command</strong>:
+<pre><code><h2>Basic etcd snapshot with proper authentication</h2>
+ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot-$(date +%Y%m%d_%H%M%S).db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key</code></pre>
+<strong>Understanding Each Parameter</strong>:
+<strong><code>--endpoints=https://127.0.0.1:2379</code></strong>: 
+<li>Points to etcd API endpoint</li>
+<li>Use localhost if running on etcd node</li>
+<li>Use cluster IPs if running remotely</li>
+<li>Can specify multiple endpoints for HA clusters</li>
+<strong>Certificate Parameters</strong>:
+<li><strong><code>--cacert</code></strong>: Certificate Authority to verify etcd server identity</li>
+<li><strong><code>--cert</code></strong>: Client certificate for authentication  </li>
+<li><strong><code>--key</code></strong>: Private key for client certificate</li>
+<li><strong>Authentication is mandatory</strong>: etcd rejects unauthenticated backup requests</li>
+<h4>Advanced Backup Configuration</h4>
+<strong>Multi-Node Cluster Backup</strong>:
+<pre><code>#!/bin/bash
+<h2>backup-etcd-cluster.sh</h2>
+<h2>Configuration</h2>
+BACKUP_DIR="/backup/etcd"
+DATE=$(date +%Y%m%d_%H%M%S)
+ENDPOINTS="https://10.0.1.10:2379,https://10.0.1.11:2379,https://10.0.1.12:2379"
+<h2>Certificate paths</h2>
+CACERT="/etc/kubernetes/pki/etcd/ca.crt"
+CERT="/etc/kubernetes/pki/etcd/healthcheck-client.crt"
+KEY="/etc/kubernetes/pki/etcd/healthcheck-client.key"
+<h2>Create backup directory</h2>
+mkdir -p "$BACKUP_DIR"
+<h2>Check etcd cluster health before backup</h2>
+echo "Checking etcd cluster health..."
+ETCDCTL_API=3 etcdctl endpoint health \
+  --endpoints="$ENDPOINTS" \
+  --cacert="$CACERT" \
+  --cert="$CERT" \
+  --key="$KEY"
+<p>if [ $? -ne 0 ]; then
+    echo "ERROR: etcd cluster unhealthy, aborting backup"
+    exit 1
+fi</p>
+<h2>Create snapshot from leader node</h2>
+echo "Creating etcd snapshot..."
+ETCDCTL_API=3 etcdctl snapshot save "$BACKUP_DIR/etcd-snapshot-$DATE.db" \
+  --endpoints="$ENDPOINTS" \
+  --cacert="$CACERT" \
+  --cert="$CERT" \
+  --key="$KEY"
+<h2>Verify snapshot integrity</h2>
+echo "Verifying snapshot integrity..."
+ETCDCTL_API=3 etcdctl snapshot status "$BACKUP_DIR/etcd-snapshot-$DATE.db" --write-out=table
+<h2>Compress snapshot for storage efficiency</h2>
+echo "Compressing snapshot..."
+gzip "$BACKUP_DIR/etcd-snapshot-$DATE.db"
+<h2>Calculate and store checksum</h2>
+echo "Calculating checksum..."
+sha256sum "$BACKUP_DIR/etcd-snapshot-$DATE.db.gz" > "$BACKUP_DIR/etcd-snapshot-$DATE.db.gz.sha256"
+<h2>Clean up old backups (keep last 30 days)</h2>
+find "$BACKUP_DIR" -name "etcd-snapshot-*.db.gz" -mtime +30 -delete
+find "$BACKUP_DIR" -name "*.sha256" -mtime +30 -delete
+<p>echo "Backup completed: $BACKUP_DIR/etcd-snapshot-$DATE.db.gz"
+ls -la "$BACKUP_DIR/etcd-snapshot-$DATE.db.gz"</code></pre></p>
+<h4>Backup Validation and Testing</h4>
+<strong>Why Backup Validation Matters</strong>:
+<li>Corrupted backups are discovered during emergency recovery (worst possible time)</li>
+<li>Network issues during backup can create incomplete snapshots</li>
+<li>Storage problems can corrupt backup files</li>
+<li>Certificate issues can cause authentication failures</li>
+<strong>Backup Integrity Verification</strong>:
+<pre><code><h2>Verify snapshot can be read</h2>
+ETCDCTL_API=3 etcdctl snapshot status backup.db --write-out=table
+<h2>Expected output shows:</h2>
+<h2>- Database size</h2>
+<h2>- Number of keys</h2>
+<h2>- Database hash</h2>
+<h2>- Revision number</h2>
+<h2>Test restore capability (non-destructive test)</h2>
+mkdir -p /tmp/etcd-restore-test
+ETCDCTL_API=3 etcdctl snapshot restore backup.db \
+  --data-dir=/tmp/etcd-restore-test \
+  --name=test-restore \
+  --initial-cluster=test-restore=http://localhost:2380 \
+  --initial-advertise-peer-urls=http://localhost:2380
+<h2>Verify restored data structure</h2>
+ls -la /tmp/etcd-restore-test/
+rm -rf /tmp/etcd-restore-test</code></pre>
+<strong>Automated Backup Testing</strong>:
+<pre><code>#!/bin/bash
+<h2>test-etcd-backup.sh</h2>
+<p>BACKUP_FILE="$1"
+TEST_DIR="/tmp/etcd-restore-test-$(date +%s)"</p>
+<p>if [ ! -f "$BACKUP_FILE" ]; then
+    echo "ERROR: Backup file not found: $BACKUP_FILE"
+    exit 1
+fi</p>
+<h2>Test 1: Verify snapshot status</h2>
+echo "Testing snapshot status..."
+ETCDCTL_API=3 etcdctl snapshot status "$BACKUP_FILE" --write-out=json > /tmp/snapshot-status.json
+<h2>Extract key metrics</h2>
+HASH=$(jq -r '.hash' /tmp/snapshot-status.json)
+KEYS=$(jq -r '.totalKey' /tmp/snapshot-status.json)
+SIZE=$(jq -r '.totalSize' /tmp/snapshot-status.json)
+<p>echo "Snapshot Hash: $HASH"
+echo "Total Keys: $KEYS"
+echo "Total Size: $SIZE bytes"</p>
+<h2>Test 2: Restore to temporary directory</h2>
+echo "Testing restore capability..."
+ETCDCTL_API=3 etcdctl snapshot restore "$BACKUP_FILE" \
+  --data-dir="$TEST_DIR" \
+  --name=test-restore \
+  --initial-cluster=test-restore=http://localhost:2380 \
+  --initial-advertise-peer-urls=http://localhost:2380
+<p>if [ $? -eq 0 ]; then
+    echo "SUCCESS: Backup restore test passed"
+    # Verify directory structure
+    ls -la "$TEST_DIR/"
+    du -sh "$TEST_DIR"
+    rm -rf "$TEST_DIR"
+else
+    echo "ERROR: Backup restore test failed"
+    exit 1
+fi</p>
+<h2>Test 3: Verify file integrity if compressed</h2>
+if [[ "$BACKUP_FILE" == *.gz ]]; then
+    echo "Testing compressed file integrity..."
+    gzip -t "$BACKUP_FILE"
+    if [ $? -eq 0 ]; then
+        echo "SUCCESS: Compressed file integrity verified"
+    else
+        echo "ERROR: Compressed file is corrupted"
+        exit 1
+    fi
+fi
+<p>echo "All backup tests passed for: $BACKUP_FILE"</code></pre></p>
+<p>---</p>
+<h3><strong>etcd Restore Procedures</strong></h3>
+<h4>Understanding Restore Scenarios</h4>
+<strong>Complete Cluster Loss</strong>:
+<li>All etcd nodes failed simultaneously</li>
+<li>Data corruption across all nodes</li>
+<li>Accidental deletion of etcd data directories</li>
+<li><strong>Recovery approach</strong>: Restore from snapshot to new cluster</li>
+<strong>Single Node Failure</strong>:
+<li>One etcd node fails in multi-node cluster</li>
+<li>Hardware failure or corruption on one node</li>
+<li><strong>Recovery approach</strong>: Re-add node to existing cluster</li>
+<strong>Partial Data Corruption</strong>:
+<li>Some data corrupted but cluster still functional</li>
+<li>Inconsistent state between nodes</li>
+<li><strong>Recovery approach</strong>: Restore all nodes from same snapshot</li>
+<h4>Complete Cluster Restore</h4>
+<strong>Step-by-Step Restore Process</strong>:
+<pre><code>#!/bin/bash
+<h2>etcd-cluster-restore.sh</h2>
+<p>SNAPSHOT_FILE="$1"
+CLUSTER_NAME="kubernetes"</p>
+<p>if [ ! -f "$SNAPSHOT_FILE" ]; then
+    echo "ERROR: Snapshot file not found: $SNAPSHOT_FILE"
+    exit 1
+fi</p>
+<p>echo "Starting etcd cluster restore from: $SNAPSHOT_FILE"</p>
+<h2>Step 1: Stop all Kubernetes services</h2>
+echo "Stopping Kubernetes services..."
+systemctl stop kubelet
+systemctl stop containerd  # or docker
+<h2>Step 2: Stop etcd if running</h2>
+systemctl stop etcd 2>/dev/null || echo "etcd service not running"
+<h2>Step 3: Backup existing etcd data (if any)</h2>
+if [ -d /var/lib/etcd ]; then
+    echo "Backing up existing etcd data..."
+    mv /var/lib/etcd /var/lib/etcd-backup-$(date +%s)
+fi
+<h2>Step 4: Restore snapshot</h2>
+echo "Restoring etcd snapshot..."
+ETCDCTL_API=3 etcdctl snapshot restore "$SNAPSHOT_FILE" \
+  --data-dir=/var/lib/etcd \
+  --name=master1 \
+  --initial-cluster=master1=https://10.0.1.10:2380,master2=https://10.0.1.11:2380,master3=https://10.0.1.12:2380 \
+  --initial-cluster-token="$CLUSTER_NAME" \
+  --initial-advertise-peer-urls=https://10.0.1.10:2380
+<h2>Step 5: Set proper permissions</h2>
+chown -R etcd:etcd /var/lib/etcd
+chmod 700 /var/lib/etcd
+<h2>Step 6: Start etcd</h2>
+echo "Starting etcd..."
+systemctl start etcd
+<h2>Step 7: Wait for etcd to be healthy</h2>
+echo "Waiting for etcd to become healthy..."
+for i in {1..30}; do
+    if ETCDCTL_API=3 etcdctl endpoint health \
+        --endpoints=https://127.0.0.1:2379 \
+        --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+        --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+        --key=/etc/kubernetes/pki/etcd/healthcheck-client.key; then
+        echo "etcd is healthy"
+        break
+    fi
+    echo "Waiting for etcd... ($i/30)"
+    sleep 10
+done
+<h2>Step 8: Start Kubernetes services</h2>
+echo "Starting Kubernetes services..."
+systemctl start containerd
+systemctl start kubelet
+<h2>Step 9: Verify cluster health</h2>
+echo "Verifying cluster health..."
+sleep 30
+kubectl get nodes
+kubectl get pods -n kube-system
+<p>echo "Restore completed. Verify all applications are working correctly."</code></pre></p>
+<strong>Multi-Node Cluster Restore</strong>:
+<pre><code><h2>For HA etcd clusters, restore on each node with appropriate parameters</h2>
+<h2>Node 1 (master1):</h2>
+ETCDCTL_API=3 etcdctl snapshot restore backup.db \
+  --data-dir=/var/lib/etcd \
+  --name=master1 \
+  --initial-cluster=master1=https://10.0.1.10:2380,master2=https://10.0.1.11:2380,master3=https://10.0.1.12:2380 \
+  --initial-cluster-token=kubernetes-cluster \
+  --initial-advertise-peer-urls=https://10.0.1.10:2380
+<h2>Node 2 (master2):</h2>
+ETCDCTL_API=3 etcdctl snapshot restore backup.db \
+  --data-dir=/var/lib/etcd \
+  --name=master2 \
+  --initial-cluster=master1=https://10.0.1.10:2380,master2=https://10.0.1.11:2380,master3=https://10.0.1.12:2380 \
+  --initial-cluster-token=kubernetes-cluster \
+  --initial-advertise-peer-urls=https://10.0.1.11:2380
+<h2>Node 3 (master3):</h2>
+ETCDCTL_API=3 etcdctl snapshot restore backup.db \
+  --data-dir=/var/lib/etcd \
+  --name=master3 \
+  --initial-cluster=master1=https://10.0.1.10:2380,master2=https://10.0.1.11:2380,master3=https://10.0.1.12:2380 \
+  --initial-cluster-token=kubernetes-cluster \
+  --initial-advertise-peer-urls=https://10.0.1.12:2380</code></pre>
+<h4>Understanding Restore Parameters</h4>
+<strong>Critical Restore Parameters Explained</strong>:
+<strong><code>--data-dir</code></strong>: 
+<li>Specifies where to create restored etcd database</li>
+<li>Must match etcd configuration in systemd/static pod</li>
+<li>Should be empty directory for clean restore</li>
+<strong><code>--name</code></strong>: 
+<li>Unique identifier for this etcd member</li>
+<li>Must match name in cluster configuration</li>
+<li>Different for each node in HA setup</li>
+<strong><code>--initial-cluster</code></strong>: 
+<li>Defines all etcd cluster members</li>
+<li>Format: name=peer-url,name=peer-url</li>
+<li>Must be identical on all nodes</li>
+<strong><code>--initial-cluster-token</code></strong>: 
+<li>Security token to distinguish this cluster</li>
+<li>Prevents accidental joining of wrong clusters</li>
+<li>Should be unique per cluster</li>
+<strong><code>--initial-advertise-peer-urls</code></strong>: 
+<li>URL this member advertises to other cluster members</li>
+<li>Must be reachable by other etcd nodes</li>
+<li>Different for each node (its own IP)</li>
+<h4>Single Node Recovery</h4>
+<strong>Adding New Node to Existing Cluster</strong>:
+<pre><code><h2>If one node fails in HA cluster, add replacement node</h2>
+<h2>Step 1: On healthy etcd node, add new member</h2>
+ETCDCTL_API=3 etcdctl member add master3-new \
+  --peer-urls=https://10.0.1.13:2380 \
+  --endpoints=https://10.0.1.10:2379,https://10.0.1.11:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+<h2>Step 2: On new node, start etcd with --initial-cluster-state=existing</h2>
+ETCDCTL_API=3 etcdctl snapshot restore backup.db \
+  --data-dir=/var/lib/etcd \
+  --name=master3-new \
+  --initial-cluster=master1=https://10.0.1.10:2380,master2=https://10.0.1.11:2380,master3-new=https://10.0.1.13:2380 \
+  --initial-cluster-state=existing \
+  --initial-advertise-peer-urls=https://10.0.1.13:2380
+<h2>Step 3: Start etcd service</h2>
+systemctl start etcd
+<h2>Step 4: Verify cluster health</h2>
+ETCDCTL_API=3 etcdctl member list
+ETCDCTL_API=3 etcdctl endpoint health --cluster</code></pre>
+<p>---</p>
+<h3><strong>Automation and Production Practices</strong></h3>
+<h4>Automated Backup Pipeline</h4>
+<strong>Systemd Timer for Regular Backups</strong>:
+<pre><code><h2>/etc/systemd/system/etcd-backup.service</h2>
+[Unit]
+Description=etcd backup
+After=network.target
+<p>[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/etcd-backup.sh
+StandardOutput=journal
+StandardError=journal</p>
+<h2>/etc/systemd/system/etcd-backup.timer</h2>
+[Unit]
+Description=etcd backup timer
+Requires=etcd-backup.service
+<p>[Timer]
+OnCalendar=<em>-</em>-* 02:00:00
+Persistent=true</p>
+<p>[Install]
+WantedBy=timers.target</p>
+<h2>Enable the timer</h2>
+systemctl enable etcd-backup.timer
+systemctl start etcd-backup.timer
+systemctl list-timers | grep etcd-backup</code></pre>
+<strong>Production Backup Script</strong>:
+<pre><code>#!/bin/bash
+<h2>/usr/local/bin/etcd-backup.sh</h2>
+<p>set -euo pipefail</p>
+<h2>Configuration</h2>
+BACKUP_DIR="/backup/etcd"
+RETENTION_DAYS=30
+MAX_BACKUP_SIZE="10G"
+ALERT_EMAIL="admin@company.com"
+<h2>etcd configuration</h2>
+ENDPOINTS="https://127.0.0.1:2379"
+CACERT="/etc/kubernetes/pki/etcd/ca.crt"
+CERT="/etc/kubernetes/pki/etcd/healthcheck-client.crt"
+KEY="/etc/kubernetes/pki/etcd/healthcheck-client.key"
+<h2>Logging</h2>
+LOG_FILE="/var/log/etcd-backup.log"
+exec 1> >(tee -a "$LOG_FILE")
+exec 2>&1
+<p>echo "=== etcd Backup Started: $(date) ==="</p>
+<h2>Pre-backup checks</h2>
+echo "Performing pre-backup health checks..."
+<h2>Check disk space</h2>
+AVAILABLE_SPACE=$(df "$BACKUP_DIR" | tail -1 | awk '{print $4}')
+REQUIRED_SPACE=5000000  # 5GB in KB
+if [ "$AVAILABLE_SPACE" -lt "$REQUIRED_SPACE" ]; then
+    echo "ERROR: Insufficient disk space for backup"
+    echo "Available: ${AVAILABLE_SPACE}KB, Required: ${REQUIRED_SPACE}KB" | mail -s "etcd Backup Failed - Disk Space" "$ALERT_EMAIL"
+    exit 1
+fi
+<h2>Check etcd health</h2>
+if ! ETCDCTL_API=3 etcdctl endpoint health \
+    --endpoints="$ENDPOINTS" \
+    --cacert="$CACERT" \
+    --cert="$CERT" \
+    --key="$KEY" >/dev/null 2>&1; then
+    echo "ERROR: etcd cluster is unhealthy"
+    echo "etcd health check failed before backup" | mail -s "etcd Backup Failed - Unhealthy Cluster" "$ALERT_EMAIL"
+    exit 1
+fi
+<h2>Create backup</h2>
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="$BACKUP_DIR/etcd-snapshot-$TIMESTAMP.db"
+<p>echo "Creating backup: $BACKUP_FILE"
+if ETCDCTL_API=3 etcdctl snapshot save "$BACKUP_FILE" \
+    --endpoints="$ENDPOINTS" \
+    --cacert="$CACERT" \
+    --cert="$CERT" \
+    --key="$KEY"; then
+    echo "Backup created successfully"
+else
+    echo "ERROR: Backup creation failed"
+    echo "etcd snapshot creation failed" | mail -s "etcd Backup Failed - Snapshot Error" "$ALERT_EMAIL"
+    exit 1
+fi</p>
+<h2>Verify backup</h2>
+echo "Verifying backup integrity..."
+if ETCDCTL_API=3 etcdctl snapshot status "$BACKUP_FILE" --write-out=table; then
+    echo "Backup verification successful"
+else
+    echo "ERROR: Backup verification failed"
+    rm -f "$BACKUP_FILE"
+    echo "Backup verification failed, file removed" | mail -s "etcd Backup Failed - Verification Error" "$ALERT_EMAIL"
+    exit 1
+fi
+<h2>Compress backup</h2>
+echo "Compressing backup..."
+gzip "$BACKUP_FILE"
+COMPRESSED_FILE="${BACKUP_FILE}.gz"
+<h2>Generate checksum</h2>
+sha256sum "$COMPRESSED_FILE" > "${COMPRESSED_FILE}.sha256"
+<h2>Upload to remote storage (example with AWS S3)</h2>
+if command -v aws >/dev/null 2>&1; then
+    echo "Uploading to S3..."
+    aws s3 cp "$COMPRESSED_FILE" s3://company-etcd-backups/$(hostname)/
+    aws s3 cp "${COMPRESSED_FILE}.sha256" s3://company-etcd-backups/$(hostname)/
+fi
+<h2>Cleanup old backups</h2>
+echo "Cleaning up old backups..."
+find "$BACKUP_DIR" -name "etcd-snapshot-*.gz" -mtime +$RETENTION_DAYS -delete
+find "$BACKUP_DIR" -name "*.sha256" -mtime +$RETENTION_DAYS -delete
+<h2>Report success</h2>
+BACKUP_SIZE=$(du -h "$COMPRESSED_FILE" | cut -f1)
+echo "=== etcd Backup Completed Successfully: $(date) ==="
+echo "Backup file: $COMPRESSED_FILE"
+echo "Backup size: $BACKUP_SIZE"
+<h2>Send success notification</h2>
+echo "etcd backup completed successfully. Size: $BACKUP_SIZE" | mail -s "etcd Backup Success" "$ALERT_EMAIL"</code></pre>
+<h4>Monitoring and Alerting</h4>
+<strong>Prometheus Metrics for Backup Monitoring</strong>:
+<pre><code><h2>etcd-backup-exporter.py (custom metrics exporter)</h2>
+#!/usr/bin/env python3
+<p>import os
+import time
+import glob
+from prometheus_client import start_http_server, Gauge, Counter</p>
+<h2>Metrics</h2>
+backup_age_seconds = Gauge('etcd_backup_age_seconds', 'Age of latest backup in seconds')
+backup_size_bytes = Gauge('etcd_backup_size_bytes', 'Size of latest backup in bytes')
+backup_success_total = Counter('etcd_backup_success_total', 'Total successful backups')
+backup_failure_total = Counter('etcd_backup_failure_total', 'Total failed backups')
+<p>def collect_backup_metrics():
+    backup_dir = '/backup/etcd'
+    
+    # Find latest backup
+    backups = glob.glob(f"{backup_dir}/etcd-snapshot-*.gz")
+    if backups:
+        latest_backup = max(backups, key=os.path.getctime)
+        
+        # Calculate age
+        backup_time = os.path.getctime(latest_backup)
+        age_seconds = time.time() - backup_time
+        backup_age_seconds.set(age_seconds)
+        
+        # Get size
+        size_bytes = os.path.getsize(latest_backup)
+        backup_size_bytes.set(size_bytes)
+    
+    # Read success/failure counts from log
+    # (Implementation depends on your logging format)</p>
+<p>if __name__ == '__main__':
+    start_http_server(8080)
+    while True:
+        collect_backup_metrics()
+        time.sleep(300)  # Update every 5 minutes</code></pre></p>
+<strong>Alerting Rules</strong>:
+<pre><code><h2>prometheus-etcd-backup-alerts.yml</h2>
+groups:
+<li>name: etcd-backup</li>
+  rules:
+  - alert: EtcdBackupTooOld
+    expr: etcd_backup_age_seconds > 86400  # 24 hours
+    for: 1h
+    labels:
+      severity: warning
+    annotations:
+      summary: "etcd backup is too old"
+      description: "Latest etcd backup is {{ $value }} seconds old"
+      
+  - alert: EtcdBackupMissing
+    expr: absent(etcd_backup_age_seconds)
+    for: 30m
+    labels:
+      severity: critical
+    annotations:
+      summary: "etcd backup metrics missing"
+      description: "No etcd backup metrics available"
+      
+  - alert: EtcdBackupFailed
+    expr: increase(etcd_backup_failure_total[24h]) > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "etcd backup failures detected"
+      description: "{{ $value }} etcd backup failures in last 24 hours"</code></pre>
+<p>---</p>
+<h3><strong>Security and Encryption Considerations</strong></h3>
+<h4>Backup Encryption</h4>
+<strong>Why Encrypt Backups</strong>:
+<li>etcd contains all cluster secrets (passwords, API keys, certificates)</li>
+<li>Backup files stored on disk or transmitted over network</li>
+<li>Compliance requirements (GDPR, HIPAA, SOX)</li>
+<li>Insider threat mitigation</li>
+<strong>Encryption at Rest</strong>:
+<pre><code>#!/bin/bash
+<h2>encrypted-etcd-backup.sh</h2>
+<p>BACKUP_FILE="etcd-snapshot-$(date +%Y%m%d_%H%M%S).db"
+ENCRYPTED_FILE="${BACKUP_FILE}.gpg"
+GPG_RECIPIENT="backup@company.com"</p>
+<h2>Create backup</h2>
+ETCDCTL_API=3 etcdctl snapshot save "$BACKUP_FILE" \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+<h2>Encrypt backup</h2>
+gpg --cipher-algo AES256 --compress-algo 2 --symmetric --output "$ENCRYPTED_FILE" "$BACKUP_FILE"
+<h2>Securely delete unencrypted backup</h2>
+shred -vfz -n 3 "$BACKUP_FILE"
+<p>echo "Encrypted backup created: $ENCRYPTED_FILE"</p>
+<h2>For restore, decrypt first:</h2>
+<h2>gpg --decrypt etcd-snapshot.db.gpg > etcd-snapshot.db</h2></code></pre>
+<strong>Certificate Management for Backups</strong>:
+<pre><code><h2>Create dedicated backup user certificate</h2>
+openssl genrsa -out etcd-backup.key 2048
+<p>openssl req -new -key etcd-backup.key -out etcd-backup.csr \
+  -subj "/CN=etcd-backup/O=system:masters"</p>
+<h2>Sign with etcd CA</h2>
+openssl x509 -req -in etcd-backup.csr \
+  -CA /etc/kubernetes/pki/etcd/ca.crt \
+  -CAkey /etc/kubernetes/pki/etcd/ca.key \
+  -out etcd-backup.crt -days 365
+<h2>Use dedicated certificates for backups</h2>
+ETCDCTL_API=3 etcdctl snapshot save backup.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/ssl/etcd-backup.crt \
+  --key=/etc/ssl/etcd-backup.key</code></pre>
+<h4>Access Control and Audit</h4>
+<strong>Limiting Backup Access</strong>:
+<pre><code><h2>Create dedicated backup user</h2>
+useradd -r -s /bin/false etcd-backup
+<h2>Set restrictive permissions on backup directory</h2>
+mkdir -p /backup/etcd
+chown etcd-backup:etcd-backup /backup/etcd
+chmod 700 /backup/etcd
+<h2>Use sudo for controlled access</h2>
+<h2>/etc/sudoers.d/etcd-backup</h2>
+etcd-backup ALL=(root) NOPASSWD: /usr/local/bin/etcd-backup.sh</code></pre>
+<strong>Audit Logging for Backups</strong>:
+<pre><code><h2>Log all backup operations</h2>
+logger -t etcd-backup "Backup started by $(whoami) from $(who am i)"
+<h2>Monitor backup file access</h2>
+auditctl -w /backup/etcd -p rwxa -k etcd-backup-access
+<h2>Review audit logs</h2>
+ausearch -k etcd-backup-access</code></pre>
+<p>---</p>
+<h3><strong>Performance Optimization and Troubleshooting</strong></h3>
+<h4>Backup Performance Considerations</h4>
+<strong>Factors Affecting Backup Performance</strong>:
+<pre><code><h2>Database size impact</h2>
+ETCDCTL_API=3 etcdctl endpoint status --write-out=table
+<h2>I/O performance during backup</h2>
+iostat -x 1 5 &
+ETCDCTL_API=3 etcdctl snapshot save backup.db
+kill %1
+<h2>Network latency (for remote backups)</h2>
+ping -c 5 backup-server
+iperf3 -c backup-server -t 30</code></pre>
+<strong>Optimizing Backup Performance</strong>:
+<pre><code><h2>Use local storage for initial backup</h2>
+ETCDCTL_API=3 etcdctl snapshot save /tmp/backup.db
+<h2>Compress and transfer separately</h2>
+gzip /tmp/backup.db
+rsync -avz /tmp/backup.db.gz backup-server:/backups/
+<h2>Parallel compression for large backups</h2>
+pigz /tmp/backup.db  # Use pigz instead of gzip for parallel compression</code></pre>
+<h4>Troubleshooting Backup Issues</h4>
+<strong>Common Backup Failures</strong>:
+<strong>Authentication Issues</strong>:
+<pre><code><h2>Test certificate validity</h2>
+openssl x509 -in /etc/kubernetes/pki/etcd/healthcheck-client.crt -text -noout | grep -A2 "Not After"
+<h2>Test certificate chain</h2>
+openssl verify -CAfile /etc/kubernetes/pki/etcd/ca.crt /etc/kubernetes/pki/etcd/healthcheck-client.crt
+<h2>Debug TLS connection</h2>
+openssl s_client -connect 127.0.0.1:2379 -cert /etc/kubernetes/pki/etcd/healthcheck-client.crt -key /etc/kubernetes/pki/etcd/healthcheck-client.key -CAfile /etc/kubernetes/pki/etcd/ca.crt</code></pre>
+<strong>Permission Errors</strong>:
+<pre><code><h2>Check etcd data directory permissions</h2>
+ls -la /var/lib/etcd/
+ps aux | grep etcd  # Check which user etcd runs as
+<h2>Fix permissions if needed</h2>
+chown -R etcd:etcd /var/lib/etcd
+chmod 700 /var/lib/etcd</code></pre>
+<strong>Network Connectivity Issues</strong>:
+<pre><code><h2>Test etcd endpoint connectivity</h2>
+telnet 127.0.0.1 2379
+<h2>Check firewall rules</h2>
+iptables -L INPUT -n | grep 2379
+systemctl status firewalld
+<h2>Test with verbose etcdctl</h2>
+ETCDCTL_API=3 etcdctl --debug snapshot save backup.db</code></pre>
+<h4>Restore Troubleshooting</h4>
+<strong>Common Restore Failures</strong>:
+<strong>Snapshot Corruption</strong>:
+<pre><code><h2>Verify snapshot integrity</h2>
+ETCDCTL_API=3 etcdctl snapshot status backup.db
+<h2>If corrupted, try previous backup</h2>
+ls -la /backup/etcd/etcd-snapshot-*.gz</code></pre>
+<strong>Permission Issues During Restore</strong>:
+<pre><code><h2>Ensure correct ownership after restore</h2>
+chown -R etcd:etcd /var/lib/etcd
+chmod 700 /var/lib/etcd
+<h2>Check SELinux contexts (if enabled)</h2>
+restorecon -R /var/lib/etcd</code></pre>
+<strong>Cluster Configuration Mismatches</strong>:
+<pre><code><h2>Verify cluster configuration matches restore parameters</h2>
+cat /etc/systemd/system/etcd.service | grep -E "(initial-cluster|name)"
+<h2>Check etcd static pod configuration</h2>
+cat /etc/kubernetes/manifests/etcd.yaml | grep -E "(initial-cluster|name)"</code></pre>
+<strong>Post-Restore Validation</strong>:
+<pre><code><h2>Check etcd cluster health</h2>
+ETCDCTL_API=3 etcdctl endpoint health --cluster
+<h2>Verify Kubernetes functionality</h2>
+kubectl get nodes
+kubectl get pods -n kube-system
+kubectl create deployment test --image=nginx
+kubectl get deployments
+kubectl delete deployment test</code></pre>
+<p>---</p>
+<h3><strong>Disaster Recovery Planning</strong></h3>
+<h4>Recovery Time and Point Objectives</h4>
+<strong>Defining RPO and RTO for etcd</strong>:
+<li><strong>RPO (Recovery Point Objective)</strong>: Maximum acceptable data loss</li>
+  - Typical values: 1-24 hours depending on change frequency
+  - Determines backup frequency
+  - Factor in cluster change rate and business impact
+<li><strong>RTO (Recovery Time Objective)</strong>: Maximum acceptable downtime</li>
+  - Cluster restore: 30-60 minutes
+  - Application restart: Additional 15-30 minutes
+  - Total system recovery: 1-2 hours typical
+<strong>Backup Strategy Based on Objectives</strong>:
+<pre><code><h2>High availability requirements (RPO: 1 hour, RTO: 30 minutes)</h2>
+<h2>- Hourly backups</h2>
+<h2>- Hot standby cluster</h2>
+<h2>- Automated restore procedures</h2>
+<h2>Standard requirements (RPO: 24 hours, RTO: 2 hours)  </h2>
+<h2>- Daily backups</h2>
+<h2>- Documented manual procedures</h2>
+<h2>- Tested restore process</h2>
+<h2>Low-criticality (RPO: 1 week, RTO: 1 day)</h2>
+<h2>- Weekly backups</h2>
+<h2>- Basic documentation</h2>
+<h2>- Best-effort recovery</h2></code></pre>
+<h4>Multi-Region Backup Strategy</h4>
+<strong>Cross-Region Backup Replication</strong>:
+<pre><code>#!/bin/bash
+<h2>cross-region-backup.sh</h2>
+<p>PRIMARY_REGION="us-west-2"
+SECONDARY_REGION="us-east-1"
+BACKUP_BUCKET="company-etcd-backups"</p>
+<h2>Create backup in primary region</h2>
+BACKUP_FILE="etcd-snapshot-$(date +%Y%m%d_%H%M%S).db"
+ETCDCTL_API=3 etcdctl snapshot save "$BACKUP_FILE"
+<h2>Encrypt and compress</h2>
+gpg --symmetric --cipher-algo AES256 --output "${BACKUP_FILE}.gpg" "$BACKUP_FILE"
+rm "$BACKUP_FILE"
+<h2>Upload to primary region</h2>
+aws s3 cp "${BACKUP_FILE}.gpg" "s3://${BACKUP_BUCKET}/${PRIMARY_REGION}/"
+<h2>Replicate to secondary region</h2>
+aws s3 cp "s3://${BACKUP_BUCKET}/${PRIMARY_REGION}/${BACKUP_FILE}.gpg" \
+         "s3://${BACKUP_BUCKET}/${SECONDARY_REGION}/"
+<h2>Verify replication</h2>
+aws s3 ls "s3://${BACKUP_BUCKET}/${SECONDARY_REGION}/" | grep "${BACKUP_FILE}.gpg"</code></pre>
+<h4>Testing Disaster Recovery</h4>
+<strong>Automated DR Testing</strong>:
+<pre><code>#!/bin/bash
+<h2>dr-test.sh</h2>
+<p>DR_CLUSTER_CONFIG="dr-cluster-kubeconfig"
+PRODUCTION_BACKUP="/backup/etcd/latest-snapshot.db"</p>
+<p>echo "Starting DR test with backup: $PRODUCTION_BACKUP"</p>
+<h2>1. Deploy DR cluster (using terraform/ansible)</h2>
+cd infrastructure/dr-cluster
+terraform apply -auto-approve
+<h2>2. Restore backup to DR cluster</h2>
+scp "$PRODUCTION_BACKUP" dr-master:/tmp/
+ssh dr-master "
+  systemctl stop kubelet
+  rm -rf /var/lib/etcd/*
+  ETCDCTL_API=3 etcdctl snapshot restore /tmp/$(basename $PRODUCTION_BACKUP) \\
+    --data-dir=/var/lib/etcd \\
+    --name=dr-master \\
+    --initial-cluster=dr-master=https://10.1.1.10:2380 \\
+    --initial-advertise-peer-urls=https://10.1.1.10:2380
+  chown -R etcd:etcd /var/lib/etcd
+  systemctl start kubelet
+"
+<h2>3. Wait for cluster to be ready</h2>
+echo "Waiting for DR cluster to be ready..."
+kubectl --kubeconfig="$DR_CLUSTER_CONFIG" wait --for=condition=Ready nodes --all --timeout=300s
+<h2>4. Validate applications</h2>
+echo "Validating applications in DR cluster..."
+kubectl --kubeconfig="$DR_CLUSTER_CONFIG" get pods -A
+kubectl --kubeconfig="$DR_CLUSTER_CONFIG" get deployments -A
+<h2>5. Run application tests</h2>
+./scripts/test-applications.sh "$DR_CLUSTER_CONFIG"
+<h2>6. Cleanup DR cluster</h2>
+read -p "DR test complete. Destroy DR cluster? (y/N): " confirm
+if [[ $confirm == [yY] ]]; then
+    terraform destroy -auto-approve
+fi
+<p>echo "DR test completed"</code></pre></p>
+<p>---</p>
+<h3><strong>Exam Tips</strong></h3>
+<h4>Key Concepts to Master</h4>
+<li><strong>etcd is the single source of truth</strong>: Understanding why backup is critical</li>
+<li><strong>Snapshot vs filesystem backup</strong>: Know why snapshots are the correct approach</li>
+<li><strong>Authentication requirements</strong>: All etcd operations require proper certificates</li>
+<li><strong>Restore process</strong>: Complete cluster rebuild from snapshot</li>
+<h4>Common Exam Scenarios</h4>
+1. <strong>Create etcd backup</strong>: Know the complete etcdctl command with certificates
+2. <strong>Restore etcd from backup</strong>: Understand the restore process and parameters
+3. <strong>Troubleshoot backup/restore issues</strong>: Certificate problems, permission errors
+4. <strong>Validate backup integrity</strong>: Use snapshot status command
+<h4>Essential Commands to Memorize</h4>
+<pre><code><h2>Create backup</h2>
+ETCDCTL_API=3 etcdctl snapshot save backup.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+<h2>Verify backup</h2>
+ETCDCTL_API=3 etcdctl snapshot status backup.db --write-out=table
+<h2>Restore backup</h2>
+ETCDCTL_API=3 etcdctl snapshot restore backup.db \
+  --data-dir=/var/lib/etcd-restore \
+  --name=master \
+  --initial-cluster=master=https://127.0.0.1:2380 \
+  --initial-advertise-peer-urls=https://127.0.0.1:2380
+<h2>Check etcd health</h2>
+ETCDCTL_API=3 etcdctl endpoint health \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key</code></pre>
+<h4>Critical Details</h4>
+<li>Always use <code>ETCDCTL_API=3</code> (not v2)</li>
+<li>Certificate paths are typically <code>/etc/kubernetes/pki/etcd/</code></li>
+<li>Default etcd data directory: <code>/var/lib/etcd</code></li>
+<li>Default etcd endpoint: <code>https://127.0.0.1:2379</code></li>
+<li>Restore creates new cluster, not addition to existing</li>
+<li>Must stop kubelet before restore, restart after</li>
+<li>Verify backup integrity before relying on it</li>
+<li>Each node in HA cluster needs unique name and peer URLs</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>

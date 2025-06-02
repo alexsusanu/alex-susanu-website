@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Study Guide: Kubernetes Cluster Upgrades with kubeadm - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Study Guide: Kubernetes Cluster Upgrades with kubeadm</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Study Guide: Kubernetes Cluster Upgrades with kubeadm</h2>
+<h3><strong>The Complexity of Distributed System Upgrades</strong></h3>
+<p>Upgrading a Kubernetes cluster is fundamentally different from upgrading a monolithic application. You're coordinating the upgrade of multiple interdependent components across many nodes, each with different compatibility requirements, while maintaining service availability for running workloads.</p>
+<h4>Why Kubernetes Upgrades Are Inherently Risky</h4>
+<strong>API Compatibility Matrix</strong>: Kubernetes follows a strict version skew policy where components must be within specific version ranges of each other. A mismatch can cause:
+<ul><li>Control plane components unable to communicate</li>
+<li>kubelet unable to register with API server</li>
+<li>Applications failing due to deprecated API usage</li>
+<li>Network policies or storage drivers becoming incompatible</li>
+<strong>Stateful Component Dependencies</strong>: Unlike stateless web applications, Kubernetes has stateful components (etcd) and complex interdependencies:
+<li>etcd schema changes require careful migration</li>
+<li>Custom Resource Definitions may become incompatible</li>
+<li>Admission controllers might reject previously valid resources</li>
+<li>Network plugins may need updates to support new features</li>
+<strong>Zero-Downtime Expectations</strong>: Modern applications expect continuous availability, but upgrades involve:
+<li>Temporary API server unavailability during control plane upgrades</li>
+<li>Pod rescheduling when nodes are drained and upgraded</li>
+<li>Potential service disruption if workloads aren't designed for high availability</li>
+<h4>The Financial Impact of Failed Upgrades</h4>
+<strong>Direct Costs</strong>:
+<li>Downtime costs (often $5,000-$100,000+ per hour for enterprise applications)</li>
+<li>Emergency response team costs</li>
+<li>Recovery efforts and data restoration</li>
+<strong>Indirect Costs</strong>:
+<li>Customer trust and satisfaction impact</li>
+<li>Delayed feature releases while fixing upgrade issues</li>
+<li>Technical debt from rushed rollback decisions</li>
+<li>Regulatory compliance issues if SLA breaches occur</li>
+<p>Understanding these risks explains why upgrade procedures are detailed and conservative.</p>
+<p>---</p>
+<h3><strong>Understanding Kubernetes Version Skew Policies</strong></h3>
+<h4>The N-1 Support Matrix</h4>
+<p>Kubernetes enforces strict version compatibility rules to ensure cluster stability:</p>
+<strong>Control Plane Component Compatibility</strong>:
+<pre><code>kube-apiserver: N (master version)
+kube-controller-manager: N-1 to N
+kube-scheduler: N-1 to N
+etcd: 3.4.3+ (specific versions tested with each K8s release)</code></pre>
+<strong>Node Component Compatibility</strong>:
+<pre><code>kubelet: N-2 to N-1 (cannot be newer than API server)
+kube-proxy: N-2 to N-1
+kubectl: N-1 to N+1 (one version in either direction)</code></pre>
+<h4>Why These Restrictions Exist</h4>
+<strong>API Evolution Management</strong>: The API server is the authoritative source of API definitions. If controller-manager is newer than API server, it might try to use APIs that don't exist yet.
+<strong>Graceful Feature Rollout</strong>: Features are added gradually across releases. Version skew policies ensure that components don't assume features exist before they're actually available.
+<strong>Testing Matrix Limitations</strong>: Kubernetes project can't test every possible version combination. The supported matrix represents thoroughly tested scenarios.
+<h4>Checking Current Versions</h4>
+<pre><code><h2>Check control plane component versions</h2>
+kubectl version --short
+<h2>Check node versions (kubelet and kube-proxy)</h2>
+kubectl get nodes -o wide
+<h2>Check etcd version</h2>
+kubectl -n kube-system exec etcd-master1 -- etcdctl version
+<h2>Detailed component version information</h2>
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.nodeInfo.kubeletVersion}{"\t"}{.status.nodeInfo.kubeProxyVersion}{"\n"}{end}'
+<h2>Check for deprecated API usage</h2>
+kubectl api-versions | grep -v v1
+<h2>Identify deprecated APIs in use (requires pluto or similar tool)</h2>
+pluto detect-helm --output json
+pluto detect-files -d /path/to/manifests --output json</code></pre>
+<h4>API Deprecation and Removal Timeline</h4>
+<strong>Understanding API Lifecycle</strong>:
+1. <strong>Alpha</strong> (v1alpha1): Experimental, may change without notice
+2. <strong>Beta</strong> (v1beta1): Stable API, deprecated in favor of GA within 9 months
+3. <strong>General Availability</strong> (v1): Stable, guaranteed backward compatibility
+<strong>Deprecation Timeline Example</strong>:
+<pre><code>K8s 1.25: extensions/v1beta1 Ingress deprecated (use networking.k8s.io/v1)
+K8s 1.26: extensions/v1beta1 Ingress removed
+K8s 1.27: policy/v1beta1 PodSecurityPolicy deprecated
+K8s 1.28: policy/v1beta1 PodSecurityPolicy removed</code></pre>
+<strong>Finding Deprecated API Usage</strong>:
+<pre><code><h2>Check for deprecated API usage in your manifests</h2>
+grep -r "apiVersion: extensions/v1beta1" /path/to/manifests
+grep -r "apiVersion: policy/v1beta1" /path/to/manifests
+<h2>Use kubectl to identify deprecated resources</h2>
+kubectl get ingress.extensions -A 2>/dev/null || echo "No deprecated ingress resources found"
+kubectl get podsecuritypolicy.policy 2>/dev/null || echo "No PSP resources found"
+<h2>Audit current API usage</h2>
+kubectl api-resources --verbs=list --output=name | xargs -n 1 kubectl get --show-kind --ignore-not-found -A | grep -E "(extensions|policy)" || echo "No deprecated APIs in use"</code></pre>
+<p>---</p>
+<h3><strong>Pre-Upgrade Planning and Assessment</strong></h3>
+<h4>Cluster Health Validation</h4>
+<strong>Before any upgrade, validate cluster health</strong>:
+<pre><code><h2>Check overall cluster status</h2>
+kubectl cluster-info
+kubectl get nodes
+kubectl get componentstatuses  # Deprecated but still useful
+<h2>Verify all system pods are healthy</h2>
+kubectl get pods -n kube-system
+<h2>Check for resource pressure</h2>
+kubectl top nodes
+kubectl top pods -A --sort-by=memory | head -20
+<h2>Validate etcd health</h2>
+kubectl -n kube-system exec etcd-master1 -- etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  endpoint health
+<h2>Check for failing pods or nodes</h2>
+kubectl get pods -A --field-selector=status.phase!=Running
+kubectl get nodes --field-selector=status.phase!=Ready</code></pre>
+<h4>Workload Assessment</h4>
+<strong>Identify upgrade impact on applications</strong>:
+<pre><code><h2>List all deployments and their replica counts</h2>
+kubectl get deployments -A -o wide
+<h2>Check PodDisruptionBudgets</h2>
+kubectl get pdb -A
+<h2>Identify single-replica deployments (high risk during upgrade)</h2>
+kubectl get deployments -A -o jsonpath='{range .items[?(@.spec.replicas==1)]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.spec.replicas}{"\n"}{end}'
+<h2>Check for StatefulSets (require special handling)</h2>
+kubectl get statefulsets -A
+<h2>Review DaemonSets (affected by node upgrades)</h2>
+kubectl get daemonsets -A</code></pre>
+<h4>Backup Strategy Validation</h4>
+<strong>Comprehensive backup before upgrade</strong>:
+<pre><code>#!/bin/bash
+<h2>pre-upgrade-backup.sh</h2>
+<p>BACKUP_DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/backup/pre-upgrade-$BACKUP_DATE"
+mkdir -p "$BACKUP_DIR"</p>
+<h2>1. etcd snapshot</h2>
+echo "Creating etcd backup..."
+ETCDCTL_API=3 etcdctl snapshot save "$BACKUP_DIR/etcd-snapshot.db" \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+<h2>Verify etcd backup</h2>
+ETCDCTL_API=3 etcdctl snapshot status "$BACKUP_DIR/etcd-snapshot.db" --write-out=table
+<h2>2. Kubernetes configuration and certificates</h2>
+echo "Backing up Kubernetes configs..."
+tar -czf "$BACKUP_DIR/kubernetes-config.tar.gz" \
+  /etc/kubernetes/ \
+  /var/lib/kubelet/config.yaml 2>/dev/null
+<h2>3. Export all cluster resources</h2>
+echo "Exporting cluster resources..."
+kubectl get all --all-namespaces -o yaml > "$BACKUP_DIR/all-resources.yaml"
+kubectl get pv,pvc,storageclass -o yaml > "$BACKUP_DIR/storage-resources.yaml"
+kubectl get crd -o yaml > "$BACKUP_DIR/custom-resources.yaml"
+<h2>4. Export RBAC resources</h2>
+kubectl get clusterroles,clusterrolebindings,roles,rolebindings -A -o yaml > "$BACKUP_DIR/rbac-resources.yaml"
+<h2>5. Export secrets and configmaps</h2>
+kubectl get secrets -A -o yaml > "$BACKUP_DIR/secrets.yaml"
+kubectl get configmaps -A -o yaml > "$BACKUP_DIR/configmaps.yaml"
+<h2>6. Create restore instructions</h2>
+cat > "$BACKUP_DIR/restore-instructions.md" << EOF
+<h2>Cluster Restore Instructions</h2>
+<h3>Pre-requisites</h3>
+<li>Cluster with same number of nodes</li>
+<li>Same Kubernetes version as backup source</li>
+<li>Same container runtime and CNI</li>
+<h3>Restore etcd</h3>
+\<code>\</code>\`bash
+systemctl stop kubelet
+ETCDCTL_API=3 etcdctl snapshot restore etcd-snapshot.db \\
+  --data-dir=/var/lib/etcd-restore
+mv /var/lib/etcd /var/lib/etcd-old
+mv /var/lib/etcd-restore /var/lib/etcd
+systemctl start kubelet
+\<code>\</code>\`
+<h3>Restore configurations</h3>
+\<code>\</code>\`bash
+tar -xzf kubernetes-config.tar.gz -C /
+systemctl restart kubelet
+\<code>\</code>\`
+<p>Backup created: $(date)
+EOF</p>
+<p>echo "Backup completed in: $BACKUP_DIR"
+ls -la "$BACKUP_DIR"</code></pre></p>
+<h4>Upgrade Path Planning</h4>
+<strong>Determine required upgrade steps</strong>:
+<pre><code><h2>Check current version</h2>
+CURRENT_VERSION=$(kubectl version --short | grep "Server Version" | awk '{print $3}')
+echo "Current version: $CURRENT_VERSION"
+<h2>Check available kubeadm versions</h2>
+apt list -a kubeadm | head -10
+<h2>Plan upgrade path (must be sequential for minor versions)</h2>
+<h2>Example: 1.26.x -> 1.27.x -> 1.28.x (cannot skip 1.27)</h2>
+<h2>Check what version kubeadm can upgrade to</h2>
+kubeadm upgrade plan</code></pre>
+<p>---</p>
+<h3><strong>Understanding the kubeadm Upgrade Process</strong></h3>
+<h4>Upgrade Workflow Philosophy</h4>
+<p>kubeadm follows a conservative, phase-based approach:</p>
+<p>1. <strong>Preflight Checks</strong>: Validate cluster state and upgrade feasibility
+2. <strong>Control Plane Upgrade</strong>: Update API server, controller-manager, scheduler, etcd
+3. <strong>CNI/DNS Upgrade</strong>: Update cluster networking and DNS components
+4. <strong>kubelet and kubectl Upgrade</strong>: Update node-level components
+5. <strong>Worker Node Upgrade</strong>: Update worker nodes one by one</p>
+<h4>What kubeadm upgrade Actually Does</h4>
+<strong>Phase 1 - Preflight Validation</strong>:
+<pre><code><h2>kubeadm checks:</h2>
+<h2>- Current cluster version and upgrade target compatibility</h2>
+<h2>- etcd health and backup recommendations</h2>
+<h2>- Container runtime compatibility</h2>
+<h2>- Available disk space and system resources</h2>
+<h2>- Network connectivity between components</h2>
+<h2>- Certificate expiration dates</h2></code></pre>
+<strong>Phase 2 - Control Plane Component Upgrade</strong>:
+<pre><code><h2>kubeadm performs:</h2>
+<h2>- Updates static pod manifests in /etc/kubernetes/manifests/</h2>
+<h2>- Waits for new control plane pods to become healthy</h2>
+<h2>- Updates kubeconfig files with new server information</h2>
+<h2>- Upgrades cluster-wide resources (RBAC, etc.)</h2>
+<h2>- Updates CoreDNS and kube-proxy configurations</h2></code></pre>
+<strong>Phase 3 - Add-on Management</strong>:
+<pre><code><h2>kubeadm manages:</h2>
+<h2>- CoreDNS deployment upgrade</h2>
+<h2>- kube-proxy DaemonSet upgrade  </h2>
+<h2>- Other kubeadm-managed add-ons</h2>
+<h2>Note: CNI plugins usually require manual upgrade</h2></code></pre>
+<h4>Upgrade Scope and Limitations</h4>
+<strong>What kubeadm DOES upgrade</strong>:
+<li>Control plane static pods (API server, controller-manager, scheduler)</li>
+<li>etcd (if managed by kubeadm)</li>
+<li>CoreDNS</li>
+<li>kube-proxy</li>
+<li>Cluster-level RBAC and configurations</li>
+<strong>What kubeadm DOES NOT upgrade</strong>:
+<li>kubelet (must be upgraded separately on each node)</li>
+<li>kubectl (upgrade manually)</li>
+<li>CNI plugins (manage separately)</li>
+<li>Custom add-ons (Ingress controllers, monitoring, etc.)</li>
+<li>Container runtime (containerd, CRI-O)</li>
+<p>This separation of concerns allows for granular control but requires understanding of what needs manual intervention.</p>
+<p>---</p>
+<h3><strong>Step-by-Step Control Plane Upgrade</strong></h3>
+<h4>Pre-Upgrade Preparation</h4>
+<strong>Update kubeadm first</strong>:
+<pre><code><h2>Check current kubeadm version</h2>
+kubeadm version
+<h2>Update apt repositories</h2>
+apt update
+<h2>Find target kubeadm version</h2>
+apt-cache madison kubeadm | grep 1.28
+<h2>Upgrade kubeadm to target version</h2>
+apt-mark unhold kubeadm
+apt-get update && apt-get install -y kubeadm=1.28.0-00
+apt-mark hold kubeadm
+<h2>Verify kubeadm version</h2>
+kubeadm version</code></pre>
+<h4>Control Plane Upgrade Process</h4>
+<strong>Step 1: Plan and validate upgrade</strong>:
+<pre><code><h2>Generate upgrade plan (run on first control plane node)</h2>
+kubeadm upgrade plan
+<h2>Example output analysis:</h2>
+<h2>- Shows current and target versions</h2>
+<h2>- Lists component upgrade paths</h2>
+<h2>- Warns about manual steps required</h2>
+<h2>- Estimates upgrade time and impact</h2></code></pre>
+<strong>Step 2: Upgrade first control plane node</strong>:
+<pre><code><h2>Drain the control plane node (optional but recommended)</h2>
+kubectl drain master1 --ignore-daemonsets --delete-emptydir-data
+<h2>Apply the upgrade</h2>
+kubeadm upgrade apply v1.28.0
+<h2>Monitor the upgrade process</h2>
+watch kubectl get pods -n kube-system
+<h2>Verify control plane health</h2>
+kubectl get nodes
+kubectl get componentstatuses
+kubectl cluster-info</code></pre>
+<strong>What happens during <code>kubeadm upgrade apply</code></strong>:
+<pre><code><h2>1. Preflight checks</h2>
+[upgrade/config] Making sure the configuration is correct
+[upgrade/version] You have chosen to change the cluster version to "v1.28.0"
+<h2>2. Certificate renewal (if needed)</h2>
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+<h2>3. Static pod manifest updates</h2>
+[upgrade/apply] Upgrading your Static Pod-hosted control plane to version "v1.28.0"
+[upgrade/staticpods] Writing new Static Pod manifests to "/etc/kubernetes/manifests"
+<h2>4. Health checks</h2>
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/apply] Waiting for the kubelet to restart
+<h2>5. Add-on upgrades</h2>
+[upgrade/addons] Upgrading to the new "CoreDNS" add-on</code></pre>
+<strong>Step 3: Upgrade kubelet and kubectl on control plane</strong>:
+<pre><code><h2>Upgrade kubelet and kubectl</h2>
+apt-mark unhold kubelet kubectl
+apt-get update && apt-get install -y kubelet=1.28.0-00 kubectl=1.28.0-00
+apt-mark hold kubelet kubectl
+<h2>Restart kubelet</h2>
+systemctl daemon-reload
+systemctl restart kubelet
+<h2>Verify kubelet is working</h2>
+systemctl status kubelet
+journalctl -u kubelet -n 50
+<h2>Uncordon the node</h2>
+kubectl uncordon master1
+<h2>Verify node status</h2>
+kubectl get nodes -o wide</code></pre>
+<h4>Multi-Control-Plane Upgrades</h4>
+<strong>For additional control plane nodes</strong>:
+<pre><code><h2>On each additional control plane node:</h2>
+<h2>1. Drain the node</h2>
+kubectl drain master2 --ignore-daemonsets --delete-emptydir-data
+<h2>2. Upgrade kubeadm (same as first master)</h2>
+apt-mark unhold kubeadm
+apt-get update && apt-get install -y kubeadm=1.28.0-00
+apt-mark hold kubeadm
+<h2>3. Upgrade control plane components</h2>
+kubeadm upgrade node
+<h2>4. Upgrade kubelet and kubectl</h2>
+apt-mark unhold kubelet kubectl
+apt-get update && apt-get install -y kubelet=1.28.0-00 kubectl=1.28.0-00
+apt-mark hold kubelet kubectl
+<p>systemctl daemon-reload
+systemctl restart kubelet</p>
+<h2>5. Uncordon the node</h2>
+kubectl uncordon master2
+<h2>6. Verify cluster health</h2>
+kubectl get nodes
+kubectl get pods -n kube-system | grep master2</code></pre>
+<strong>Why <code>kubeadm upgrade node</code> vs <code>kubeadm upgrade apply</code></strong>:
+<li><strong><code>upgrade apply</code></strong>: Used only on the first control plane node, updates cluster-wide configurations</li>
+<li><strong><code>upgrade node</code></strong>: Used on additional control plane and worker nodes, updates only local components</li>
+<p>---</p>
+<h3><strong>Worker Node Upgrade Process</strong></h3>
+<h4>Rolling Worker Node Updates</h4>
+<strong>The challenge</strong>: Worker nodes run application workloads that must remain available during upgrades. This requires careful orchestration.
+<strong>Step-by-step worker upgrade</strong>:
+<pre><code><h2>1. Cordon the node (prevent new pods from scheduling)</h2>
+kubectl cordon worker1
+<h2>2. Drain the node (move existing pods to other nodes)</h2>
+kubectl drain worker1 --ignore-daemonsets --delete-emptydir-data --force --grace-period=300
+<h2>Watch pods being rescheduled</h2>
+kubectl get pods -A -o wide | grep worker1</code></pre>
+<strong>Understanding drain behavior</strong>:
+<pre><code><h2>Drain respects PodDisruptionBudgets by default</h2>
+kubectl get pdb -A
+<h2>Force drain if PDBs are blocking (use carefully)</h2>
+kubectl drain worker1 --ignore-daemonsets --delete-emptydir-data --disable-eviction
+<h2>Drain with longer grace period for slow-stopping apps</h2>
+kubectl drain worker1 --ignore-daemonsets --delete-emptydir-data --grace-period=600
+<h2>Skip certain pods (for debugging)</h2>
+kubectl drain worker1 --ignore-daemonsets --pod-selector='app!=critical-app'</code></pre>
+<strong>On the worker node itself</strong>:
+<pre><code><h2>3. Upgrade kubeadm</h2>
+apt-mark unhold kubeadm
+apt-get update && apt-get install -y kubeadm=1.28.0-00
+apt-mark hold kubeadm
+<h2>4. Upgrade node configuration</h2>
+kubeadm upgrade node
+<h2>5. Upgrade kubelet and kubectl</h2>
+apt-mark unhold kubelet kubectl
+apt-get update && apt-get install -y kubelet=1.28.0-00 kubectl=1.28.0-00
+apt-mark hold kubelet kubectl
+<h2>6. Restart kubelet</h2>
+systemctl daemon-reload
+systemctl restart kubelet
+<h2>7. Verify kubelet health</h2>
+systemctl status kubelet
+journalctl -u kubelet -n 20</code></pre>
+<strong>From control plane</strong>:
+<pre><code><h2>8. Verify node is ready</h2>
+kubectl get node worker1
+<h2>9. Uncordon the node (allow pod scheduling)</h2>
+kubectl uncordon worker1
+<h2>10. Verify workloads are redistributed</h2>
+kubectl get pods -A -o wide | grep worker1</code></pre>
+<h4>Batch Worker Node Upgrades</h4>
+<strong>For large clusters, upgrade multiple workers in parallel</strong>:
+<pre><code>#!/bin/bash
+<h2>batch-worker-upgrade.sh</h2>
+<p>WORKERS=("worker1" "worker2" "worker3")
+BATCH_SIZE=2</p>
+<p>for ((i=0; i<${#WORKERS[@]}; i+=BATCH_SIZE)); do
+    batch=("${WORKERS[@]:i:BATCH_SIZE}")
+    echo "Upgrading batch: ${batch[*]}"
+    
+    # Drain nodes in parallel
+    for worker in "${batch[@]}"; do
+        kubectl drain "$worker" --ignore-daemonsets --delete-emptydir-data &
+    done
+    wait
+    
+    # Upgrade nodes in parallel
+    for worker in "${batch[@]}"; do
+        ssh "$worker" 'bash -s' << 'EOF' &
+            apt-mark unhold kubeadm kubelet kubectl
+            apt-get update && apt-get install -y kubeadm=1.28.0-00 kubelet=1.28.0-00 kubectl=1.28.0-00
+            apt-mark hold kubeadm kubelet kubectl
+            kubeadm upgrade node
+            systemctl daemon-reload
+            systemctl restart kubelet
+EOF
+    done
+    wait
+    
+    # Uncordon nodes
+    for worker in "${batch[@]}"; do
+        kubectl uncordon "$worker"
+    done
+    
+    # Wait for nodes to be ready before next batch
+    for worker in "${batch[@]}"; do
+        kubectl wait --for=condition=Ready node/"$worker" --timeout=300s
+    done
+    
+    echo "Batch complete: ${batch[*]}"
+    sleep 30  # Brief pause between batches
+done</code></pre></p>
+<strong>Considerations for batch upgrades</strong>:
+<li><strong>Cluster capacity</strong>: Ensure remaining nodes can handle workload from drained nodes</li>
+<li><strong>PodDisruptionBudgets</strong>: May prevent draining if too many replicas would be unavailable</li>
+<li><strong>Network policies</strong>: Ensure pods can still reach each other after rescheduling</li>
+<li><strong>Persistent volumes</strong>: StatefulSets with local storage cannot be moved</li>
+<p>---</p>
+<h3><strong>Advanced Upgrade Scenarios</strong></h3>
+<h4>CNI Plugin Upgrades</h4>
+<strong>CNI plugins require separate upgrade procedures</strong>:
+<strong>Calico upgrade example</strong>:
+<pre><code><h2>Check current Calico version</h2>
+kubectl get pods -n calico-system -o jsonpath='{.items[<em>].spec.containers[</em>].image}' | tr ' ' '\n' | grep calico | sort -u
+<h2>Download new Calico manifests</h2>
+curl -O https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
+<h2>Review changes before applying</h2>
+kubectl diff -f tigera-operator.yaml
+<h2>Apply upgrade</h2>
+kubectl apply -f tigera-operator.yaml
+<h2>Monitor upgrade progress</h2>
+kubectl get pods -n calico-system -w
+<h2>Verify networking after upgrade</h2>
+kubectl run test-pod --image=busybox --restart=Never -- sleep 3600
+kubectl exec test-pod -- nslookup kubernetes.default
+kubectl delete pod test-pod</code></pre>
+<strong>Flannel upgrade example</strong>:
+<pre><code><h2>Check current Flannel version</h2>
+kubectl get daemonset -n kube-system kube-flannel-ds -o jsonpath='{.spec.template.spec.containers[*].image}'
+<h2>Apply new Flannel manifest</h2>
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+<h2>Flannel updates as rolling update automatically</h2>
+kubectl rollout status daemonset/kube-flannel-ds -n kube-system
+<h2>Verify pod networking</h2>
+kubectl get pods -A -o wide | grep flannel</code></pre>
+<h4>etcd Upgrades</h4>
+<strong>etcd upgrades are handled by kubeadm but require special attention</strong>:
+<strong>Before etcd upgrade</strong>:
+<pre><code><h2>Backup etcd data</h2>
+ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-pre-upgrade.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+<h2>Check etcd cluster health</h2>
+ETCDCTL_API=3 etcdctl endpoint health \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+<h2>Check etcd member list</h2>
+ETCDCTL_API=3 etcdctl member list \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key</code></pre>
+<strong>Monitor etcd during upgrade</strong>:
+<pre><code><h2>Watch etcd pods during upgrade</h2>
+kubectl get pods -n kube-system -l component=etcd -w
+<h2>Check etcd logs for errors</h2>
+kubectl logs -n kube-system etcd-master1 -f
+<h2>Verify etcd performance after upgrade</h2>
+ETCDCTL_API=3 etcdctl endpoint status \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  --write-out=table</code></pre>
+<h4>Custom Resource Definition Updates</h4>
+<strong>CRDs may require manual attention during upgrades</strong>:
+<pre><code><h2>List all CRDs before upgrade</h2>
+kubectl get crd
+<h2>Check for deprecated CRD versions</h2>
+kubectl get crd -o jsonpath='{range .items[<em>]}{.metadata.name}{"\t"}{.spec.versions[</em>].name}{"\n"}{end}'
+<h2>Update CRDs if needed (example with cert-manager)</h2>
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.13.0/cert-manager.crds.yaml
+<h2>Verify CRD instances still work</h2>
+kubectl get certificates -A
+kubectl describe certificate example-cert</code></pre>
+<p>---</p>
+<h3><strong>Troubleshooting Upgrade Failures</strong></h3>
+<h4>Common Failure Scenarios</h4>
+<strong>Control Plane Upgrade Failures</strong>:
+<strong>Scenario 1: API Server Won't Start</strong>
+<pre><code><h2>Check static pod manifest</h2>
+cat /etc/kubernetes/manifests/kube-apiserver.yaml
+<h2>Check kubelet logs</h2>
+journalctl -u kubelet -f
+<h2>Common issues:</h2>
+<h2>- Invalid configuration in manifest</h2>
+<h2>- Certificate problems</h2>
+<h2>- Port conflicts</h2>
+<h2>- Insufficient resources</h2>
+<h2>Rollback approach:</h2>
+<h2>1. Restore previous manifest from backup</h2>
+cp /backup/kubernetes-config/manifests/kube-apiserver.yaml /etc/kubernetes/manifests/
+systemctl restart kubelet</code></pre>
+<strong>Scenario 2: etcd Upgrade Failure</strong>
+<pre><code><h2>Check etcd pod logs</h2>
+kubectl logs -n kube-system etcd-master1
+<h2>Common etcd issues:</h2>
+<h2>- Data directory permissions</h2>
+<h2>- Disk space exhaustion</h2>
+<h2>- Network connectivity between etcd members</h2>
+<h2>- Configuration mismatch</h2>
+<h2>Emergency etcd recovery:</h2>
+systemctl stop kubelet
+ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-pre-upgrade.db \
+  --data-dir=/var/lib/etcd-restore
+mv /var/lib/etcd /var/lib/etcd-failed
+mv /var/lib/etcd-restore /var/lib/etcd
+chown -R etcd:etcd /var/lib/etcd
+systemctl start kubelet</code></pre>
+<strong>Scenario 3: Control Plane Split Brain</strong>
+<pre><code><h2>Check if multiple API servers are running different versions</h2>
+kubectl get pods -n kube-system -l component=kube-apiserver -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
+<h2>Check cluster health from each control plane node</h2>
+kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes
+<h2>Resolution:</h2>
+<h2>1. Stop kubelet on problematic nodes</h2>
+<h2>2. Restore consistent configuration</h2>
+<h2>3. Restart in sequence (leader first)</h2></code></pre>
+<h4>Worker Node Upgrade Failures</h4>
+<strong>Scenario 1: kubelet Won't Start After Upgrade</strong>
+<pre><code><h2>Check kubelet logs</h2>
+journalctl -u kubelet -f
+<h2>Common kubelet issues:</h2>
+<h2>- Configuration file incompatibility</h2>
+<h2>- Container runtime connectivity</h2>
+<h2>- Certificate problems</h2>
+<h2>- Resource constraints</h2>
+<h2>Debug kubelet configuration</h2>
+kubelet --config=/var/lib/kubelet/config.yaml --dry-run
+<h2>Check container runtime</h2>
+crictl info
+crictl ps
+<h2>Rollback kubelet if needed</h2>
+apt-get install -y kubelet=1.27.0-00
+systemctl restart kubelet</code></pre>
+<strong>Scenario 2: Pods Stuck in Terminating State</strong>
+<pre><code><h2>Identify stuck pods</h2>
+kubectl get pods -A | grep Terminating
+<h2>Force delete stuck pods (use carefully)</h2>
+kubectl delete pod stuck-pod --grace-period=0 --force
+<h2>Check for finalizers preventing deletion</h2>
+kubectl get pod stuck-pod -o yaml | grep finalizers
+<h2>Remove finalizers if safe</h2>
+kubectl patch pod stuck-pod -p '{"metadata":{"finalizers":null}}'
+<h2>Investigate underlying cause</h2>
+kubectl describe pod stuck-pod
+kubectl logs stuck-pod --previous</code></pre>
+<strong>Scenario 3: Node Not Ready After Upgrade</strong>
+<pre><code><h2>Check node conditions</h2>
+kubectl describe node worker1
+<h2>Common "NotReady" causes:</h2>
+<h2>- kubelet not running</h2>
+<h2>- CNI plugin issues</h2>
+<h2>- Resource pressure</h2>
+<h2>- Container runtime problems</h2>
+<h2>Debug network issues</h2>
+<h2>On the node:</h2>
+ip route show
+iptables -L -n
+systemctl status containerd
+<h2>Test pod scheduling</h2>
+kubectl run debug-pod --image=busybox --restart=Never --overrides='{"spec":{"nodeName":"worker1"}}' -- sleep 3600
+kubectl get pod debug-pod -o wide</code></pre>
+<h4>Rollback Procedures</h4>
+<strong>Control Plane Rollback</strong>:
+<pre><code>#!/bin/bash
+<h2>control-plane-rollback.sh</h2>
+<p>PREVIOUS_VERSION="1.27.0"</p>
+<p>echo "Rolling back control plane to $PREVIOUS_VERSION"</p>
+<h2>1. Downgrade kubeadm</h2>
+apt-mark unhold kubeadm
+apt-get install -y kubeadm=$PREVIOUS_VERSION-00
+apt-mark hold kubeadm
+<h2>2. Rollback cluster configuration</h2>
+kubeadm upgrade apply $PREVIOUS_VERSION --force
+<h2>3. Downgrade kubelet and kubectl</h2>
+apt-mark unhold kubelet kubectl
+apt-get install -y kubelet=$PREVIOUS_VERSION-00 kubectl=$PREVIOUS_VERSION-00
+apt-mark hold kubelet kubectl
+<p>systemctl daemon-reload
+systemctl restart kubelet</p>
+<p>echo "Rollback complete, verify cluster health"
+kubectl get nodes
+kubectl get pods -n kube-system</code></pre></p>
+<strong>Worker Node Rollback</strong>:
+<pre><code><h2>Simpler worker rollback (per node)</h2>
+apt-mark unhold kubeadm kubelet kubectl
+apt-get install -y kubeadm=1.27.0-00 kubelet=1.27.0-00 kubectl=1.27.0-00
+apt-mark hold kubeadm kubelet kubectl
+<p>kubeadm upgrade node  # Apply previous configuration
+systemctl daemon-reload
+systemctl restart kubelet</code></pre></p>
+<p>---</p>
+<h3><strong>Post-Upgrade Validation and Testing</strong></h3>
+<h4>Comprehensive Cluster Validation</h4>
+<strong>System-Level Validation</strong>:
+<pre><code>#!/bin/bash
+<h2>post-upgrade-validation.sh</h2>
+<p>echo "=== Post-Upgrade Validation ==="</p>
+<h2>1. Check cluster basic health</h2>
+echo "Checking cluster health..."
+kubectl cluster-info
+kubectl get nodes -o wide
+kubectl get componentstatuses 2>/dev/null || echo "ComponentStatuses deprecated"
+<h2>2. Verify all system pods are running</h2>
+echo "Checking system pods..."
+kubectl get pods -n kube-system
+UNHEALTHY_PODS=$(kubectl get pods -n kube-system --field-selector=status.phase!=Running --no-headers | wc -l)
+if [ $UNHEALTHY_PODS -gt 0 ]; then
+    echo "WARNING: $UNHEALTHY_PODS system pods are not running"
+    kubectl get pods -n kube-system --field-selector=status.phase!=Running
+fi
+<h2>3. Test API server functionality</h2>
+echo "Testing API server..."
+kubectl auth can-i '<em>' '</em>' --as=system:admin
+kubectl get events --limit=5
+<h2>4. Test scheduler functionality</h2>
+echo "Testing scheduler..."
+kubectl run upgrade-test --image=nginx --restart=Never
+sleep 10
+kubectl get pod upgrade-test -o wide
+kubectl delete pod upgrade-test
+<h2>5. Test networking</h2>
+echo "Testing networking..."
+kubectl run net-test --image=busybox --restart=Never -- sleep 3600
+sleep 5
+kubectl exec net-test -- nslookup kubernetes.default
+kubectl exec net-test -- wget -qO- httpbin.org/ip --timeout=10
+kubectl delete pod net-test
+<h2>6. Verify persistent volumes</h2>
+echo "Checking storage..."
+kubectl get pv,pvc -A
+kubectl get storageclass
+<h2>7. Test RBAC</h2>
+echo "Testing RBAC..."
+kubectl auth can-i create pods --as=system:anonymous 2>/dev/null
+if [ $? -eq 0 ]; then
+    echo "WARNING: Anonymous users can create pods"
+fi
+<p>echo "=== Validation Complete ==="</code></pre></p>
+<h4>Application-Level Testing</h4>
+<strong>Workload Validation</strong>:
+<pre><code><h2>Check all deployments are healthy</h2>
+kubectl get deployments -A
+kubectl get deployments -A -o jsonpath='{range .items[?(@.status.readyReplicas!=@.status.replicas)]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.status.readyReplicas}/{.status.replicas}{"\n"}{end}'
+<h2>Test rolling update capability</h2>
+kubectl create deployment test-rollout --image=nginx:1.20
+kubectl scale deployment test-rollout --replicas=3
+kubectl set image deployment/test-rollout nginx=nginx:1.21
+kubectl rollout status deployment/test-rollout
+kubectl delete deployment test-rollout
+<h2>Verify StatefulSets</h2>
+kubectl get statefulsets -A
+for sts in $(kubectl get statefulsets -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name} {end}'); do
+    echo "Checking StatefulSet: $sts"
+    kubectl rollout status statefulset/$sts
+done
+<h2>Test service connectivity</h2>
+kubectl get services -A
+kubectl run service-test --image=busybox --restart=Never -- sleep 3600
+kubectl exec service-test -- nslookup kubernetes.default.svc.cluster.local
+kubectl delete pod service-test</code></pre>
+<h4>Performance Validation</h4>
+<strong>Resource Usage Monitoring</strong>:
+<pre><code><h2>Monitor resource usage after upgrade</h2>
+kubectl top nodes
+kubectl top pods -A --sort-by=memory | head -20
+<h2>Check for resource pressure</h2>
+kubectl describe nodes | grep -E "(Pressure|Allocatable|Allocated)"
+<h2>Monitor etcd performance</h2>
+kubectl -n kube-system exec etcd-master1 -- etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  endpoint status --write-out=table
+<h2>Check API server response times</h2>
+kubectl get --raw /healthz -v 6 2>&1 | grep "Response Status"
+time kubectl get nodes >/dev/null</code></pre>
+<strong>Load Testing</strong>:
+<pre><code><h2>Simple load test for API server</h2>
+for i in {1..100}; do
+    kubectl get nodes >/dev/null &
+done
+wait
+echo "Load test completed"
+<h2>Test pod creation performance</h2>
+time (
+    for i in {1..10}; do
+        kubectl run perf-test-$i --image=busybox --restart=Never -- sleep 60 &
+    done
+    wait
+)
+<h2>Cleanup</h2>
+kubectl delete pods -l run=perf-test</code></pre>
+<p>---</p>
+<h3><strong>Best Practices for Production Upgrades</strong></h3>
+<h4>Change Management and Planning</h4>
+<strong>Upgrade Windows and Communication</strong>:
+<pre><code><h2>Create upgrade runbook template</h2>
+cat > upgrade-runbook.md << 'EOF'
+<h2>Kubernetes Upgrade Runbook</h2>
+<h3>Pre-Upgrade Checklist</h3>
+<li>[ ] Cluster health validated</li>
+<li>[ ] Backup completed and verified</li>
+<li>[ ] Application teams notified</li>
+<li>[ ] Rollback plan confirmed</li>
+<li>[ ] Emergency contacts available</li>
+<h3>Upgrade Steps</h3>
+1. [ ] Control plane upgrade (Master 1)
+2. [ ] Control plane validation
+3. [ ] Control plane upgrade (Masters 2-3)
+4. [ ] Worker node upgrades (batch 1)
+5. [ ] Application validation
+6. [ ] Worker node upgrades (remaining batches)
+<h3>Post-Upgrade Validation</h3>
+<li>[ ] All nodes ready</li>
+<li>[ ] All system pods running</li>
+<li>[ ] Application health checks passed</li>
+<li>[ ] Performance metrics normal</li>
+<h3>Rollback Triggers</h3>
+<li>API server unavailable for >5 minutes</li>
+<li>>20% of application pods failing</li>
+<li>Critical application functionality broken</li>
+<li>Performance degradation >50%</li>
+EOF</code></pre>
+<strong>Automated Testing Pipeline</strong>:
+<pre><code><h2>.github/workflows/upgrade-test.yml</h2>
+name: Kubernetes Upgrade Test
+on:
+  schedule:
+    - cron: '0 2 <em> </em> 1'  # Weekly on Monday
+  workflow_dispatch:
+<p>jobs:
+  upgrade-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create test cluster
+      run: |
+        kind create cluster --config=test-cluster-config.yaml
+        
+    - name: Deploy test applications
+      run: |
+        kubectl apply -f test-applications/
+        kubectl wait --for=condition=ready pod -l app=test-app --timeout=300s
+        
+    - name: Perform upgrade
+      run: |
+        # Simulate upgrade process
+        ./scripts/upgrade-test-cluster.sh
+        
+    - name: Validate post-upgrade
+      run: |
+        ./scripts/validate-cluster.sh
+        kubectl get pods -A
+        
+    - name: Cleanup
+      run: |
+        kind delete cluster</code></pre></p>
+<h4>Blue-Green Cluster Strategy</h4>
+<strong>For critical production environments</strong>:
+<pre><code>#!/bin/bash
+<h2>blue-green-upgrade.sh</h2>
+<h2>Assumes you have infrastructure automation (Terraform, etc.)</h2>
+<p>echo "Starting blue-green cluster upgrade"</p>
+<h2>1. Create new cluster (green) with target version</h2>
+terraform -chdir=infrastructure/green apply -var="k8s_version=1.28.0"
+<h2>2. Deploy applications to green cluster</h2>
+kubectl --kubeconfig=green-cluster.conf apply -f applications/
+<h2>3. Run validation tests on green cluster</h2>
+./scripts/validate-applications.sh green-cluster.conf
+<h2>4. Update DNS/load balancer to point to green cluster</h2>
+<h2>(Implementation depends on your infrastructure)</h2>
+<h2>5. Monitor green cluster for issues</h2>
+echo "Monitoring green cluster for 30 minutes..."
+sleep 1800
+<h2>6. If successful, destroy blue cluster</h2>
+read -p "Green cluster stable? Destroy blue cluster? (y/N): " confirm
+if [[ $confirm == [yY] ]]; then
+    terraform -chdir=infrastructure/blue destroy
+    echo "Blue-green upgrade completed"
+else
+    echo "Rolling back to blue cluster"
+    # Revert DNS/load balancer
+fi</code></pre>
+<h4>Monitoring During Upgrades</h4>
+<strong>Real-time Health Monitoring</strong>:
+<pre><code>#!/bin/bash
+<h2>upgrade-monitor.sh</h2>
+<h2>Monitor key metrics during upgrade</h2>
+while true; do
+    clear
+    echo "=== Kubernetes Upgrade Monitor ==="
+    echo "Time: $(date)"
+    echo
+    
+    echo "Node Status:"
+    kubectl get nodes --no-headers | awk '{print $1 "\t" $2}'
+    echo
+    
+    echo "Control Plane Pods:"
+    kubectl get pods -n kube-system -l tier=control-plane --no-headers | awk '{print $1 "\t" $3}'
+    echo
+    
+    echo "API Server Responsiveness:"
+    time kubectl get --raw /healthz >/dev/null 2>&1 && echo "API server responsive" || echo "API server slow/unresponsive"
+    echo
+    
+    echo "etcd Health:"
+    kubectl -n kube-system exec etcd-master1 -- etcdctl \
+      --endpoints=https://127.0.0.1:2379 \
+      --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+      --cert=/etc/kubernetes/pki/etcd/server.crt \
+      --key=/etc/kubernetes/pki/etcd/server.key \
+      endpoint health 2>/dev/null || echo "etcd health check failed"
+    
+    sleep 30
+done</code></pre>
+<strong>Alert Integration</strong>:
+<pre><code><h2>prometheus-upgrade-alerts.yml</h2>
+groups:
+<li>name: kubernetes-upgrade</li>
+  rules:
+  - alert: UpgradeAPIServerDown
+    expr: up{job="kubernetes-apiservers"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "API server down during upgrade"
+      
+  - alert: UpgradeEtcdDown
+    expr: up{job="etcd"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "etcd down during upgrade"
+      
+  - alert: UpgradeHighErrorRate
+    expr: rate(apiserver_request_total{code=~"5.."}[5m]) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High error rate during upgrade"</code></pre>
+<p>---</p>
+<h3><strong>Version-Specific Upgrade Considerations</strong></h3>
+<h4>Major Version Changes</h4>
+<strong>Kubernetes 1.24 → 1.25 Changes</strong>:
+<pre><code><h2>Key changes to validate:</h2>
+<h2>1. PodSecurityPolicy removal (replaced by Pod Security Standards)</h2>
+kubectl get podsecuritypolicy 2>/dev/null && echo "PSPs found - migration needed"
+<h2>2. Ingress API changes</h2>
+kubectl get ingress.extensions -A 2>/dev/null && echo "Old Ingress API in use"
+<h2>Migration script for PSP to PSS</h2>
+kubectl label namespace default pod-security.kubernetes.io/enforce=baseline
+kubectl label namespace default pod-security.kubernetes.io/audit=restricted
+kubectl label namespace default pod-security.kubernetes.io/warn=restricted</code></pre>
+<strong>Kubernetes 1.25 → 1.26 Changes</strong>:
+<pre><code><h2>Key changes:</h2>
+<h2>1. CRI v1alpha2 removal</h2>
+crictl info | grep -i version
+<h2>2. Dynamic kubelet configuration removal</h2>
+kubectl get configmap -n kube-system kubelet-config-* 2>/dev/null</code></pre>
+<strong>Kubernetes 1.27 → 1.28 Changes</strong>:
+<pre><code><h2>Key changes:</h2>
+<h2>1. Legacy package repositories deprecated</h2>
+<h2>Update apt sources before upgrade</h2>
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list</code></pre>
+<h4>Container Runtime Considerations</h4>
+<strong>containerd upgrades alongside Kubernetes</strong>:
+<pre><code><h2>Check containerd compatibility</h2>
+containerd --version
+crictl info
+<h2>Update containerd if needed</h2>
+apt-get update && apt-get install -y containerd.io
+<h2>Restart containerd and kubelet</h2>
+systemctl restart containerd
+systemctl restart kubelet
+<h2>Verify functionality</h2>
+crictl ps
+kubectl get nodes</code></pre>
+<strong>CRI-O upgrade considerations</strong>:
+<pre><code><h2>CRI-O versions must match Kubernetes minor versions</h2>
+<h2>Check current CRI-O version</h2>
+crio version
+<h2>Update CRI-O version to match Kubernetes</h2>
+<h2>(Installation process varies by distribution)</h2>
+<h2>Restart after upgrade</h2>
+systemctl restart crio
+systemctl restart kubelet</code></pre>
+<p>---</p>
+<h3><strong>Exam Tips</strong></h3>
+<h4>Key Upgrade Concepts</h4>
+<li><strong>Version skew policy</strong>: Control plane must be upgraded before workers, kubelet cannot be newer than API server</li>
+<li><strong>Sequential minor versions</strong>: Cannot skip minor versions (1.26 → 1.27 → 1.28)</li>
+<li><strong>Component upgrade order</strong>: kubeadm → control plane → worker nodes</li>
+<li><strong>Backup before upgrade</strong>: Always backup etcd and configurations</li>
+<h4>Common Exam Scenarios</h4>
+1. <strong>Upgrade control plane from version X to Y</strong>: Know the full kubeadm workflow
+2. <strong>Upgrade worker nodes safely</strong>: Understand drain/cordon/uncordon process
+3. <strong>Troubleshoot failed upgrades</strong>: Identify common failure points and resolution
+4. <strong>Validate upgrade success</strong>: Check cluster health and application functionality
+<h4>Time-Saving Commands</h4>
+<pre><code><h2>Quick upgrade status check</h2>
+kubectl get nodes -o wide
+kubectl version --short
+kubeadm version
+<h2>Fast health validation</h2>
+kubectl get pods -n kube-system
+kubectl cluster-info
+kubectl get componentstatuses
+<h2>Emergency rollback check</h2>
+ls /etc/kubernetes/manifests/
+journalctl -u kubelet -n 20</code></pre>
+<h4>Critical Details to Remember</h4>
+<li>Use <code>kubeadm upgrade apply</code> only on first control plane node</li>
+<li>Use <code>kubeadm upgrade node</code> on additional control plane and worker nodes</li>
+<li>Always upgrade kubeadm first, then use it to upgrade cluster components</li>
+<li>kubelet and kubectl must be upgraded separately on each node</li>
+<li>CNI plugins require separate upgrade procedures</li>
+<li>PodDisruptionBudgets can block node draining</li>
+<li>etcd backups are mandatory before any upgrade</li>
+<li>Validate cluster health before and after each phase</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
