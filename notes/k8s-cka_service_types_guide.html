@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKA Study Guide: ClusterIP, NodePort, LoadBalancer Service Types and Endpoints - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CKA Study Guide: ClusterIP, NodePort, LoadBalancer Service Types and Endpoints</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 02, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>CKA Study Guide: ClusterIP, NodePort, LoadBalancer Service Types and Endpoints</h2>
+<h3><strong>The Service Abstraction: Solving the Dynamic Pod Problem</strong></h3>
+<p>In a world where pods are ephemeral and their IP addresses change constantly, applications need a stable way to communicate with each other. Kubernetes Services provide this stability by creating a persistent virtual IP address that automatically routes traffic to healthy pods, regardless of where they're running or how many instances exist.</p>
+<h4>The Fundamental Service Challenge</h4>
+<strong>Why Direct Pod Communication Fails at Scale</strong>:
+<ul><li><strong>Pod IP Instability</strong>: Pods get new IP addresses when they restart, reschedule, or scale</li>
+<li><strong>Dynamic Discovery</strong>: Applications can't hardcode IP addresses when replicas change constantly</li>
+<li><strong>Load Distribution</strong>: Traffic needs to be distributed across multiple pod instances</li>
+<li><strong>Health Awareness</strong>: Failed pods should be automatically removed from traffic rotation</li>
+<li><strong>Cross-Cluster Communication</strong>: Services need to work across different network environments</li>
+<strong>The Pre-Service Era Problems</strong>:
+<pre><code><h2>Before Services, applications had to:</h2>
+<h2>1. Discover pod IPs manually</h2>
+kubectl get pods -l app=backend -o jsonpath='{.items[*].status.podIP}'
+<h2>Output: 10.244.1.5 10.244.2.8 10.244.3.12</h2>
+<h2>2. Implement their own load balancing</h2>
+<h2>3. Handle pod failures and replacements</h2>
+<h2>4. Manage service discovery and registration</h2>
+<h2>5. Deal with network changes manually</h2></code></pre>
+<strong>What Services Provide</strong>:
+<li><strong>Stable Virtual IP</strong>: A consistent IP address that never changes</li>
+<li><strong>Automatic Load Balancing</strong>: Built-in traffic distribution across healthy pods</li>
+<li><strong>Service Discovery</strong>: DNS-based naming that applications can rely on</li>
+<li><strong>Health Integration</strong>: Automatic endpoint management based on pod health</li>
+<li><strong>Multiple Access Patterns</strong>: Different service types for different use cases</li>
+<p>---</p>
+<h3><strong>Service Architecture and Components</strong></h3>
+<h4>Understanding the Service Ecosystem</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                        Service                              │
+│                 (Virtual IP + Port)                         │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────┴───────────────────────────────────────┐
+│                    Endpoints                                │
+│              (List of Pod IP:Port)                          │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────┴───────────────────────────────────────┐
+│                      Pods                                   │
+│            (Actual Running Instances)                       │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4>The Service Control Loop</h4>
+<strong>How Services Maintain Pod Mappings</strong>:
+<pre><code><h2>1. Service Controller watches for:</h2>
+<h2>   - New services being created</h2>
+<h2>   - Pod label changes</h2>
+<h2>   - Pod health status changes</h2>
+<h2>2. Endpoint Controller maintains endpoint lists:</h2>
+<h2>   - Scans pods matching service selector</h2>
+<h2>   - Includes only ready pods in endpoints</h2>
+<h2>   - Updates endpoint list when pods change</h2>
+<h2>3. kube-proxy implements service networking:</h2>
+<h2>   - Creates iptables/IPVS rules for service IPs</h2>
+<h2>   - Routes traffic to endpoint pods</h2>
+<h2>   - Handles load balancing and failover</h2></code></pre>
+<strong>Service Components Interaction</strong>:
+<pre><code><h2>View service components</h2>
+kubectl get svc,endpoints,pods -l app=web-app
+<h2>Example output showing the relationship:</h2>
+<h2>NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE</h2>
+<h2>service/web-app-svc  ClusterIP   10.96.45.123   <none>        80/TCP    5m</h2>
+<h2>NAME                   ENDPOINTS                           AGE</h2>
+<h2>endpoints/web-app-svc  10.244.1.5:80,10.244.2.8:80        5m</h2>
+<h2>NAME                       READY   STATUS    RESTARTS   AGE   IP</h2>
+<h2>pod/web-app-deployment-abc  1/1     Running   0          5m    10.244.1.5</h2>
+<h2>pod/web-app-deployment-def  1/1     Running   0          5m    10.244.2.8</h2></code></pre>
+<p>---</p>
+<h3><strong>ClusterIP: Internal Cluster Communication</strong></h3>
+<h4>ClusterIP Architecture and Use Cases</h4>
+<strong>What ClusterIP Provides</strong>:
+<li><strong>Cluster-Internal Access</strong>: Service is only accessible from within the cluster</li>
+<li><strong>Stable Virtual IP</strong>: Allocated from the service CIDR range</li>
+<li><strong>DNS Integration</strong>: Automatic DNS records for service discovery</li>
+<li><strong>Load Balancing</strong>: Distributes traffic across all healthy endpoints</li>
+<strong>ClusterIP Configuration</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  labels:
+    app: backend
+spec:
+  type: ClusterIP  # Default type, can be omitted
+  selector:
+    app: backend
+    tier: api
+  ports:
+  - name: http
+    port: 80        # Port exposed by the service
+    targetPort: 8080 # Port on the pods
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics  # Can reference named ports
+    protocol: TCP</code></pre>
+<strong>Advanced ClusterIP Features</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: advanced-service
+spec:
+  type: ClusterIP
+  clusterIP: 10.96.100.200  # Specify exact IP (optional)
+  # clusterIP: None          # Headless service (no virtual IP)
+  
+  selector:
+    app: backend
+  
+  ports:
+  - port: 80
+    targetPort: 8080
+    
+  # Session affinity for sticky sessions
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours</code></pre>
+<h4>ClusterIP Networking Implementation</h4>
+<strong>How kube-proxy Implements ClusterIP</strong>:
+<pre><code><h2>kube-proxy creates iptables rules for service virtual IPs</h2>
+<h2>Example for service 10.96.45.123:80</h2>
+<h2>1. Intercept traffic to service IP</h2>
+sudo iptables -t nat -L KUBE-SERVICES -n | grep 10.96.45.123
+<h2>Example output:</h2>
+<h2>KUBE-SVC-XYZ123ABC  tcp  --  0.0.0.0/0  10.96.45.123  tcp dpt:80</h2>
+<h2>2. Load balance to endpoints</h2>
+sudo iptables -t nat -L KUBE-SVC-XYZ123ABC -n
+<h2>Example rules for 2 endpoints:</h2>
+<h2>KUBE-SEP-ABC123  all  --  0.0.0.0/0  0.0.0.0/0  statistic mode random probability 0.50000000000</h2>
+<h2>KUBE-SEP-DEF456  all  --  0.0.0.0/0  0.0.0.0/0</h2>
+<h2>3. DNAT to specific pod IPs</h2>
+sudo iptables -t nat -L KUBE-SEP-ABC123 -n
+<h2>DNAT  tcp  --  0.0.0.0/0  0.0.0.0/0  tcp to:10.244.1.5:8080</h2></code></pre>
+<strong>ClusterIP Traffic Flow</strong>:
+<pre><code><h2>When pod A connects to service IP:</h2>
+<h2>1. Pod sends packet to 10.96.45.123:80</h2>
+<h2>2. iptables intercepts packet in KUBE-SERVICES chain</h2>
+<h2>3. Packet redirected to KUBE-SVC-XYZ123ABC chain</h2>
+<h2>4. Random selection chooses endpoint (KUBE-SEP-ABC123)</h2>
+<h2>5. DNAT changes destination to 10.244.1.5:8080</h2>
+<h2>6. Packet routed to destination pod</h2>
+<h2>7. Response follows reverse path with SNAT</h2>
+<h2>Monitor service traffic</h2>
+sudo tcpdump -i any -n "host 10.96.45.123 or host 10.244.1.5"</code></pre>
+<h4>DNS Integration for ClusterIP Services</h4>
+<strong>Service DNS Records</strong>:
+<pre><code><h2>Services get automatic DNS records</h2>
+<h2>Format: <service-name>.<namespace>.svc.<cluster-domain></h2>
+<h2>Example DNS records for backend-service in default namespace:</h2>
+<h2>backend-service.default.svc.cluster.local  → 10.96.45.123</h2>
+<h2>backend-service.default.svc                → 10.96.45.123  </h2>
+<h2>backend-service.default                    → 10.96.45.123</h2>
+<h2>backend-service                            → 10.96.45.123 (same namespace only)</h2>
+<h2>Test DNS resolution from a pod</h2>
+kubectl run test-pod --image=busybox --rm -it -- nslookup backend-service
+kubectl run test-pod --image=busybox --rm -it -- nslookup backend-service.default.svc.cluster.local</code></pre>
+<strong>Port-Specific DNS Records</strong>:
+<pre><code><h2>Named ports get SRV records</h2>
+<h2>Format: _<port-name>._<protocol>.<service-name>.<namespace>.svc.<cluster-domain></h2>
+<h2>For service with named port "http":</h2>
+kubectl run test-pod --image=busybox --rm -it -- nslookup _http._tcp.backend-service.default.svc.cluster.local
+<h2>SRV record provides port information:</h2>
+<h2>_http._tcp.backend-service.default.svc.cluster.local. 30 IN SRV 0 100 80 backend-service.default.svc.cluster.local.</h2></code></pre>
+<h4>Headless Services (ClusterIP: None)</h4>
+<strong>Understanding Headless Services</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: headless-service
+spec:
+  clusterIP: None  # No virtual IP assigned
+  selector:
+    app: database
+  ports:
+  - port: 5432
+    targetPort: 5432</code></pre>
+<strong>Headless Service DNS Behavior</strong>:
+<pre><code><h2>Headless services return pod IPs directly in DNS</h2>
+kubectl run test-pod --image=busybox --rm -it -- nslookup headless-service
+<h2>Example output:</h2>
+<h2>Name:      headless-service.default.svc.cluster.local</h2>
+<h2>Address 1: 10.244.1.5 database-0.headless-service.default.svc.cluster.local</h2>
+<h2>Address 2: 10.244.2.8 database-1.headless-service.default.svc.cluster.local</h2>
+<h2>Address 3: 10.244.3.12 database-2.headless-service.default.svc.cluster.local</h2>
+<h2>Use cases for headless services:</h2>
+<h2>- StatefulSet pod discovery</h2>
+<h2>- Custom load balancing in applications</h2>
+<h2>- Service mesh sidecar discovery</h2>
+<h2>- Database cluster member discovery</h2></code></pre>
+<p>---</p>
+<h3><strong>NodePort: External Access via Node IPs</strong></h3>
+<h4>NodePort Architecture and Implementation</h4>
+<strong>What NodePort Provides</strong>:
+<li><strong>External Accessibility</strong>: Service accessible from outside the cluster</li>
+<li><strong>Node IP Integration</strong>: Service available on every node's IP address</li>
+<li><strong>Port Allocation</strong>: Automatic assignment from nodePort range (30000-32767)</li>
+<li><strong>ClusterIP Inheritance</strong>: Includes all ClusterIP functionality</li>
+<strong>NodePort Configuration</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: web-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: web-app
+  ports:
+  - port: 80          # ClusterIP port
+    targetPort: 8080  # Pod port
+    nodePort: 30080   # External port (optional, auto-assigned if not specified)
+    protocol: TCP</code></pre>
+<strong>NodePort Range Configuration</strong>:
+<pre><code><h2>Default NodePort range: 30000-32767</h2>
+<h2>Configured in kube-apiserver:</h2>
+<h2>--service-node-port-range=30000-32767</h2>
+<h2>Check current range</h2>
+kubectl cluster-info dump | grep -i "service-node-port-range"
+<h2>Or check API server configuration</h2>
+ps aux | grep kube-apiserver | grep -o '\--service-node-port-range=[0-9-]*'</code></pre>
+<h4>NodePort Networking Implementation</h4>
+<strong>kube-proxy NodePort Rules</strong>:
+<pre><code><h2>kube-proxy creates iptables rules for NodePort access</h2>
+<h2>Example for NodePort 30080</h2>
+<h2>1. Accept traffic on NodePort</h2>
+sudo iptables -t nat -L KUBE-NODEPORTS -n | grep 30080
+<h2>Example output:</h2>
+<h2>KUBE-SVC-XYZ123ABC  tcp  --  0.0.0.0/0  0.0.0.0/0  tcp dpt:30080</h2>
+<h2>2. Route to same service chain as ClusterIP</h2>
+sudo iptables -t nat -L KUBE-SVC-XYZ123ABC -n
+<h2>(Same load balancing rules as ClusterIP)</h2>
+<h2>3. Source NAT for external traffic</h2>
+sudo iptables -t nat -L POSTROUTING -n | grep KUBE-POSTROUTING
+<h2>SNAT ensures return traffic goes back through same node</h2></code></pre>
+<strong>NodePort Traffic Flow</strong>:
+<pre><code><h2>External client connects to node:30080</h2>
+<h2>1. Client sends packet to node-ip:30080</h2>
+<h2>2. iptables intercepts in KUBE-NODEPORTS chain</h2>
+<h2>3. Packet routed to service load balancing rules</h2>
+<h2>4. DNAT to selected pod IP:port</h2>
+<h2>5. SNAT applied to ensure return path</h2>
+<h2>6. Response returns via same node</h2>
+<h2>Test NodePort connectivity</h2>
+curl http://<node-ip>:30080
+curl http://<any-node-ip>:30080  # Works from any node</code></pre>
+<h4>NodePort Load Balancing Behavior</h4>
+<strong>External Traffic Policy</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: nodeport-service
+spec:
+  type: NodePort
+  externalTrafficPolicy: Local  # Cluster (default) or Local
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30080</code></pre>
+<strong>Traffic Policy Comparison</strong>:
+<pre><code><h2>externalTrafficPolicy: Cluster (default)</h2>
+<h2>- Traffic distributed to pods on any node</h2>
+<h2>- Source IP is lost (SNAT applied)</h2>
+<h2>- Additional network hop for cross-node traffic</h2>
+<h2>- Even load distribution</h2>
+<h2>externalTrafficPolicy: Local  </h2>
+<h2>- Traffic only to pods on receiving node</h2>
+<h2>- Source IP preserved (no SNAT)</h2>
+<h2>- No additional network hops</h2>
+<h2>- Uneven load if pods not evenly distributed</h2>
+<h2>Check service traffic policy</h2>
+kubectl get svc nodeport-service -o yaml | grep externalTrafficPolicy</code></pre>
+<strong>NodePort High Availability Considerations</strong>:
+<pre><code><h2>NodePort challenges for production:</h2>
+<h2>- Single node failure affects external access</h2>
+<h2>- Client needs to know all node IPs</h2>
+<h2>- No health checking of nodes</h2>
+<h2>- Manual load balancing required</h2>
+<h2>Common solutions:</h2>
+<h2>1. External load balancer in front of nodes</h2>
+<h2>2. DNS round-robin across node IPs</h2>
+<h2>3. Hardware load balancer with health checks</h2>
+<h2>4. Cloud provider integration (LoadBalancer type)</h2></code></pre>
+<p>---</p>
+<h3><strong>LoadBalancer: Cloud Provider Integration</strong></h3>
+<h4>LoadBalancer Architecture</h4>
+<strong>What LoadBalancer Provides</strong>:
+<li><strong>External Load Balancer</strong>: Cloud provider provisions actual load balancer</li>
+<li><strong>Single External IP</strong>: Stable external IP address for client access</li>
+<li><strong>Health Checking</strong>: Cloud LB monitors node and pod health</li>
+<li><strong>NodePort Inheritance</strong>: Includes NodePort and ClusterIP functionality</li>
+<strong>LoadBalancer Configuration</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: web-loadbalancer
+  annotations:
+    # Cloud-specific annotations
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+  
+  # Optional: specify desired external IP
+  loadBalancerIP: 203.0.113.45
+  
+  # Optional: restrict source IPs
+  loadBalancerSourceRanges:
+  - 192.168.1.0/24
+  - 10.0.0.0/16</code></pre>
+<h4>Cloud Provider Implementations</h4>
+<strong>AWS Load Balancer Controller</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: aws-loadbalancer
+  annotations:
+    # Network Load Balancer (Layer 4)
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    
+    # Application Load Balancer (Layer 7) - requires AWS Load Balancer Controller
+    service.beta.kubernetes.io/aws-load-balancer-type: "alb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    
+    # SSL configuration
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:123456789:certificate/abc123"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    
+    # Health check configuration
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/health"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "8080"
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-app
+  ports:
+  - port: 443
+    targetPort: 8080
+    protocol: TCP</code></pre>
+<strong>Google Cloud Load Balancer</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: gcp-loadbalancer
+  annotations:
+    # Internal load balancer
+    networking.gke.io/load-balancer-type: "Internal"
+    
+    # Regional vs Global
+    cloud.google.com/load-balancer-type: "External"
+    
+    # Backend configuration
+    cloud.google.com/backend-config: '{"default": "my-backend-config"}'
+    
+    # Firewall rules
+    networking.gke.io/allow-firewall-rules: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+<strong>Azure Load Balancer</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: azure-loadbalancer
+  annotations:
+    # Internal load balancer
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    service.beta.kubernetes.io/azure-load-balancer-internal-subnet: "subnet1"
+    
+    # Resource group
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: "my-resource-group"
+    
+    # Health probe configuration
+    service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/health"
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+<h4>LoadBalancer Status and Troubleshooting</h4>
+<strong>LoadBalancer Provisioning Process</strong>:
+<pre><code><h2>1. Service created with type: LoadBalancer</h2>
+kubectl apply -f loadbalancer-service.yaml
+<h2>2. Initially shows <pending> external IP</h2>
+kubectl get svc web-loadbalancer
+<h2>NAME              TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE</h2>
+<h2>web-loadbalancer  LoadBalancer   10.96.45.123   <pending>     80:30123/TCP   30s</h2>
+<h2>3. Cloud controller provisions load balancer</h2>
+<h2>4. External IP populated when ready</h2>
+kubectl get svc web-loadbalancer
+<h2>NAME              TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)        AGE</h2>
+<h2>web-loadbalancer  LoadBalancer   10.96.45.123   203.0.113.45   80:30123/TCP   2m</h2></code></pre>
+<strong>Troubleshooting LoadBalancer Issues</strong>:
+<pre><code><h2>Check service events</h2>
+kubectl describe svc web-loadbalancer
+<h2>Common failure reasons:</h2>
+<h2>- Insufficient cloud provider quotas</h2>
+<h2>- Invalid annotations or configuration</h2>
+<h2>- Network connectivity issues</h2>
+<h2>- Cloud controller not properly configured</h2>
+<h2>Check cloud controller logs</h2>
+kubectl logs -n kube-system -l app=cloud-controller-manager
+<h2>Verify cloud provider credentials</h2>
+kubectl get secrets -n kube-system | grep cloud
+<h2>Test connectivity to LoadBalancer</h2>
+curl http://203.0.113.45/
+curl -I http://203.0.113.45/health</code></pre>
+<p>---</p>
+<h3><strong>Endpoints: The Service-Pod Connection</strong></h3>
+<h4>Understanding Endpoint Objects</h4>
+<strong>What Endpoints Represent</strong>:
+<pre><code><h2>Endpoints are the actual IP:port combinations that services route to</h2>
+kubectl get endpoints
+<h2>Example output:</h2>
+<h2>NAME              ENDPOINTS                                 AGE</h2>
+<h2>kubernetes        192.168.1.100:6443                       5d</h2>
+<h2>web-service       10.244.1.5:8080,10.244.2.8:8080         2h</h2>
+<h2>database-service  10.244.3.12:5432                         1d</h2></code></pre>
+<strong>Endpoint Object Structure</strong>:
+<pre><code>apiVersion: v1
+kind: Endpoints
+metadata:
+  name: web-service  # Must match service name
+subsets:
+<li>addresses:</li>
+  - ip: 10.244.1.5
+    targetRef:
+      kind: Pod
+      name: web-app-deployment-abc123
+      namespace: default
+  - ip: 10.244.2.8
+    targetRef:
+      kind: Pod
+      name: web-app-deployment-def456
+      namespace: default
+  ports:
+  - port: 8080
+    protocol: TCP</code></pre>
+<h4>Endpoint Controller Behavior</h4>
+<strong>How Endpoints Are Managed</strong>:
+<pre><code><h2>Endpoint controller continuously:</h2>
+<h2>1. Watches for pods matching service selectors</h2>
+<h2>2. Checks pod readiness status</h2>
+<h2>3. Updates endpoint lists automatically</h2>
+<h2>4. Removes failed/unready pods from endpoints</h2>
+<h2>Only ready pods are included in endpoints</h2>
+kubectl get pods -l app=web-app
+kubectl get endpoints web-service
+<h2>If pods are not ready, they won't appear in endpoints</h2>
+kubectl describe pod unready-pod | grep "Ready.*False"
+kubectl get endpoints web-service  # Won't include unready pod</code></pre>
+<strong>Manual Endpoint Management</strong>:
+<pre><code><h2>Service without selector (manual endpoint management)</h2>
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-service
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  # No selector means manual endpoint management
+<p>---
+<h2>Manually created endpoints</h2>
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: external-service  # Must match service name
+subsets:
+<li>addresses:</li>
+  - ip: 192.168.1.100  # External server IP
+  - ip: 192.168.1.101
+  ports:
+  - port: 80</code></pre></p>
+<h4>EndpointSlices (Modern Endpoint Management)</h4>
+<strong>Understanding EndpointSlices</strong>:
+<pre><code><h2>EndpointSlices replace Endpoints for better scalability</h2>
+<h2>Introduced in Kubernetes 1.17, GA in 1.21</h2>
+<p>kubectl get endpointslices</p>
+<h2>Example output:</h2>
+<h2>NAME                    ADDRESSTYPE   PORTS   ENDPOINTS   AGE</h2>
+<h2>web-service-abc123      IPv4          8080    10.244.1.5,10.244.2.8   2h</h2>
+<h2>kubernetes-def456       IPv4          6443    192.168.1.100            5d</h2></code></pre>
+<strong>EndpointSlice Advantages</strong>:
+<pre><code><h2>Benefits over Endpoints:</h2>
+<h2>1. Better scalability (up to 1000 endpoints per slice)</h2>
+<h2>2. Support for multiple address types (IPv4, IPv6, FQDN)</h2>
+<h2>3. Improved network efficiency</h2>
+<h2>4. Better support for topology-aware routing</h2>
+<h2>Enable EndpointSlice mirroring</h2>
+kubectl get service web-service -o yaml | grep -A5 metadata.annotations
+<h2>endpointslice.kubernetes.io/managed-by: endpointslice-controller.k8s.io</h2></code></pre>
+<h4>Endpoint Troubleshooting</h4>
+<strong>Common Endpoint Issues</strong>:
+<pre><code><h2>Issue 1: Service has no endpoints</h2>
+kubectl get svc web-service
+kubectl get endpoints web-service
+<h2>Debugging steps:</h2>
+<h2>1. Check if pods exist with correct labels</h2>
+kubectl get pods -l app=web-app --show-labels
+<h2>2. Check pod readiness</h2>
+kubectl get pods -l app=web-app -o wide
+<h2>3. Check service selector</h2>
+kubectl describe svc web-service | grep Selector
+<h2>4. Check readiness probe configuration</h2>
+kubectl describe pod pod-name | grep -A10 "Readiness"</code></pre>
+<strong>Endpoint Synchronization Issues</strong>:
+<pre><code><h2>Issue 2: Endpoints not updating</h2>
+<h2>Check endpoint controller logs</h2>
+kubectl logs -n kube-system -l component=kube-controller-manager | grep endpoint
+<h2>Check for endpoint controller errors</h2>
+kubectl get events --field-selector reason=FailedToUpdateEndpoint
+<h2>Verify RBAC permissions for endpoint controller</h2>
+kubectl auth can-i update endpoints --as=system:serviceaccount:kube-system:endpoint-controller</code></pre>
+<p>---</p>
+<h3><strong>Service Discovery and DNS Integration</strong></h3>
+<h4>CoreDNS Configuration for Services</h4>
+<strong>Service DNS Records</strong>:
+<pre><code><h2>CoreDNS automatically creates DNS records for services</h2>
+<h2>A records: <service>.<namespace>.svc.<cluster-domain> → ClusterIP</h2>
+<h2>SRV records: _<port>._<protocol>.<service>.<namespace>.svc.<cluster-domain></h2>
+<h2>Check CoreDNS configuration</h2>
+kubectl get configmap coredns -n kube-system -o yaml
+<h2>Example CoreDNS config:</h2>
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+           lameduck 5s
+        }
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+           pods insecure
+           fallthrough in-addr.arpa ip6.arpa
+           ttl 30
+        }
+        prometheus :9153
+        forward . /etc/resolv.conf
+        cache 30
+        loop
+        reload
+        loadbalance
+    }</code></pre>
+<strong>DNS-Based Service Discovery</strong>:
+<pre><code><h2>Test service discovery from within cluster</h2>
+kubectl run dns-test --image=busybox --rm -it -- sh
+<h2>Inside the pod:</h2>
+nslookup web-service
+nslookup web-service.default.svc.cluster.local
+nslookup web-service.production.svc.cluster.local
+<h2>SRV record lookup for port information</h2>
+nslookup -type=srv _http._tcp.web-service.default.svc.cluster.local
+<h2>Example SRV response:</h2>
+<h2>_http._tcp.web-service.default.svc.cluster.local service = 0 100 80 web-service.default.svc.cluster.local.</h2></code></pre>
+<h4>Service Discovery Best Practices</h4>
+<strong>Environment-Based Service Discovery</strong>:
+<pre><code><h2>ConfigMap with service endpoints</h2>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-config
+data:
+  database_url: "postgresql://database-service.production.svc.cluster.local:5432/app"
+  cache_url: "redis://redis-service.production.svc.cluster.local:6379"
+  api_url: "http://api-service.production.svc.cluster.local:80"
+<p>---
+<h2>Pod using service discovery</h2>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  containers:
+  - name: app
+    image: my-app:latest
+    envFrom:
+    - configMapRef:
+        name: service-config</code></pre></p>
+<strong>Service Mesh Integration</strong>:
+<pre><code><h2>Istio service discovery</h2>
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-service
+spec:
+  hosts:
+  - external-api.example.com
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS</code></pre>
+<p>---</p>
+<h3><strong>Advanced Service Configuration</strong></h3>
+<h4>Session Affinity and Load Balancing</h4>
+<strong>Client IP Session Affinity</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: sticky-service
+spec:
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080
+  
+  # Enable session affinity
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours</code></pre>
+<strong>Load Balancing Algorithms</strong>:
+<pre><code><h2>kube-proxy load balancing modes:</h2>
+<h2>1. iptables (default): Random selection with equal weights</h2>
+<h2>2. IPVS: Multiple algorithms available</h2>
+<h2>Enable IPVS mode</h2>
+kubectl edit configmap kube-proxy -n kube-system
+<h2>Change mode from "iptables" to "ipvs"</h2>
+<h2>IPVS algorithms:</h2>
+<h2>- rr (round robin)</h2>
+<h2>- lc (least connection)</h2>
+<h2>- dh (destination hashing)</h2>
+<h2>- sh (source hashing)</h2>
+<h2>- sed (shortest expected delay)</h2>
+<h2>- nq (never queue)</h2>
+<h2>Check IPVS configuration</h2>
+sudo ipvsadm -L -n</code></pre>
+<h4>Multi-Port Services</h4>
+<strong>Service with Multiple Ports</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: multi-port-service
+spec:
+  selector:
+    app: web-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 8443
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: prometheus
+    protocol: TCP
+  - name: grpc
+    port: 9000
+    targetPort: 9000
+    protocol: TCP</code></pre>
+<strong>Named Ports in Pod Specifications</strong>:
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-port-pod
+spec:
+  containers:
+  - name: web-app
+    image: my-app:latest
+    ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+    - name: https
+      containerPort: 8443
+      protocol: TCP
+    - name: prometheus
+      containerPort: 9090
+      protocol: TCP</code></pre>
+<h4>Service Topology and Traffic Routing</h4>
+<strong>Topology Aware Hints</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: topology-aware-service
+  annotations:
+    service.kubernetes.io/topology-aware-hints: auto
+spec:
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+<strong>Internal Traffic Policy</strong>:
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: local-traffic-service
+spec:
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080
+  
+  # Route cluster traffic to local endpoints when possible
+  internalTrafficPolicy: Local  # Cluster (default) or Local</code></pre>
+<p>---</p>
+<h3><strong>Service Monitoring and Troubleshooting</strong></h3>
+<h4>Service Health Monitoring</h4>
+<strong>Service Connectivity Testing</strong>:
+<pre><code>#!/bin/bash
+<h2>service-connectivity-test.sh</h2>
+<p>SERVICE_NAME="$1"
+NAMESPACE="${2:-default}"</p>
+<p>if [ -z "$SERVICE_NAME" ]; then
+    echo "Usage: $0 <service-name> [namespace]"
+    exit 1
+fi</p>
+<p>echo "=== Service Connectivity Test: $SERVICE_NAME ==="</p>
+<h2>1. Check service exists</h2>
+kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" || exit 1
+<h2>2. Get service details</h2>
+SERVICE_IP=$(kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.clusterIP}')
+SERVICE_PORT=$(kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].port}')
+SERVICE_TYPE=$(kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.type}')
+<p>echo "Service IP: $SERVICE_IP"
+echo "Service Port: $SERVICE_PORT"
+echo "Service Type: $SERVICE_TYPE"</p>
+<h2>3. Check endpoints</h2>
+ENDPOINT_COUNT=$(kubectl get endpoints "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.subsets[<em>].addresses[</em>].ip}' | wc -w)
+echo "Endpoint Count: $ENDPOINT_COUNT"
+<p>if [ "$ENDPOINT_COUNT" -eq 0 ]; then
+    echo "ERROR: No endpoints found"
+    kubectl describe endpoints "$SERVICE_NAME" -n "$NAMESPACE"
+    exit 1
+fi</p>
+<h2>4. Test connectivity from within cluster</h2>
+echo "Testing connectivity..."
+kubectl run test-pod --image=busybox --rm -it --restart=Never -- sh -c "
+    nc -zv $SERVICE_IP $SERVICE_PORT && echo 'SUCCESS: Service reachable' || echo 'FAILED: Service unreachable'
+"
+<h2>5. Test DNS resolution</h2>
+echo "Testing DNS resolution..."
+kubectl run test-pod --image=busybox --rm -it --restart=Never -- sh -c "
+    nslookup $SERVICE_NAME.$NAMESPACE.svc.cluster.local && echo 'SUCCESS: DNS resolution working' || echo 'FAILED: DNS resolution failed'
+"
+<h2>6. For NodePort services, test external access</h2>
+if [ "$SERVICE_TYPE" = "NodePort" ]; then
+    NODE_PORT=$(kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].nodePort}')
+    NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+    echo "Testing NodePort access: $NODE_IP:$NODE_PORT"
+    curl -m 5 "http://$NODE_IP:$NODE_PORT" || echo "NodePort access test failed"
+fi
+<p>echo "=== Service connectivity test completed ==="</code></pre></p>
+<h4>Performance Monitoring</h4>
+<strong>Service Performance Metrics</strong>:
+<pre><code><h2>Monitor service request latency and throughput</h2>
+kubectl top pods -l app=web-app
+<h2>Check service endpoint distribution</h2>
+kubectl get endpoints web-service -o yaml | grep -A5 addresses
+<h2>Monitor connection distribution with IPVS</h2>
+sudo ipvsadm -L -n --stats
+<h2>Example output:</h2>
+<h2>IP Virtual Server version 1.2.1 (size=4096)</h2>
+<h2>Prot LocalAddress:Port               Conns   InPkts  OutPkts  InBytes OutBytes</h2>
+<h2>  -> RemoteAddress:Port</h2>
+<h2>TCP  10.96.45.123:80                    45      234      189    23.4K    18.9K</h2>
+<h2>  -> 10.244.1.5:8080                    23      117       94    11.7K     9.4K</h2>
+<h2>  -> 10.244.2.8:8080                    22      117       95    11.7K     9.5K</h2></code></pre>
+<strong>Service Monitoring with Prometheus</strong>:
+<pre><code><h2>ServiceMonitor for Prometheus scraping</h2>
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: web-app-monitor
+spec:
+  selector:
+    matchLabels:
+      app: web-app
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s</code></pre>
+<h4>Common Service Issues and Solutions</h4>
+<strong>Issue 1: Service Not Accessible</strong>:
+<pre><code><h2>Debug service accessibility</h2>
+kubectl describe svc problematic-service
+<h2>Check service configuration</h2>
+kubectl get svc problematic-service -o yaml
+<h2>Verify endpoints exist</h2>
+kubectl get endpoints problematic-service
+<h2>Check pod readiness</h2>
+kubectl get pods -l app=problematic-app
+kubectl describe pod problematic-pod | grep -A10 Readiness
+<h2>Test from different pods/namespaces</h2>
+kubectl run debug-pod --image=busybox --rm -it -- telnet service-ip port</code></pre>
+<strong>Issue 2: Load Balancing Not Working</strong>:
+<pre><code><h2>Check if multiple endpoints exist</h2>
+kubectl get endpoints service-name -o wide
+<h2>Test multiple requests to see distribution</h2>
+for i in {1..10}; do
+    kubectl run test-$i --image=busybox --rm --restart=Never -- wget -qO- http://service-name/ | grep hostname
+done
+<h2>Check kube-proxy configuration</h2>
+kubectl logs -n kube-system -l k8s-app=kube-proxy | grep -i error
+<h2>Verify iptables rules</h2>
+sudo iptables -t nat -L | grep service-name</code></pre>
+<strong>Issue 3: External Load Balancer Not Provisioning</strong>:
+<pre><code><h2>Check service status</h2>
+kubectl describe svc loadbalancer-service
+<h2>Look for events indicating provisioning issues</h2>
+kubectl get events --field-selector involvedObject.name=loadbalancer-service
+<h2>Check cloud controller manager logs</h2>
+kubectl logs -n kube-system -l app=cloud-controller-manager
+<h2>Verify cloud provider configuration</h2>
+kubectl get secrets -n kube-system | grep cloud
+kubectl describe secret cloud-provider-secret -n kube-system</code></pre>
+<p>---</p>
+<h3><strong>Exam Tips</strong></h3>
+<h4>Essential Commands to Master</h4>
+<pre><code><h2>Service management</h2>
+kubectl create service clusterip web-svc --tcp=80:8080
+kubectl create service nodeport web-svc --tcp=80:8080 --node-port=30080
+kubectl expose deployment web-app --port=80 --target-port=8080 --type=LoadBalancer
+<h2>Service inspection</h2>
+kubectl get svc,endpoints -o wide
+kubectl describe svc service-name
+kubectl get endpoints service-name -o yaml</code></pre>
+<h4>Key Concepts for Exam</h4>
+<li><strong>ClusterIP provides internal cluster access with virtual IP</strong></li>
+<li><strong>NodePort adds external access via node IPs on high ports</strong></li>
+<li><strong>LoadBalancer adds cloud provider load balancer integration</strong></li>
+<li><strong>Endpoints connect services to actual pod IPs automatically</strong></li>
+<li><strong>DNS provides service discovery via predictable names</strong></li>
+<h4>Common Exam Scenarios</h4>
+1. <strong>Create different service types for applications</strong>
+2. <strong>Troubleshoot service connectivity issues</strong>
+3. <strong>Debug why services have no endpoints</strong>
+4. <strong>Test service accessibility from pods</strong>
+5. <strong>Configure service with session affinity</strong>
+6. <strong>Create headless service for StatefulSet</strong>
+<h4>Time-Saving Shortcuts</h4>
+<pre><code><h2>Quick service creation</h2>
+kubectl expose deploy app --port=80 --type=NodePort
+<h2>Fast connectivity test</h2>
+kubectl run test --image=busybox --rm -it -- wget -qO- http://service-name/
+<h2>Quick endpoint check</h2>
+kubectl get endpoints service-name
+<h2>Fast service description</h2>
+kubectl describe svc service-name | grep -E "(IP|Port|Endpoints)"</code></pre>
+<h4>Critical Details to Remember</h4>
+<li>Services get ClusterIP from service-cidr range (typically 10.96.0.0/12)</li>
+<li>NodePort range is 30000-32767 by default</li>
+<li>Only ready pods appear in endpoints</li>
+<li>Service selector must match pod labels exactly</li>
+<li>LoadBalancer includes NodePort and ClusterIP functionality</li>
+<li>DNS format: service-name.namespace.svc.cluster.local</li>
+<li>Session affinity only supports ClientIP, not cookie-based</li>
+<li>External traffic policy affects source IP preservation and load distribution</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
