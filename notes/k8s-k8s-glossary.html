@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Glossary – In-Depth Explanations for CKAD & CKA - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>Kubernetes Glossary – In-Depth Explanations for CKAD & CKA</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                General (k8s) • Updated June 03, 2025
+            </div>
+            
+            <div class="note-tags">
+                
+            </div>
+            
+            <div class="note-content">
+                <h2>Kubernetes Glossary – In-Depth Explanations for CKAD & CKA</h2>
+<p>---</p>
+<h3>1. Pod</h3>
+<strong>What:</strong>  
+A pod is the smallest deployable unit in Kubernetes. It wraps one or more containers that share:
+<ul><li>Network (same IP)</li>
+<li>Storage (volumes)</li>
+<li>Lifecycle</li>
+<p>You don’t run containers directly in Kubernetes — you run <strong>pods</strong>.</p>
+<strong>Why:</strong>  
+<li>Every workload runs in a pod.</li>
+<li>Even a single-container app must be in a pod.</li>
+<li>Critical for understanding how deployments, jobs, and services work.</li>
+<strong>Example:</strong>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: demo
+spec:
+  containers:
+  - name: web
+    image: nginx</code></pre>
+<strong>Gotchas:</strong>  
+<li>Pods are <strong>ephemeral</strong>. If a pod dies, it's gone unless managed by a controller.</li>
+<li>Logs and filesystem are gone unless externalized (volumes or log collection).</li>
+<p>---</p>
+<h3>2. ReplicaSet</h3>
+<strong>What:</strong>  
+ReplicaSet ensures that <strong>N number of identical pods</strong> are running at all times. It will add or remove pods to match the desired count.
+<strong>Why:</strong>  
+<li>Ensures <strong>high availability</strong> and <strong>auto-recovery</strong>.</li>
+<li>Underpins Deployments.</li>
+<li>CKA exam expects you to understand its role, even if you rarely define one directly.</li>
+<strong>Gotchas:</strong>  
+<li>Don't use it directly; use Deployments.</li>
+<li>Selector mismatch = ReplicaSet won’t manage pods → no scaling.</li>
+<p>---</p>
+<h3>3. Deployment</h3>
+<strong>What:</strong>  
+A controller that manages ReplicaSets. Provides features like:
+<li>Rolling updates</li>
+<li>Rollbacks</li>
+<li>Declarative updates of app versions</li>
+<strong>Why:</strong>  
+<li>Primary way to deploy applications in Kubernetes.</li>
+<li>Simplifies version control, scaling, and upgrades.</li>
+<strong>Gotchas:</strong>  
+<li><code>kubectl rollout undo</code> reverts changes.</li>
+<li>Don't confuse <code>Deployment</code> strategy (<code>rollingUpdate</code> or <code>recreate</code>) with <code>Pod</code> restarts.</li>
+<p>---</p>
+<h3>4. StatefulSet</h3>
+<strong>What:</strong>  
+A controller for stateful applications. Unlike Deployments:
+<li>Each pod gets a <strong>persistent identity</strong> (name, volume, network)</li>
+<li>Pods are created <strong>in order</strong>, terminated in reverse</li>
+<strong>Why:</strong>  
+<li>Needed for databases, queues, apps that can't be scaled blindly.</li>
+<li>Real-world apps like PostgreSQL, Kafka, Zookeeper rely on it.</li>
+<strong>Gotchas:</strong>  
+<li>Needs a <code>Headless Service</code> (<code>clusterIP: None</code>)</li>
+<li>Slower to scale; pods must start one-by-one</li>
+<p>---</p>
+<h3>5. DaemonSet</h3>
+<strong>What:</strong>  
+Ensures that <strong>one pod runs on every (or selected) node</strong>. Useful for background agents like:
+<li>Log collectors (e.g., Fluentd)</li>
+<li>Monitoring tools (e.g., Node Exporter)</li>
+<strong>Why:</strong>  
+<li>Critical for cluster-wide side tools.</li>
+<li>CKAD/CKA will test it in system-level scenarios.</li>
+<strong>Gotchas:</strong>  
+<li>Doesn’t respect pod anti-affinity; you must configure it yourself.</li>
+<li>Deleting a node = pod disappears too.</li>
+<p>---</p>
+<h3>6. Job</h3>
+<strong>What:</strong>  
+Runs a pod to <strong>completion</strong> (e.g., for batch jobs, scripts, one-off tasks). It will re-run the pod if it fails until it completes successfully (or reaches a failure threshold).
+<strong>Why:</strong>  
+<li>Required for database migrations, cleanup tasks, report generation.</li>
+<li>CKA often includes this in troubleshooting questions.</li>
+<strong>Gotchas:</strong>  
+<li>Will not restart if the container exits 0 unless it hasn’t reached <code>completions</code>.</li>
+<p>---</p>
+<h3>7. CronJob</h3>
+<strong>What:</strong>  
+A Job scheduled at regular intervals using cron syntax.
+<strong>Why:</strong>  
+<li>Replaces external crontabs with native K8s job scheduling.</li>
+<li>Supports history, retries, concurrency policy.</li>
+<strong>Gotchas:</strong>  
+<li>Check <code>concurrencyPolicy: Forbid/Allow/Replace</code> if overlapping jobs matter.</li>
+<li>Pods may remain if history is not cleaned (<code>successfulJobsHistoryLimit</code>).</li>
+<p>---</p>
+<h3>8. Namespace</h3>
+<strong>What:</strong>  
+Virtual cluster partitioning inside a real cluster. Isolates workloads by:
+<li>Resource quota</li>
+<li>Access permissions</li>
+<li>Network policies (sometimes)</li>
+<strong>Why:</strong>  
+<li>Needed for multi-team environments.</li>
+<li>Every resource (except nodes/persistent volumes) is namespaced.</li>
+<strong>Gotchas:</strong>  
+<li>Namespace deletion is slow if it contains finalizers.</li>
+<li>Don’t assume network isolation unless policies exist.</li>
+<p>---</p>
+<h3>9. Node</h3>
+<strong>What:</strong>  
+A worker machine (VM or physical) in the cluster. It runs:
+<li>kubelet</li>
+<li>container runtime (e.g., containerd)</li>
+<li>kube-proxy</li>
+<strong>Why:</strong>  
+<li>Fundamental for understanding scheduling, affinity, failure domains.</li>
+<strong>Gotchas:</strong>  
+<li>Taints on nodes prevent pods from scheduling.</li>
+<li>Master nodes are schedulable only if <code>NoSchedule</code> taint is removed.</li>
+<p>---</p>
+<h3>10. Service</h3>
+<strong>What:</strong>  
+A stable endpoint that abstracts access to a set of pods. It:
+<li>Load-balances traffic to healthy pods</li>
+<li>Gets a virtual IP (ClusterIP)</li>
+<li>Can be exposed via NodePort, LoadBalancer, or ExternalName</li>
+<strong>Why:</strong>  
+<li>The only sane way to access pods (whose IPs change).</li>
+<li>Required for communication between apps.</li>
+<strong>Gotchas:</strong>  
+<li>No built-in health checks — relies on endpoints.</li>
+<li>Only forwards to ready pods.</li>
+<p>---</p>
+<h3>11. ConfigMap</h3>
+<strong>What:</strong>  
+Used to inject <strong>non-sensitive</strong> configuration data into pods.
+<strong>Why:</strong>  
+<li>Keeps code and config separate</li>
+<li>Lets you update config without rebuilding containers</li>
+<strong>Gotchas:</strong>  
+<li>Changing a ConfigMap won’t update the pod unless it’s reloaded/restarted.</li>
+<li>Use volume mount for live reloading only if the app supports it.</li>
+<p>---</p>
+<h3>12. Secret</h3>
+<strong>What:</strong>  
+Stores sensitive data like passwords and tokens in base64 format.
+<strong>Why:</strong>  
+<li>Prevents secrets from being hardcoded.</li>
+<li>Can be mounted as volumes or environment variables.</li>
+<strong>Gotchas:</strong>  
+<li>Base64 ≠ secure encryption. Use encryption at rest and limit RBAC access.</li>
+<p>---</p>
+<h3>13. Init Container</h3>
+<strong>What:</strong>  
+A special type of container that runs <strong>before</strong> the main application containers in a pod. It completes its task and exits before the main containers start.
+<strong>Why:</strong>  
+<li>Used for initialization logic (e.g., downloading files, waiting for service readiness)</li>
+<li>Allows separation of setup logic from app logic</li>
+<strong>Gotchas:</strong>  
+<li>If an init container fails, the pod stays in the <code>Init</code> phase.</li>
+<li>Does not share process namespace with main containers.</li>
+<p>---</p>
+<h3>14. Sidecar Container</h3>
+<strong>What:</strong>  
+A container in the same pod as the main app, providing supporting functionality like logging, proxying, or syncing data.
+<strong>Why:</strong>  
+<li>Useful for separating concerns</li>
+<li>Common in service meshes (e.g., Envoy in Istio)</li>
+<strong>Gotchas:</strong>  
+<li>Poor coordination between sidecar and main container can cause lifecycle issues.</li>
+<li>They share the pod’s resources and lifecycle.</li>
+<p>---</p>
+<h3>15. ServiceAccount</h3>
+<strong>What:</strong>  
+An identity for processes running in a pod to interact with the Kubernetes API.
+<strong>Why:</strong>  
+<li>Used by pods, controllers, and tools to authenticate securely to the cluster.</li>
+<strong>Gotchas:</strong>  
+<li>Every pod gets the default service account unless you specify another.</li>
+<li>Unused tokens may be mounted unless explicitly disabled.</li>
+<p>---</p>
+<h3>16. Role / ClusterRole</h3>
+<strong>What:</strong>  
+Defines a set of permissions (verbs on resources).  
+<li><code>Role</code> applies to a <strong>namespace</strong>.  </li>
+<li><code>ClusterRole</code> applies <strong>cluster-wide</strong> or can be bound to namespaces.</li>
+<strong>Why:</strong>  
+<li>Core of RBAC (Role-Based Access Control)</li>
+<strong>Gotchas:</strong>  
+<li>Must match with appropriate <code>RoleBinding</code> or <code>ClusterRoleBinding</code>.</li>
+<p>---</p>
+<h3>17. RoleBinding / ClusterRoleBinding</h3>
+<strong>What:</strong>  
+Assigns a Role or ClusterRole to a user/group/service account.
+<strong>Why:</strong>  
+<li>Grants actual permission to use a role.</li>
+<li>Required for access control and secure multi-tenant setups.</li>
+<strong>Gotchas:</strong>  
+<li>Binding a ClusterRole to a namespace still scopes access to that namespace.</li>
+<p>---</p>
+<h3>18. SecurityContext</h3>
+<strong>What:</strong>  
+Defines privilege and access control settings for containers, including:
+<li>User IDs</li>
+<li>Capabilities</li>
+<li>Filesystem permissions</li>
+<strong>Why:</strong>  
+<li>Critical for security posture (least privilege, rootless containers)</li>
+<strong>Gotchas:</strong>  
+<li>Some settings only work if supported by the container runtime and image.</li>
+<p>---</p>
+<h3>19. Liveness Probe</h3>
+<strong>What:</strong>  
+Checks if the app is still running. If it fails, Kubernetes restarts the container.
+<strong>Why:</strong>  
+<li>Prevents deadlocks, stuck apps from hanging indefinitely.</li>
+<strong>Gotchas:</strong>  
+<li>If misconfigured, it can cause endless restarts.</li>
+<p>---</p>
+<h3>20. Readiness Probe</h3>
+<strong>What:</strong>  
+Checks if the app is <strong>ready to serve traffic</strong>. If it fails, the pod is <strong>removed from Service endpoints</strong>, but not restarted.
+<strong>Why:</strong>  
+<li>Prevents traffic from hitting an unready app.</li>
+<strong>Gotchas:</strong>  
+<li>Unlike liveness, it won’t restart the pod — just removes it from load balancing.</li>
+<p>---</p>
+<h3>21. Startup Probe</h3>
+<strong>What:</strong>  
+Used to <strong>delay</strong> the liveness and readiness probes until the app is fully started. Avoids false failures for slow-starting apps.
+<strong>Why:</strong>  
+<li>Helps prevent premature restarts of large or complex apps.</li>
+<strong>Gotchas:</strong>  
+<li>Only one-time use at pod startup; not repeated like the other probes.</li>
+<p>---</p>
+<h3>22. Taints and Tolerations</h3>
+<strong>What:</strong>  
+<li><strong>Taint</strong> on a node says “don’t schedule pods here unless they tolerate it.”</li>
+<li><strong>Toleration</strong> on a pod says “I can go on tainted nodes.”</li>
+<strong>Why:</strong>  
+<li>Used for dedicating nodes to certain workloads (e.g., GPU, high-memory)</li>
+<strong>Gotchas:</strong>  
+<li>No toleration = pod won't be scheduled on tainted node.</li>
+<p>---</p>
+<h3>23. Affinity / Anti-Affinity</h3>
+<strong>What:</strong>  
+<li>Controls <strong>where</strong> pods are scheduled relative to other pods.</li>
+<li>Affinity: “prefer pods with X label”</li>
+<li>Anti-affinity: “don’t schedule near pods with X label”</li>
+<strong>Why:</strong>  
+<li>Used for spreading or grouping apps across zones/nodes for HA or compliance.</li>
+<strong>Gotchas:</strong>  
+<li>Must be carefully defined, otherwise pods might not get scheduled at all.</li>
+<p>---</p>
+<h3>24. HorizontalPodAutoscaler (HPA)</h3>
+<strong>What:</strong>  
+Automatically adjusts the number of pod replicas based on CPU/memory usage or custom metrics.
+<strong>Why:</strong>  
+<li>Saves resources, improves resilience under load.</li>
+<strong>Gotchas:</strong>  
+<li>Needs <code>metrics-server</code> to function.</li>
+<li>Doesn’t scale <strong>to 0</strong> — use Knative or KEDA for that.</li>
+<p>---</p>
+<h3>25. Volume / PersistentVolume / PVC</h3>
+<strong>What:</strong>  
+<li><code>Volume</code>: Temporary storage for containers.</li>
+<li><code>PersistentVolume (PV)</code>: A piece of persistent storage provisioned in the cluster.</li>
+<li><code>PersistentVolumeClaim (PVC)</code>: A request for storage by a pod.</li>
+<strong>Why:</strong>  
+<li>Needed for data persistence across restarts.</li>
+<strong>Gotchas:</strong>  
+<li>PVC and Pod must be in the same namespace.</li>
+<li>Reclaim policy of PV determines what happens when PVC is deleted.</li>
+<p>---</p>
+<h3>26. ClusterIP / NodePort / LoadBalancer / ExternalName</h3>
+<strong>ClusterIP (default):</strong>  
+Creates a virtual IP accessible only inside the cluster. Used for internal service communication.
+<strong>NodePort:</strong>  
+Exposes the service on each Node’s IP at a specific port. Allows access from outside the cluster via <code>NodeIP:NodePort</code>.
+<strong>LoadBalancer:</strong>  
+Provisions an external load balancer via cloud provider. Best for public-facing apps.
+<strong>ExternalName:</strong>  
+Maps a service to an external DNS name. No proxying, just DNS aliasing.
+<strong>Why:</strong>  
+<li>These are the core Service types.</li>
+<li>Critical for application connectivity and external exposure.</li>
+<strong>Gotchas:</strong>  
+<li>NodePort uses a static port (30000–32767); avoid hardcoding.</li>
+<li>LoadBalancer won’t work without cloud integration.</li>
+<p>---</p>
+<h3>27. NetworkPolicy</h3>
+<strong>What:</strong>  
+Defines ingress and egress rules for pod traffic. Acts like a firewall at the pod level.
+<strong>Why:</strong>  
+<li>Enforces zero-trust networking in the cluster.</li>
+<li>Required in production-grade secure environments.</li>
+<strong>Gotchas:</strong>  
+<li>No default deny unless you explicitly define it.</li>
+<li>Depends on CNI plugin support (e.g., Calico supports it, Flannel does not).</li>
+<p>---</p>
+<h3>28. CNI (Container Network Interface)</h3>
+<strong>What:</strong>  
+Plugin system that Kubernetes uses to provide networking capabilities.
+<strong>Why:</strong>  
+<li>Defines how pods get IPs, how routing works</li>
+<li>Enables features like NetworkPolicy, multi-networking</li>
+<strong>Gotchas:</strong>  
+<li>K8s doesn't do networking itself—it delegates to CNI.</li>
+<li>Not all CNIs support advanced features like NetworkPolicy or IP masquerading.</li>
+<p>---</p>
+<h3>29. Ingress / Ingress Controller</h3>
+<strong>Ingress:</strong>  
+Defines rules for routing external HTTP/HTTPS traffic to services in the cluster.
+<strong>Ingress Controller:</strong>  
+Implements the ingress rules. Common options: NGINX, Traefik, Istio.
+<strong>Why:</strong>  
+<li>Offers path-based and host-based routing.</li>
+<li>Enables TLS termination, authentication, rewrites, rate limits.</li>
+<strong>Gotchas:</strong>  
+<li>Ingress rules do nothing unless an Ingress Controller is installed.</li>
+<li>Each controller has its own annotations and behaviors.</li>
+<p>---</p>
+<h3>30. DNS Resolution</h3>
+<strong>What:</strong>  
+Pods and Services automatically get internal DNS records via CoreDNS.
+<strong>Why:</strong>  
+<li>Enables service discovery inside the cluster.</li>
+<li>Pods can refer to services by name like <code>myservice.namespace.svc.cluster.local</code>.</li>
+<strong>Gotchas:</strong>  
+<li>DNS cache can cause delays in detecting service updates.</li>
+<li>Long hostnames can be truncated/misinterpreted in older clients.</li>
+<p>---</p>
+<h3>31. StorageClass</h3>
+<strong>What:</strong>  
+Defines the type of storage (e.g., SSD, HDD, NFS) and its provisioning method (manual, dynamic).
+<strong>Why:</strong>  
+<li>Allows dynamic provisioning of PersistentVolumes when PVC is created.</li>
+<strong>Gotchas:</strong>  
+<li>Only one default StorageClass allowed per cluster unless explicitly defined.</li>
+<li>ReclaimPolicy affects how volumes are handled after PVC deletion.</li>
+<p>---</p>
+<h3>32. VolumeMount</h3>
+<strong>What:</strong>  
+Mounts a Kubernetes Volume into a specific path in a container.
+<strong>Why:</strong>  
+<li>Required for sharing config files, data, or logs with the app.</li>
+<strong>Gotchas:</strong>  
+<li>If the mount path exists, it will <strong>overwrite</strong> any existing files.</li>
+<p>---</p>
+<h3>33. ReadWriteOnce / ReadWriteMany / ReadOnlyMany</h3>
+<strong>What:</strong>  
+Defines volume access modes:
+<li>RWO: Mounted by one node for read/write</li>
+<li>RWX: Mounted by multiple nodes (e.g., NFS)</li>
+<li>ROX: Mounted read-only by many nodes</li>
+<strong>Why:</strong>  
+<li>Defines how multiple pods share data safely.</li>
+<strong>Gotchas:</strong>  
+<li>Not all volume plugins support RWX (e.g., AWS EBS doesn’t).</li>
+<p>---</p>
+<h3>34. Termination Grace Period</h3>
+<strong>What:</strong>  
+How long Kubernetes waits before forcefully killing a pod during shutdown.
+<strong>Why:</strong>  
+<li>Gives the app time to shut down cleanly (close DB connections, flush logs)</li>
+<strong>Gotchas:</strong>  
+<li>If PreStop hook or SIGTERM handling is slow, pod can be force-killed.</li>
+<p>---</p>
+<h3>35. Lifecycle Hooks</h3>
+<strong>What:</strong>  
+Run specific commands at certain points in a container’s lifecycle:
+<li><code>PostStart</code>: after container starts</li>
+<li><code>PreStop</code>: before container stops</li>
+<strong>Why:</strong>  
+<li>Used for setup, cleanup, draining connections</li>
+<strong>Gotchas:</strong>  
+<li>Must be quick — long-running PreStop can delay pod deletion.</li>
+<p>---</p>
+<h3>36. Controller Manager</h3>
+<strong>What:</strong>  
+Component that runs all built-in controllers (Deployment, Node, Job, etc.)
+<strong>Why:</strong>  
+<li>Keeps the actual vs desired state in sync</li>
+<strong>Gotchas:</strong>  
+<li>If it goes down, nothing is enforced (but existing apps still run).</li>
+<p>---</p>
+<h3>37. Scheduler</h3>
+<strong>What:</strong>  
+Assigns pods to nodes based on resource availability, affinity rules, taints/tolerations.
+<strong>Why:</strong>  
+<li>Ensures optimal use of cluster resources</li>
+<strong>Gotchas:</strong>  
+<li>If scheduling fails (e.g., no memory, taint mismatch), pods stay pending.</li>
+<p>---</p>
+<h3>38. kubelet</h3>
+<strong>What:</strong>  
+Agent that runs on each node and ensures the containers are running as expected.
+<strong>Why:</strong>  
+<li>Core component for node management</li>
+<strong>Gotchas:</strong>  
+<li>Doesn’t communicate directly with etcd, only with kube-apiserver.</li>
+<p>---</p>
+<h3>39. kube-proxy</h3>
+<strong>What:</strong>  
+Maintains network rules on nodes to allow communication to/from services.
+<strong>Why:</strong>  
+<li>Enables service IP routing via iptables/ipvs</li>
+<strong>Gotchas:</strong>  
+<li>Only manages <strong>Service</strong> networking — not full pod-to-pod mesh.</li>
+<p>---</p>
+<h3>40. etcd</h3>
+<strong>What:</strong>  
+The <strong>key-value store</strong> backing Kubernetes state (like a database for the cluster).
+<strong>Why:</strong>  
+<li>Stores all objects, configurations, secrets, status, etc.</li>
+<strong>Gotchas:</strong>  
+<li>If etcd is lost and not backed up, your cluster is gone.</li>
+<li>Should be backed up regularly and secured.</li>
+<p>---</p>
+<h3>41. Admission Controllers</h3>
+<strong>What:</strong>  
+Plugins that intercept requests to the Kubernetes API <strong>after authentication/authorization</strong>, and either <strong>mutate</strong> or <strong>validate</strong> them.
+<strong>Why:</strong>  
+<li>Add extra enforcement or transformation</li>
+<li>Used for security, policy, and defaults</li>
+<strong>Gotchas:</strong>  
+<li>Some are enabled by default (e.g., NamespaceLifecycle, LimitRanger)</li>
+<li>Others like OPA Gatekeeper or PodSecurityPolicy must be explicitly configured</li>
+<p>---</p>
+<h3>42. PodSecurityPolicy (Deprecated)</h3>
+<strong>What:</strong>  
+Legacy method to enforce pod-level security controls (e.g., no root, restricted volumes).
+<strong>Why:</strong>  
+<li>Deprecated in Kubernetes 1.21+ in favor of PodSecurity Admission</li>
+<strong>Gotchas:</strong>  
+<li>Deprecated and removed in 1.25 — don’t use for new deployments.</li>
+<p>---</p>
+<h3>43. PodSecurity Admission</h3>
+<strong>What:</strong>  
+Replacement for PodSecurityPolicy. Applies security profiles (<code>restricted</code>, <code>baseline</code>, <code>privileged</code>) using labels.
+<strong>Why:</strong>  
+<li>Much easier to use than PSP</li>
+<li>Enforces consistent security policies</li>
+<strong>Gotchas:</strong>  
+<li>Must label namespaces for it to take effect.</li>
+<li>Does not mutate pods — only validates.</li>
+<p>---</p>
+<h3>44. Audit Logs</h3>
+<strong>What:</strong>  
+Records of who did what in the Kubernetes API server.
+<strong>Why:</strong>  
+<li>Essential for compliance, forensics, and debugging</li>
+<strong>Gotchas:</strong>  
+<li>Needs to be explicitly configured via audit policy file</li>
+<li>Logs can be large — offload to log aggregator</li>
+<p>---</p>
+<h3>45. Metrics Server</h3>
+<strong>What:</strong>  
+Collects resource usage metrics like CPU and memory from kubelets.
+<strong>Why:</strong>  
+<li>Required for HPA (HorizontalPodAutoscaler)</li>
+<li>Enables real-time monitoring of pod and node resource usage</li>
+<strong>Gotchas:</strong>  
+<li>Not installed by default</li>
+<li>Doesn’t persist metrics (for that, use Prometheus)</li>
+<p>---</p>
+<h3>46. Debug (Ephemeral Containers)</h3>
+<strong>What:</strong>  
+Temporary container injected into a running pod for debugging (without restarting it).
+<strong>Why:</strong>  
+<li>Lets you debug broken containers that don’t have a shell or CLI tools</li>
+<strong>Gotchas:</strong>  
+<li>Must enable the <code>EphemeralContainers</code> feature gate in older clusters</li>
+<li>Doesn’t support networking outside the pod</li>
+<p>---</p>
+<h3>47. exec</h3>
+<strong>What:</strong>  
+Runs a command inside a running container.
+<strong>Why:</strong>  
+<li>Crucial for debugging, health checks, quick fixes</li>
+<strong>Gotchas:</strong>  
+<li>Needs shell access in the container</li>
+<li>Doesn’t persist; only for interactive use</li>
+<p>---</p>
+<h3>48. Port-forward</h3>
+<strong>What:</strong>  
+Forwards a port from your local machine to a pod in the cluster.
+<strong>Why:</strong>  
+<li>Lets you access services/pods without exposing them publicly</li>
+<strong>Gotchas:</strong>  
+<li>Only lasts while the command is active</li>
+<li>Useful for debugging, not production use</li>
+<p>---</p>
+<h3>49. Describe</h3>
+<strong>What:</strong>  
+Displays detailed state of a Kubernetes resource, including status, events, configuration.
+<strong>Why:</strong>  
+<li>Primary tool for debugging stuck, crashing, or pending pods</li>
+<strong>Gotchas:</strong>  
+<li>Verbose output — search with grep or less</li>
+<p>---</p>
+<h3>50. Logs</h3>
+<strong>What:</strong>  
+Shows stdout/stderr logs of a container in a pod.
+<strong>Why:</strong>  
+<li>First place to look when troubleshooting a crashing or misbehaving container</li>
+<strong>Gotchas:</strong>  
+<li>Only works for currently or recently running containers</li>
+<li>Doesn’t capture app-level logging unless redirected to stdout</li>
+<p>---</p>
+<h3>51. Recreate Strategy</h3>
+<strong>What:</strong>  
+Deployment strategy that <strong>kills all old pods</strong> before starting new ones.
+<strong>Why:</strong>  
+<li>Use when old and new versions can't coexist (e.g., DB schema changes)</li>
+<strong>Gotchas:</strong>  
+<li>Downtime during rollout</li>
+<p>---</p>
+<h3>52. RollingUpdate Strategy</h3>
+<strong>What:</strong>  
+Default strategy that updates pods <strong>gradually</strong> to avoid downtime.
+<strong>Why:</strong>  
+<li>Smooth deployments without service interruption</li>
+<strong>Gotchas:</strong>  
+<li>Misconfigured probes can delay rollout</li>
+<p>---</p>
+<h3>53. VerticalPodAutoscaler (VPA)</h3>
+<strong>What:</strong>  
+Adjusts resource requests (CPU/mem) for pods automatically based on usage.
+<strong>Why:</strong>  
+<li>Avoids over/under-provisioning</li>
+<li>Complements or replaces manual tuning</li>
+<strong>Gotchas:</strong>  
+<li>Doesn’t work with HPA on same deployment</li>
+<li>Restarts pods when applying changes</li>
+<p>---</p>
+<h3>54. Deployment Revision History</h3>
+<strong>What:</strong>  
+Tracks version history of deployment changes for rollback.
+<strong>Why:</strong>  
+<li>Enables <code>kubectl rollout undo</code></li>
+<strong>Gotchas:</strong>  
+<li>Limited by <code>revisionHistoryLimit</code></li>
+<p>---</p>
+<h3>55. Canary Deployment</h3>
+<strong>What:</strong>  
+Releases a new version to a <strong>subset of users or pods</strong> for testing.
+<strong>Why:</strong>  
+<li>Safer releases, early detection of bugs</li>
+<strong>Gotchas:</strong>  
+<li>Needs proper monitoring and rollback plan</li>
+<p>---</p>
+<h3>56. Blue-Green Deployment</h3>
+<strong>What:</strong>  
+Runs <strong>two parallel environments</strong> (blue = old, green = new). Switch traffic only when ready.
+<strong>Why:</strong>  
+<li>Instant switch between versions</li>
+<li>Easy rollback</li>
+<strong>Gotchas:</strong>  
+<li>Expensive (double resources)</li>
+<li>More complex to orchestrate in Kubernetes without tooling</li>
+<p>---</p>
+<h3>57. Helm</h3>
+<strong>What:</strong>  
+Kubernetes package manager. Uses <strong>charts</strong> (templated YAML files) to deploy and manage apps.
+<strong>Why:</strong>  
+<li>Simplifies deployment of complex apps</li>
+<li>Supports versioning, upgrades, config overrides</li>
+<strong>Gotchas:</strong>  
+<li>Requires understanding templating and <code>values.yaml</code></li>
+<li>Can abstract too much, hiding important details</li>
+<p>---</p>
+<h3>58. kubeadm</h3>
+<strong>What:</strong>  
+Tool to bootstrap Kubernetes clusters. Handles control plane init, node join, certificates.
+<strong>Why:</strong>  
+<li>Fastest way to set up a K8s cluster manually</li>
+<strong>Gotchas:</strong>  
+<li>Doesn’t install CNI plugin</li>
+<li>Requires extra setup for production hardening</li>
+<p>---</p>
+<h3>59. Custom Resource Definitions (CRD)</h3>
+<strong>What:</strong>  
+Extends the Kubernetes API to allow custom resources like <code>KafkaCluster</code>, <code>RedisOperator</code>, etc.
+<strong>Why:</strong>  
+<li>Powers tools like Prometheus, Cert-Manager, ArgoCD</li>
+<strong>Gotchas:</strong>  
+<li>Must define schema properly</li>
+<li>Not validated unless OpenAPI schema is included</li>
+<p>---</p>
+<h3>60. Operator</h3>
+<strong>What:</strong>  
+Custom controller that manages an app using CRDs. Encodes operational knowledge (like backup, failover).
+<strong>Why:</strong>  
+<li>Automates management of complex, stateful apps</li>
+<strong>Gotchas:</strong>  
+<li>Writing your own is complex</li>
+<li>Existing operators can be buggy if not well maintained</li>
+<p>---</p>
+<h3>78. Resource Requests vs Limits (continued)</h3>
+<strong>What:</strong>  
+<li>Request: minimum guaranteed resources for scheduling</li>
+<li>Limit: maximum resources a container can use</li>
+<strong>Why:</strong>  
+<li>Ensures fair sharing and prevents resource exhaustion</li>
+<strong>Gotchas:</strong>  
+<li>Over-requesting wastes resources, under-requesting causes evictions</li>
+<p>---</p>
+<h3>79. Eviction</h3>
+<strong>What:</strong>  
+When the kubelet removes a pod from a node due to resource pressure (CPU, memory, disk).
+<strong>Why:</strong>  
+<li>Protects node stability</li>
+<strong>Gotchas:</strong>  
+<li>Not the same as graceful deletion — can be sudden and disrupt services</li>
+<p>---</p>
+<h3>80. Event</h3>
+<strong>What:</strong>  
+System-generated record for state changes (e.g., pod created, image pull failed).
+<strong>Why:</strong>  
+<li>Critical for debugging and visibility</li>
+<strong>Gotchas:</strong>  
+<li>Events are ephemeral; use log collectors to persist</li>
+<p>---</p>
+<h3>81. Label</h3>
+<strong>What:</strong>  
+Key-value pair attached to objects for identification.
+<strong>Why:</strong>  
+<li>Enables selectors, groupings, filters</li>
+<strong>Gotchas:</strong>  
+<li>Labels must be unique per key; overuse can make selection inefficient</li>
+<p>---</p>
+<h3>82. Annotation</h3>
+<strong>What:</strong>  
+Key-value metadata for attaching non-identifying information to resources.
+<strong>Why:</strong>  
+<li>Used for tooling, debugging, versioning, etc.</li>
+<strong>Gotchas:</strong>  
+<li>Not used in selectors — for humans and systems, not filters</li>
+<p>---</p>
+<h3>83. Selector</h3>
+<strong>What:</strong>  
+Mechanism for targeting Kubernetes resources via label match.
+<strong>Why:</strong>  
+<li>Used by ReplicaSets, Services, NetworkPolicies, etc.</li>
+<strong>Gotchas:</strong>  
+<li>MatchLabels and MatchExpressions must match actual pod labels</li>
+<p>---</p>
+<h3>84. Field Selector</h3>
+<strong>What:</strong>  
+Targets resources based on resource field values (e.g., metadata.name).
+<strong>Why:</strong>  
+<li>Enables precise filtering for imperative commands</li>
+<strong>Gotchas:</strong>  
+<li>Limited to built-in fields</li>
+<p>---</p>
+<h3>85. taint-based Eviction</h3>
+<strong>What:</strong>  
+Evicts pods from nodes when taints are dynamically applied due to resource pressure.
+<strong>Why:</strong>  
+<li>Used in node lifecycle and autoscaling</li>
+<strong>Gotchas:</strong>  
+<li>Needs tolerations to avoid unwanted eviction</li>
+<p>---</p>
+<h3>86. Static Pod</h3>
+<strong>What:</strong>  
+Pod defined directly in kubelet via a manifest file on the node.
+<strong>Why:</strong>  
+<li>Used for core components (e.g., etcd, kube-apiserver)</li>
+<strong>Gotchas:</strong>  
+<li>Not managed by Kubernetes API — shows up as mirror pod</li>
+<p>---</p>
+<h3>87. Mirror Pod</h3>
+<strong>What:</strong>  
+Read-only representation in API server of a static pod on a node.
+<strong>Why:</strong>  
+<li>Provides visibility into static pod state</li>
+<strong>Gotchas:</strong>  
+<li>Cannot be deleted from API — delete the static pod file</li>
+<p>---</p>
+<h3>88. Job BackoffLimit</h3>
+<strong>What:</strong>  
+Maximum number of retries for failed Jobs before being marked failed.
+<strong>Why:</strong>  
+<li>Controls job failure policy</li>
+<strong>Gotchas:</strong>  
+<li>Set too low = premature failure, too high = retry loops</li>
+<p>---</p>
+<h3>89. CronJob ConcurrencyPolicy</h3>
+<strong>What:</strong>  
+Specifies how to handle multiple CronJob runs:
+<li><code>Allow</code>: run in parallel</li>
+<li><code>Forbid</code>: skip if previous is running</li>
+<li><code>Replace</code>: stop previous, run new</li>
+<strong>Why:</strong>  
+<li>Prevents overlapping jobs where unsafe</li>
+<strong>Gotchas:</strong>  
+<li>Default is <code>Allow</code> — can cause conflict</li>
+<p>---</p>
+<h3>90. Terminating Pod</h3>
+<strong>What:</strong>  
+A pod in the process of shutting down (due to delete or node eviction).
+<strong>Why:</strong>  
+<li>Allows graceful cleanup, PreStop hooks, draining</li>
+<strong>Gotchas:</strong>  
+<li>Stuck in Terminating often means volume or finalizer issues</li>
+<p>---</p>
+<h3>91. CrashLoopBackOff</h3>
+<strong>What:</strong>  
+State when a container fails and Kubernetes waits exponentially longer to restart it.
+<strong>Why:</strong>  
+<li>Indicates app bug, misconfig, or readiness probe failure</li>
+<strong>Gotchas:</strong>  
+<li>Often confused with LivenessProbe killing the pod — check logs</li>
+<p>---</p>
+<h3>92. InitContainers Completed / Pending</h3>
+<strong>What:</strong>  
+Pods don’t run main containers until all initContainers finish.
+<strong>Why:</strong>  
+<li>Useful for dependency checks (e.g., DB readiness)</li>
+<strong>Gotchas:</strong>  
+<li>If one fails, pod will hang forever in Init state</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
