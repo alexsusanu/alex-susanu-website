@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudWatch vs CloudTrail - AWS Services Comparison - Alex Susanu</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Note-specific styles that extend the main CSS */
+        .note-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .note-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-nav {
+            background: #f8f9ff;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e8f0ff;
+        }
+        
+        .back-btn {
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #357abd;
+        }
+        
+        .note-content-wrapper {
+            padding: 40px 30px;
+        }
+        
+        .note-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8f0ff;
+        }
+        
+        .note-footer {
+            background: #f8f9ff;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e8f0ff;
+        }
+    </style>
+</head>
+<body class="note-page">
+    <div class="note-container">
+        <div class="note-header">
+            <h1>CloudWatch vs CloudTrail - AWS Services Comparison</h1>
+        </div>
+        
+        <div class="back-nav">
+            <a href="../index.html" class="back-btn">← Back to Knowledge Base</a>
+        </div>
+        
+        <div class="note-content-wrapper">
+            <div class="note-meta">
+                Security (aws) • Updated June 17, 2025
+            </div>
+            
+            <div class="note-tags">
+                <span class="tag">aws</span><span class="tag">monitoring</span><span class="tag">logging</span><span class="tag">pentesting</span><span class="tag">cloud-security</span>
+            </div>
+            
+            <div class="note-content">
+                <h2>CloudWatch vs CloudTrail - AWS Services Comparison</h2>
+<h3>General Overview & Core Differences</h3>
+<strong>CloudWatch</strong> and <strong>CloudTrail</strong> are two completely separate AWS services that serve different purposes but can integrate together.
+<strong>CloudWatch = Performance & Monitoring</strong>
+<ul><li>Real-time monitoring and observability</li>
+<li>"How is my infrastructure performing?"</li>
+<li>Metrics, logs, dashboards, and alerts</li>
+<li>Operational health and performance data</li>
+<strong>CloudTrail = Audit & Security Logging</strong>
+<li>API call logging and auditing</li>
+<li>"Who did what, when, and from where?"</li>
+<li>Compliance and security forensics</li>
+<li>User activity and resource change tracking</li>
+<h4>Key Philosophical Difference</h4>
+<li><strong>CloudWatch:</strong> Reactive monitoring - "Something is wrong, fix it"</li>
+<li><strong>CloudTrail:</strong> Proactive auditing - "Someone did something, track it"</li>
+<h3>Detailed Service Breakdown</h3>
+<h4>CloudWatch Capabilities</h4>
+<li><strong>Metrics Collection</strong></li>
+  - CPU, memory, disk, network utilization
+  - Custom application metrics
+  - Real-time and historical data
+  - Automatic scaling triggers
+<li><strong>Log Management</strong></li>
+  - Application logs aggregation
+  - System logs from EC2, Lambda, etc.
+  - Log insights and searching
+  - Log retention policies
+<li><strong>Alerting & Notifications</strong></li>
+  - Threshold-based alarms
+  - SNS integration for notifications
+  - Auto-scaling triggers
+  - Dashboard visualizations
+<h4>CloudTrail Capabilities</h4>
+<li><strong>API Call Logging</strong></li>
+  - Every AWS API call recorded
+  - User identity and source IP
+  - Request parameters and responses
+  - Timestamp and service information
+<li><strong>Audit Trail Features</strong></li>
+  - Management events (control plane)
+  - Data events (S3 object access, Lambda execution)
+  - Insight events (unusual activity patterns)
+  - Multi-region trail support
+<li><strong>Compliance & Forensics</strong></li>
+  - Immutable log records
+  - Log file integrity validation
+  - Integration with AWS Config
+  - Long-term retention options
+<h3>Service Architecture Differences</h3>
+<h4>CloudWatch Data Flow</h4>
+<pre><code>AWS Resources → CloudWatch Agent → CloudWatch Service → Dashboards/Alarms
+Application Logs → CloudWatch Logs → Log Groups → Insights/Filters</code></pre>
+<h4>CloudTrail Data Flow</h4>
+<pre><code>AWS API Calls → CloudTrail Service → S3 Bucket → Analysis Tools
+Management Console → API Gateway → CloudTrail Logs → Compliance Reports</code></pre>
+<h4>Storage & Retention</h4>
+<li><strong>CloudWatch:</strong></li>
+  - Metrics: 1 second to 15 months retention
+  - Logs: Configurable retention (1 day to indefinite)
+  - Real-time streaming available
+<li><strong>CloudTrail:</strong></li>
+  - Events: 90 days in CloudTrail console (free)
+  - S3 storage: Indefinite retention (configurable)
+  - Log file delivery within 15 minutes
+<h3>Integration Points</h3>
+<h4>How They Work Together</h4>
+<li><strong>CloudTrail → CloudWatch Logs:</strong> Send audit logs to CloudWatch for alerting</li>
+<li><strong>CloudWatch Alarms:</strong> Trigger on specific CloudTrail events</li>
+<li><strong>Cross-service visibility:</strong> Monitor who changed monitoring configurations</li>
+<h4>Example Integration</h4>
+<pre><code>{
+  "AlarmName": "RootAccountUsage",
+  "MetricName": "RootAccountUsageCount",
+  "Namespace": "CloudTrailMetrics",
+  "Statistic": "Sum",
+  "Threshold": 1,
+  "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+}</code></pre>
+<h3>Pentesting Applications</h3>
+<h4>CloudWatch for Offensive Security</h4>
+<p>#### Information Gathering
+<li><strong>Target Reconnaissance</strong></li>
+  - Identify running services via metrics
+  - Spot high-value targets (high CPU/memory usage)
+  - Find applications with frequent errors
+  - Map resource relationships through dashboards</p>
+<li><strong>Persistence Indicators</strong></li>
+  - Monitor if your access is detected
+  - Watch for investigation activities
+  - Identify backup and monitoring schedules
+<p>#### Common Misconfigurations
+<pre><code><h2>Check for public CloudWatch dashboards</h2>
+aws cloudwatch list-dashboards
+aws cloudwatch get-dashboard --dashboard-name <name></p>
+<h2>Look for overly permissive log groups</h2>
+aws logs describe-log-groups
+aws logs describe-metric-filters</code></pre>
+<h4>CloudTrail for Offensive Security</h4>
+<p>#### OPSEC & Evasion
+<li><strong>Audit Trail Analysis</strong></li>
+  - Understand what gets logged
+  - Identify logging gaps and blind spots
+  - Time attacks during high-activity periods
+  - Use legitimate-looking API calls</p>
+<li><strong>Privilege Escalation Intelligence</strong></li>
+  - Map user permissions through logged API calls
+  - Identify service roles with interesting permissions
+  - Find misconfigured cross-account access
+<p>#### Attack Techniques
+<pre><code><h2>Check if CloudTrail is enabled</h2>
+aws cloudtrail describe-trails
+aws cloudtrail get-trail-status --name <trail-name></p>
+<h2>Look for logging misconfigurations</h2>
+aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=StopLogging
+<h2>Find data events configuration (often disabled)</h2>
+aws cloudtrail get-event-selectors --trail-name <trail-name></code></pre>
+<h4>Common Pentesting Scenarios</h4>
+<p>#### Scenario 1: CloudTrail Disabled
+<li><strong>Opportunity:</strong> Complete blind spot for defenders</li>
+<li><strong>Action:</strong> Aggressive enumeration and lateral movement</li>
+<li><strong>Risk:</strong> None from audit perspective</li></p>
+<p>#### Scenario 2: CloudWatch Without Alerting
+<li><strong>Opportunity:</strong> Systems monitored but no one watching</li>
+<li><strong>Action:</strong> Resource abuse, cryptocurrency mining</li>
+<li><strong>Risk:</strong> Eventually discovered through manual review</li></p>
+<p>#### Scenario 3: Misconfigured Log Storage
+<pre><code><h2>Check S3 bucket permissions for CloudTrail logs</h2>
+aws s3api get-bucket-acl --bucket <cloudtrail-bucket>
+aws s3api get-bucket-policy --bucket <cloudtrail-bucket></p>
+<h2>Look for world-readable CloudTrail logs</h2>
+aws s3 ls s3://<bucket>/AWSLogs/ --recursive</code></pre>
+<h3>Key Concepts Summary</h3>
+<li><strong>CloudWatch</strong> - Performance monitoring, real-time metrics, operational health</li>
+<li><strong>CloudTrail</strong> - Security auditing, API logging, compliance tracking</li>
+<li><strong>Separate Services</strong> - Different purposes, can work independently</li>
+<li><strong>Integration Possible</strong> - CloudTrail events can trigger CloudWatch alarms</li>
+<li><strong>Pentesting Value</strong> - CloudWatch for recon, CloudTrail for OPSEC</li>
+<h3>Common Misconfigurations for Exploitation</h3>
+<h4>CloudWatch Misconfigurations</h4>
+1. <strong>Public Dashboards</strong> - Sensitive infrastructure exposed
+2. <strong>Overprivileged Metrics</strong> - Cross-account metric sharing
+3. <strong>Log Group Permissions</strong> - World-readable application logs
+4. <strong>No Alerting</strong> - Monitoring without action
+<h4>CloudTrail Misconfigurations</h4>
+1. <strong>Disabled Logging</strong> - Complete audit blind spot
+2. <strong>Single Region</strong> - Multi-region attacks undetected
+3. <strong>No Data Events</strong> - S3/Lambda activity unlogged
+4. <strong>Public S3 Buckets</strong> - Historical logs exposed
+<h3>Best Practices for Defense</h3>
+<p>1. <strong>Enable Both Services</strong> - Complementary coverage
+2. <strong>Multi-Region CloudTrail</strong> - Global activity visibility
+3. <strong>Data Events Logging</strong> - S3 and Lambda activity
+4. <strong>CloudWatch Alarms</strong> - Automated threat detection
+5. <strong>Log Integrity</strong> - CloudTrail log file validation
+6. <strong>Least Privilege</strong> - Restrict access to logging services</p>
+<h3>References / Further Reading</h3>
+<li>AWS CloudWatch Documentation</li>
+<li>AWS CloudTrail User Guide</li>
+<li>AWS Well-Architected Security Pillar</li>
+<li>NIST Cybersecurity Framework - Logging Guidelines</li>
+<li>SANS Cloud Security Controls</li></ul>
+            </div>
+        </div>
+        
+        <div class="note-footer">
+            <p><a href="../index.html">← Back to Alex Susanu's Knowledge Base</a></p>
+        </div>
+    </div>
+</body>
+</html>
